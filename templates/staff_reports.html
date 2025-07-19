@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Sales Reports{% endblock %}
+
+{% block content %}
+<div class="staff-container">
+    <h1><i class="fas fa-chart-bar"></i> Sales Reports</h1>
+
+    <div class="staff-widgets">
+        <!-- This Month Revenue Widget -->
+        <div class="widget">
+            <div class="widget-header">
+                <h2>This Month Revenue</h2>
+                <button type="button" class="btn btn-sm export-csv" id="exportMonthlyRevenueCSV">Export to CSV</button>
+            </div>
+            <div class="widget-content">
+                <table style="width: 100%; border-collapse: collapse; border: 1px solid #aaa; font-weight: 400;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Date</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Orders Count</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Daily Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyRevenueTable">
+                        <tr><td colspan="3">Loading this month's revenue...</td></tr>
+                    </tbody>
+                </table>
+                <p id="monthlyRevenueMessage" class="no-data-message" style="display: none;">No revenue data available for this month.</p>
+            </div>
+        </div>
+
+        <!-- Top Selling Products Widget -->
+        <div class="widget">
+            <div class="widget-header">
+                <h2>Top Selling Products</h2>
+                <button type="button" class="btn btn-sm export-csv" id="exportTopSellingProductsCSV">Export to CSV</button>
+            </div>
+            <div class="widget-content">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Quantity Sold</th>
+                            <th>Total Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topSellingProductsTable">
+                        <tr><td colspan="3">Loading top selling products...</td></tr>
+                    </tbody>
+                </table>
+                <p id="topSellingProductsMessage" class="no-data-message" style="display: none;">No top selling products data available.</p>
+            </div>
+        </div>
+
+        <!-- Top Selling Products by Category Widget -->
+        <div class="widget">
+            <div class="widget-header">
+                <h2>Top Selling Products by Category</h2>
+                <button type="button" class="btn btn-sm export-csv" id="exportTopSellingProductsByCategoryCSV">Export to CSV</button>
+            </div>
+            <div class="widget-content">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Category Name</th>
+                            <th>Total Products Sold</th>
+                            <th>Total Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topSellingProductsByCategoryTable">
+                        <tr><td colspan="3">Loading top selling products by category...</td></tr>
+                    </tbody>
+                </table>
+                <p id="topSellingProductsByCategoryMessage" class="no-data-message" style="display: none;">No top selling products by category data available.</p>
+            </div>
+        </div>
+
+        <!-- Customer Discount History Widget -->
+        <div class="widget">
+            <div class="widget-header">
+                <h2><i class="fas fa-users"></i> Customer Discount History</h2>
+                <button type="button" class="btn btn-sm export-csv" id="exportCustomerHistoryCSV">Export to CSV</button>
+            </div>
+            <div class="widget-content">
+                <!-- Customer Search -->
+                <div class="customer-search-section">
+                    <div class="search-input-group">
+                        <input type="text" id="customer-search-input" class="form-control" placeholder="Search customer by name, email, or phone...">
+                        <button type="button" class="btn btn-primary" id="search-customer-btn">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="show-recent-customers-btn">
+                            <i class="fas fa-clock"></i> Recent Activity
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Customer History Results -->
+                <div class="customer-history-results" id="customer-history-results" style="display: none;">
+                    <div class="customer-info-card" id="customer-info-card">
+                        <!-- Customer details will be populated here -->
+                    </div>
+
+                    <div class="discount-history-table">
+                        <h4><i class="fas fa-history"></i> Discount History</h4>
+                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #aaa; font-weight: 400;">
+                            <thead>
+                                <tr>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Date</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Product</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Original Price</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Discount %</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Final Price</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Savings</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Staff Member</th>
+                                </tr>
+                            </thead>
+                            <tbody id="discount-history-table-body">
+                                <!-- History will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="customer-insights">
+                        <div class="insight-cards">
+                            <div class="insight-card">
+                                <div class="insight-icon"><i class="fas fa-percentage"></i></div>
+                                <div class="insight-content">
+                                    <div class="insight-label">Most Common Discount</div>
+                                    <div class="insight-value" id="common-discount">-</div>
+                                </div>
+                            </div>
+                            <div class="insight-card">
+                                <div class="insight-icon"><i class="fas fa-shopping-cart"></i></div>
+                                <div class="insight-content">
+                                    <div class="insight-label">Total Purchases</div>
+                                    <div class="insight-value" id="total-purchases">-</div>
+                                </div>
+                            </div>
+                            <div class="insight-card">
+                                <div class="insight-icon"><i class="fas fa-dollar-sign"></i></div>
+                                <div class="insight-content">
+                                    <div class="insight-label">Total Savings</div>
+                                    <div class="insight-value" id="total-savings">-</div>
+                                </div>
+                            </div>
+                            <div class="insight-card">
+                                <div class="insight-icon"><i class="fas fa-calendar"></i></div>
+                                <div class="insight-content">
+                                    <div class="insight-label">Last Visit</div>
+                                    <div class="insight-value" id="last-visit">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="suggested-pricing">
+                            <h5><i class="fas fa-lightbulb"></i> Suggested Pricing</h5>
+                            <div class="pricing-suggestion" id="pricing-suggestion">
+                                <!-- Suggestions will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Customer Activity -->
+                <div class="recent-customer-activity" id="recent-customer-activity" style="display: none;">
+                    <h4><i class="fas fa-clock"></i> Recent Customer Activity</h4>
+                    <div class="recent-customers-list" id="recent-customers-list">
+                        <!-- Recent customers will be populated here -->
+                    </div>
+                </div>
+
+                <!-- No Results Message -->
+                <div class="no-results-message" id="no-customer-results" style="display: none;">
+                    <i class="fas fa-search"></i>
+                    <p>No customer found. Try searching by name, email, or phone number.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Message Container for Notifications -->
+<div id="message-container"></div>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_reports.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_notifications.css') }}">
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/staff_messages.js') }}"></script>
+<script src="{{ url_for('static', filename='js/monthly_revenue.js') }}"></script>
+<script src="{{ url_for('static', filename='js/top_selling_products.js') }}"></script>
+<script src="{{ url_for('static', filename='js/top_selling_products_by_category.js') }}"></script>
+<script src="{{ url_for('static', filename='js/customer_history.js') }}"></script>
+{% endblock %}
+

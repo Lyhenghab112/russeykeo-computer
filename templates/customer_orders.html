@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Orders{% endblock %}
+
+{% block content %}
+<div class="staff-container" style="padding-left: 270px;">
+    <h1>Orders for Customer</h1>
+
+    <div class="order-status-tabs">
+        <button class="tab-button active" data-status="all">All</button>
+        <button class="tab-button" data-status="pending">Pending</button>
+        <button class="tab-button" data-status="processing">Processing</button>
+        <button class="tab-button" data-status="cancelled">Cancelled</button>
+    </div>
+
+    <div id="orders-container">
+        {% for order in orders %}
+        <div class="order-card" data-status="{{ order.status|lower }}">
+            {% if order.type == 'preorder' %}
+                <h3>Pre-Order #{{ order.id }} - {{ order.status|capitalize }}</h3>
+                <span class="badge" style="background-color: #fd7e14; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; margin-left: 10px;">Pre-Order</span>
+            {% else %}
+                <h3>Order #{{ order.id }} - {{ order.status|capitalize }}</h3>
+                <span class="badge" style="background-color: #007bff; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; margin-left: 10px;">Order</span>
+            {% endif %}
+            <p>Order Date: {{ order.order_date }}</p>
+            <p>Total Amount: ${{ "%.2f"|format(order.total_amount) }}</p>
+            <h4>Items:</h4>
+            <ul>
+                {% for item in order.items %}
+                <li>{{ item.product_name }} - Quantity: {{ item.quantity }} - Price: ${{ "%.2f"|format(item.price) }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <p>No orders found for this customer.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.tab-button');
+    const orders = document.querySelectorAll('.order-card');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            const status = tab.getAttribute('data-status');
+            orders.forEach(order => {
+                if (status === 'all' || order.getAttribute('data-status') === status) {
+                    order.style.display = 'block';
+                } else {
+                    order.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+
+<style>
+.staff-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.order-status-tabs {
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    background-color: #eee;
+    border: none;
+    padding: 10px 15px;
+    margin-right: 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.tab-button.active {
+    background-color: #4aaa57;
+    color: white;
+}
+
+.order-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}

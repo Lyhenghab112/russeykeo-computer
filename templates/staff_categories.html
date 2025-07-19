@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+</head>
+<body>
+    {% extends "base.html" %}
+
+{% block content %}
+<div class="staff-container" style="padding-left: 270px;">
+    <h1>{{ title }}</h1>
+    <form method="post" action="{{ url_for('auth.staff_categories') }}">
+        <div class="mb-3">
+            <label for="name" class="form-label">Category Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Category</button>
+    </form>
+    <table style="width: 100%; border-collapse: collapse; border: 1px solid #aaa; font-weight: 400;">
+        <thead>
+            <tr>
+                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Category Name</th>
+                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Number of Products</th>
+                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ category.name }}</td>
+                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ category.get_product_count() }}</td>
+                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;"><button class="btn btn-sm btn-info" data-category-id="{{ category.id }}">View</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Category Products Modal -->
+    <div class="modal fade" id="categoryProductsModal" tabindex="-1" aria-labelledby="categoryProductsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="categoryProductsModalLabel">Products in Category:</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="categoryProductsModalBody">
+                    Loading...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,212 @@
+/* Standardized Staff Notification System */
+/* This file provides consistent notification styling across all staff dashboard pages */
+
+/* Message Container */
+#message-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    max-width: 400px;
+}
+
+/* Base Message Styling */
+.message {
+    padding: 15px 20px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideIn 0.3s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 300px;
+    max-width: 500px;
+    word-wrap: break-word;
+    white-space: normal;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Message Types */
+.message.success {
+    background: linear-gradient(45deg, #27ae60, #229954);
+    color: white;
+    border-left: 4px solid #1e8449;
+}
+
+.message.error {
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+    color: white;
+    border-left: 4px solid #a93226;
+}
+
+.message.warning {
+    background: linear-gradient(45deg, #f39c12, #e67e22);
+    color: white;
+    border-left: 4px solid #d68910;
+}
+
+.message.info {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+    border-left: 4px solid #2471a3;
+}
+
+/* Message Icons */
+.message i {
+    font-size: 1.2em;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 2px;
+}
+
+/* Message Text */
+.message-text {
+    flex: 1;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+    white-space: normal;
+    text-align: left;
+}
+
+/* Slide-in Animation */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Fade-out Animation */
+@keyframes fadeOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.message.fade-out {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+/* Hover Effects */
+.message:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+}
+
+/* Close Button - Removed (no longer used) */
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #message-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+
+    .message {
+        min-width: auto;
+        max-width: none;
+        padding: 12px 16px;
+        font-size: 0.9em;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .message-text {
+        white-space: normal;
+        word-break: break-word;
+    }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .message {
+        border: 2px solid;
+    }
+    
+    .message.success {
+        border-color: #ffffff;
+    }
+    
+    .message.error {
+        border-color: #ffffff;
+    }
+    
+    .message.warning {
+        border-color: #ffffff;
+    }
+    
+    .message.info {
+        border-color: #ffffff;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .message {
+        animation: none;
+    }
+    
+    .message.fade-out {
+        animation: none;
+        opacity: 0;
+    }
+    
+    .message:hover {
+        transform: none;
+        transition: none;
+    }
+}
+
+/* Dark Mode Support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+    .message {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+}
+
+/* Multiple Message Stacking */
+.message:not(:last-child) {
+    margin-bottom: 10px;
+}
+
+/* Loading State (for future use) */
+.message.loading {
+    background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+    color: white;
+    border-left: 4px solid #5d6d7e;
+}
+
+.message.loading::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

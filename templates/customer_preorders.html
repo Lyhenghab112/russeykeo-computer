@@ -1,0 +1,1611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Pre-Orders - Computer Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        header, .top-bar, nav {
+            width: 100%;
+            text-align: center;
+        }
+
+        .top-bar {
+            background-color: #333;
+            color: white;
+            padding: 10px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .top-bar span {
+            font-size: 2em;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+
+        nav ul li {
+            position: relative;
+            margin: 0 15px;
+            padding: 10px 0;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        nav ul li a:hover, nav ul li a:focus {
+            background-color: #f0f0f0;
+            color: #333;
+            outline: none;
+        }
+
+        nav ul li .dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 9999; /* Increased z-index to ensure dropdowns appear above other elements */
+            min-width: 200px;
+            padding: 15px 0;
+        }
+
+        nav ul li .dropdown li {
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li .dropdown li a {
+            display: block;
+            padding: 12px 20px;
+            color: white;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        nav ul li .dropdown li a:hover, nav ul li .dropdown li a:focus {
+            background-color: #444;
+            color: #fff;
+        }
+
+        nav ul li:hover .dropdown, nav ul li:focus-within .dropdown {
+            display: block;
+        }
+
+        .content {
+            margin-top: 120px; /* Add margin to account for fixed header */
+            padding: 20px;
+        }
+
+        .preorder-card {
+            border-left: 4px solid #ffc107;
+            transition: transform 0.2s;
+        }
+        .preorder-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .completed-order-card {
+            border-left: 4px solid #28a745;
+            transition: transform 0.2s;
+        }
+        .completed-order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        /* View More/Less transitions */
+        .preorder-item, .completed-order-item {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .preorder-item[style*="display: none"],
+        .completed-order-item[style*="display: none"] {
+            opacity: 0;
+        }
+
+        /* Button spacing and alignment */
+        .payment-btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .preorder-card .btn-group {
+            width: 100%;
+        }
+
+        .preorder-card .d-grid {
+            margin-top: 0.5rem;
+        }
+        .status-badge {
+            font-size: 0.9em;
+        }
+        .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .payment-option {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .payment-option:hover {
+            border-color: #007bff !important;
+            background-color: #f8f9ff !important;
+        }
+        .payment-icon {
+            font-size: 32px;
+            margin-right: 15px;
+        }
+        .payment-title {
+            margin: 0;
+            color: #333;
+        }
+
+        .active-nav {
+            background-color: #f0f0f0 !important;
+            color: #333 !important;
+        }
+
+        .bi-person-circle {
+            font-size: 1.2em !important;
+        }
+
+        /* Username text styling */
+        .username-text {
+            font-size: 0.95rem !important;
+            font-weight: 400;
+        }
+
+        /* Payment modal styling */
+        .payment-history-section {
+            display: none;
+        }
+
+        .payment-type-indicator {
+            border-left: 4px solid #007bff;
+            padding-left: 10px;
+        }
+
+        .payment-type-indicator.deposit {
+            border-left-color: #ffc107;
+        }
+
+        .payment-type-indicator.balance {
+            border-left-color: #dc3545;
+        }
+
+        /* Notification styles */
+        .notification-badge {
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 0px 2px;
+            font-size: 0.4rem;
+            position: relative;
+            top: -2px;
+            margin-left: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 12px;
+            height: 12px;
+        }
+
+        .notification-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .notification-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+        }
+
+        .notification-item.unread {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+
+        .notification-item.order_cancelled {
+            border-left: 4px solid #dc3545;
+        }
+
+        .notification-item.recent {
+            border: 1px solid #28a745;
+            background-color: #f8fff9;
+        }
+
+        .notification-date {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        /* Search functionality styles */
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            color: black;
+        }
+
+        .search-suggestions {
+            position: absolute;
+            background-color: #ffffff;
+            border: 1px solid #555;
+            border-top: none;
+            width: 200px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            cursor: pointer;
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            top: 100%;
+            left: 30px;
+            margin-top: 5px;
+        }
+
+        .search-suggestions div {
+            color: #000000;
+            background-color: #ffffff;
+            padding: 8px 12px;
+            border-bottom: 1px solid #333;
+            transition: all 0.2s ease;
+        }
+
+        .search-suggestions div:hover {
+            background-color: #0c0c0c;
+            color: #ffffff;
+        }
+
+        .search-icon {
+            cursor: pointer;
+            transition: transform 0.3s, filter 0.3s;
+        }
+
+        .search-icon:focus {
+            outline: 2px solid #e67e22;
+            outline-offset: 2px;
+        }
+
+        .search-icon img:hover, .search-icon img:focus {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+
+        .search-input {
+            width: 0;
+            padding: 0;
+            border: none;
+            outline: none;
+            background-color: white;
+            color: black;
+            font-size: 16px;
+            transition: width 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+            position: absolute;
+            left: 30px;
+            opacity: 0;
+            pointer-events: none;
+            border-radius: 50px;
+        }
+
+        .search-input:focus {
+            border: 1px solid #e67e22;
+            outline: none;
+        }
+
+        .search-container.active .search-input {
+            width: 200px;
+            padding: 5px 10px;
+            opacity: 1;
+            pointer-events: auto;
+            border: 1px solid #e67e22;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <header>
+        <div class="top-bar">
+            <span>COMPUTER SHOP</span>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('show_dashboard') }}">Home</a></li>
+                   
+                    <li><a href="#">Categories</a>
+                        <ul class="dropdown">
+                            <li><a href="/products/category/multi/1,5">Laptops</a></li>
+                            <li><a href="/products/category/2">Desktops</a></li>
+                            <li><a href="/products/category/3">Accessories</a></li>
+                        </ul>
+                    </li>
+                   <li><a href="#">Products</a>
+                        <ul class="dropdown">
+                            <li><a href="/products/brand/dell">Dell</a></li>
+                            <li><a href="/products/brand/hp">HP</a></li>
+                            <li><a href="/products/brand/lenovo">Lenovo</a></li>
+                            <li><a href="/products/brand/asus">Asus</a></li>
+                            <li><a href="/products/brand/acer">Acer</a></li>
+                            <li><a href="/products/brand/razer">Razer</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#">About Company</a>
+                        <ul class="dropdown">
+                            <li><a href="{{ url_for('about') }}">About Us</a></li>
+                            <li><a href="{{ url_for('services') }}">Our Services</a></li>
+                            <li><a href="{{ url_for('privacy') }}">Privacy Policy</a></li>
+                            
+                        </ul>
+                    </li>
+                     <li><a href="{{ url_for('cart') }}">My Cart</a></li>
+                     {% if not session.username %}
+                     <li><a href="{{ url_for('auth.register') }}">Create Account</a></li>
+                     {% endif %}
+                    {% if session.username %}
+                    <li><a href="{{ url_for('customer_preorders') }}" class="active-nav">My Pre-Orders</a></li>
+                    <li><a href="#" onclick="showNotifications()" id="notifications-link">Notifications <span id="notification-badge" class="notification-badge" style="display: none;">0</span></a></li>
+                    {% endif %}
+                    <!-- <li><a href="#">Check Out</a></li> -->
+                    <!-- User Authentication Section -->
+                    {% if session.username %}
+                    <!-- Logged in user - show username and logout -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <span class="username-text">{{ session.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <!-- Not logged in - show login button -->
+                    <li class="nav-item">
+                        <a href="/auth/login" class="btn btn-outline-light btn-sm d-flex align-items-center">
+                            <i class="bi bi-person-plus me-2"></i>
+                            Login Account
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                    <form class="search-container" action="/search" method="GET" onsubmit="return validateSearch()">
+                        <button type="button" class="search-icon" tabindex="0" aria-label="Search products" style="background:none; border:none; padding:0; cursor:pointer;">
+                            <img src="/static/icons/search.png" alt="Search Icon" style="height: 20px;">
+                        </button>
+                        <input type="text" name="q" class="search-input" placeholder="Search..." aria-label="Search products" required>
+                        <div class="search-suggestions"></div>
+                    </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="content">
+        <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-clock text-warning"></i> My Pre-Orders</h2>
+                    <a href="{{ url_for('show_dashboard') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-plus"></i> Browse Products
+                    </a>
+                </div>
+
+                {% if pre_orders %}
+                    <div class="row" id="preorders-container">
+                        {% for preorder in pre_orders %}
+                        <div class="col-md-6 col-lg-4 mb-4 preorder-item" data-index="{{ loop.index0 }}" {% if loop.index0 >= 3 %}style="display: none;"{% endif %}>
+                            <div class="card preorder-card h-100" data-preorder-id="{{ preorder.id }}">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <img src="/static/uploads/products/{{ preorder.product_photo }}" 
+                                             alt="{{ preorder.product_name }}" 
+                                             class="product-image me-3">
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-1">{{ preorder.product_name }}</h6>
+                                            <small class="text-muted">Pre-Order #{{ preorder.id }}</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        {% if preorder.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark status-badge">
+                                                <i class="bi bi-hourglass-split"></i> Pending Confirmation
+                                            </span>
+                                        {% elif preorder.status == 'confirmed' %}
+                                            <span class="badge bg-info status-badge">
+                                                <i class="bi bi-check-circle"></i> Confirmed
+                                            </span>
+                                        {% elif preorder.status == 'partially_paid' %}
+                                            <span class="badge bg-primary status-badge">
+                                                <i class="bi bi-credit-card"></i> Partially Paid
+                                            </span>
+                                        {% elif preorder.status == 'ready_for_pickup' %}
+                                            <span class="badge bg-success status-badge">
+                                                <i class="bi bi-box-seam"></i> Ready for Pickup
+                                            </span>
+                                        {% elif preorder.status == 'completed' %}
+                                            <span class="badge bg-success status-badge">
+                                                <i class="bi bi-check-all"></i> Completed
+                                            </span>
+                                        {% elif preorder.status == 'cancelled' %}
+                                            <span class="badge bg-danger status-badge">
+                                                <i class="bi bi-x-circle"></i> Cancelled
+                                            </span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <strong>Quantity:</strong> {{ preorder.quantity }}
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Expected Price:</strong> $<span class="total-price">{{ "%.2f"|format(preorder.expected_price * preorder.quantity) }}</span>
+                                    </div>
+                                    {% if preorder.deposit_amount and preorder.deposit_amount > 0 %}
+                                    <div class="mb-2">
+                                        <strong>Deposit Paid:</strong> ${{ "%.2f"|format(preorder.deposit_amount) }}
+                                        <small class="text-muted">({{ preorder.deposit_payment_method }})</small>
+                                    </div>
+                                    {% endif %}
+                                    {% if preorder.expected_availability_date %}
+                                    <div class="mb-2">
+                                        <strong>Expected Date:</strong> {{ preorder.expected_availability_date.strftime('%B %d, %Y') }}
+                                    </div>
+                                    {% endif %}
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <strong>Ordered:</strong> {{ preorder.created_date.strftime('%B %d, %Y at %I:%M %p') }}
+                                        </small>
+                                    </div>
+
+
+
+                                    <div class="d-grid gap-2">
+                                        {% if preorder.status == 'confirmed' %}
+                                            <div class="alert alert-success mb-2">
+                                                <i class="bi bi-check-circle"></i>
+                                                <strong>Confirmed!</strong> Your pre-order has been confirmed and is being processed.
+                                            </div>
+                                        {% elif preorder.status == 'ready_for_pickup' %}
+                                            <div class="alert alert-success mb-2">
+                                                <i class="bi bi-exclamation-circle"></i>
+                                                <strong>Ready for pickup!</strong> Please visit our store to complete your purchase.
+                                            </div>
+                                        {% elif preorder.status == 'completed' %}
+                                            <div class="alert alert-success mb-2">
+                                                <i class="bi bi-check-circle"></i>
+                                                <strong>Completed!</strong> Thank you for your purchase.
+                                            </div>
+                                        {% elif preorder.status == 'cancelled' %}
+                                            <div class="alert alert-danger mb-2">
+                                                <i class="bi bi-x-circle"></i>
+                                                <strong>Cancelled!</strong> This pre-order has been cancelled.
+                                            </div>
+                                        {% elif remaining_balance <= 0 and preorder.status not in ['ready_for_pickup', 'completed', 'cancelled'] %}
+                                            <div class="alert alert-info mb-2">
+                                                <i class="bi bi-info-circle"></i>
+                                                <strong>Fully Paid!</strong> Waiting for product availability.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- View More Button for Pre-Orders -->
+                    {% if pre_orders|length > 3 %}
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-outline-primary" id="preorders-view-more" onclick="togglePreOrdersView()">
+                            <i class="bi bi-chevron-down"></i> View More Pre-Orders ({{ pre_orders|length - 3 }} more)
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="preorders-view-less" onclick="togglePreOrdersView()" style="display: none;">
+                            <i class="bi bi-chevron-up"></i> View Less
+                        </button>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-clock display-1 text-muted"></i>
+                        <h4 class="mt-3 text-muted">No Pre-Orders Yet</h4>
+                        <p class="text-muted">You haven't placed any pre-orders. Browse our products to pre-order items that are out of stock.</p>
+                        <a href="{{ url_for('show_dashboard') }}" class="btn btn-primary">
+                            <i class="bi bi-shop"></i> Browse Products
+                        </a>
+                    </div>
+                {% endif %}
+
+                <!-- Completed Orders Section - AJAX Loaded -->
+                <div class="mt-5" id="completed-orders-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="bi bi-check-circle text-success"></i> Completed Orders</h2>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="completed-orders-loading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading completed orders...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading your completed orders...</p>
+                    </div>
+
+                    <!-- Content Container -->
+                    <div id="completed-orders-content"></div>
+                </div>
+
+                    <!-- Content will be loaded via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Payment Options Modal -->
+    <div class="modal fade" id="paymentOptionsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="payment-modal-title">
+                        <i class="bi bi-credit-card"></i> <span id="payment-type-label">Final Balance Payment</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="payment-product-info" class="mb-3">
+                        <!-- Product info will be populated here -->
+                    </div>
+
+                    <!-- Payment History Section -->
+                    <div id="payment-history-section" class="mb-4 payment-history-section">
+                        <h6 class="text-muted mb-2"><i class="bi bi-clock-history"></i> Payment History</h6>
+                        <div id="payment-history-list" class="border rounded p-2 bg-light">
+                            <!-- Payment history will be populated here -->
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="payment-amount" class="form-label">
+                            <span id="payment-amount-label">Payment Amount</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="payment-amount"
+                                   step="0.01" min="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-text" id="payment-amount-help">
+                            Enter the amount you want to pay (up to the remaining balance)
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Payment Type</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment-type"
+                                   id="deposit-payment" value="deposit" checked>
+                            <label class="form-check-label" for="deposit-payment">
+                                Deposit Payment
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment-type"
+                                   id="full-payment" value="full">
+                            <label class="form-check-label" for="full-payment">
+                                Full Payment
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-wallet2"></i> Select Payment Method
+                        </label>
+
+                        <!-- Cash Payment Option -->
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="finalPaymentMethod" id="final-payment-cash" value="Cash" checked>
+                            <label class="form-check-label" for="final-payment-cash">
+                                <i class="bi bi-cash-stack text-success"></i> <strong>Cash Payment</strong>
+                                <small class="text-muted d-block">Pay in person at our store</small>
+                            </label>
+                        </div>
+
+                        <!-- QR Payment Option -->
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="finalPaymentMethod" id="final-payment-qr" value="QR Payment">
+                            <label class="form-check-label" for="final-payment-qr">
+                                <i class="bi bi-qr-code text-primary"></i> <strong>QR Payment</strong>
+                                <small class="text-muted d-block">ACLEDA, ABA, Wing, Pi Pay</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm-final-payment">
+                        <i class="bi bi-credit-card"></i> Make Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Basic page functionality - payment functionality removed
+        console.log('🔄 Customer pre-orders page loaded - showing confirmed pre-orders only');
+    </script>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="notification-modal">
+        <div class="notification-content">
+            <span class="close-modal" onclick="closeNotifications()">&times;</span>
+            <h2>Notifications</h2>
+            <div id="notificationsList">
+                <p>Loading notifications...</p>
+            </div>
+            <div style="margin-top: 20px;">
+                <button onclick="markAllAsRead()" class="btn btn-primary">Mark All as Read</button>
+                <button onclick="clearAllNotifications()" class="btn btn-warning">Clear All</button>
+                <button onclick="closeNotifications()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Temporarily disable completed orders functions
+        /*
+        // Reorder functionality
+        async function reorderItems(orderId) {
+            try {
+                const response = await fetch(`/api/orders/${orderId}/reorder`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ Items added to cart successfully!\n\n📦 ${result.items_added} item(s) added to your cart.`);
+                    // Optionally redirect to cart
+                    if (confirm('Would you like to view your cart now?')) {
+                        window.location.href = '/cart';
+                    }
+                } else {
+                    alert(`❌ Error: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error reordering items:', error);
+                alert('❌ An error occurred while reordering items.');
+            }
+        }
+
+        // View order details functionality
+        function viewOrderDetails(orderId) {
+            // Create and show order details modal
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.id = 'orderDetailsModal';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Order Details #${orderId}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading order details...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            const modalInstance = new bootstrap.Modal(modal);
+            modalInstance.show();
+
+            // Fetch order details
+            fetch(`/api/orders/${orderId}/details`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const order = data.order;
+                        const modalBody = modal.querySelector('.modal-body');
+                        modalBody.innerHTML = `
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <strong>Order Date:</strong> ${new Date(order.order_date).toLocaleDateString()}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Total Amount:</strong> $${order.total_amount.toFixed(2)}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <strong>Payment Method:</strong> ${order.payment_method}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Status:</strong> <span class="badge bg-success">Completed</span>
+                                </div>
+                            </div>
+                            <hr>
+                            <h6>Order Items:</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${order.items.map(item => `
+                                            <tr>
+                                                <td>${item.product_name}</td>
+                                                <td>${item.quantity}</td>
+                                                <td>$${item.price.toFixed(2)}</td>
+                                                <td>$${(item.quantity * item.price).toFixed(2)}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    } else {
+                        modal.querySelector('.modal-body').innerHTML = `
+                            <div class="alert alert-danger">
+                                Error loading order details: ${data.error}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching order details:', error);
+                    modal.querySelector('.modal-body').innerHTML = `
+                        <div class="alert alert-danger">
+                            An error occurred while loading order details.
+                        </div>
+                    `;
+                });
+
+            // Clean up modal when closed
+            modal.addEventListener('hidden.bs.modal', function() {
+                document.body.removeChild(modal);
+            });
+        }
+        */
+
+        // AJAX function to load completed orders
+        async function loadCompletedOrders() {
+            const loadingDiv = document.getElementById('completed-orders-loading');
+            const contentDiv = document.getElementById('completed-orders-content');
+
+            try {
+                console.log('🔄 Loading completed orders via AJAX...');
+
+                const response = await fetch('/api/customer/completed-orders');
+                const data = await response.json();
+
+                // Hide loading spinner
+                if (loadingDiv) {
+                    loadingDiv.style.display = 'none';
+                }
+
+                if (data.success && data.completed_orders && data.completed_orders.length > 0) {
+                    console.log(`✅ Loaded ${data.completed_orders.length} completed orders`);
+                    renderCompletedOrders(data.completed_orders);
+                } else {
+                    console.log('ℹ️ No completed orders found');
+                    renderNoCompletedOrders();
+                }
+
+            } catch (error) {
+                console.error('❌ Error loading completed orders:', error);
+                if (loadingDiv) {
+                    loadingDiv.style.display = 'none';
+                }
+                renderCompletedOrdersError();
+            }
+        }
+
+        // Render completed orders HTML
+        function renderCompletedOrders(orders) {
+            const contentDiv = document.getElementById('completed-orders-content');
+            if (!contentDiv) return;
+
+            let html = '<div class="row" id="completed-orders-container">';
+
+            orders.forEach((order, index) => {
+                const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
+                const itemCount = order.items ? order.items.length : 0;
+
+                html += `
+                    <div class="col-md-6 col-lg-4 mb-4 completed-order-item" data-index="${index}" style="${index >= 3 ? 'display: none;' : ''}">
+                        <div class="card completed-order-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start mb-3">
+                                    <img src="/static/uploads/products/${firstItem ? firstItem.product_photo : 'default.jpg'}"
+                                         alt="${firstItem ? firstItem.product_name : 'Product'}"
+                                         class="product-image me-3"
+                                         onerror="this.src='/static/uploads/products/default.jpg'">
+                                    <div class="flex-grow-1">
+                                        <h6 class="card-title mb-1">
+                                            ${firstItem ?
+                                                (itemCount === 1 ? firstItem.product_name : `${firstItem.product_name} + ${itemCount - 1} more`)
+                                                : 'Unknown Product'}
+                                        </h6>
+                                        <small class="text-muted">Order #${order.id}</small>
+                                        <span class="badge bg-success ms-2">COMPLETED</span>
+                                    </div>
+                                </div>
+
+                                <div class="order-details">
+                                    <div class="row mb-2">
+                                        <div class="col-6">
+                                            <small class="text-muted">Order Date:</small>
+                                            <div class="fw-bold">${order.order_date}</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Total Amount:</small>
+                                            <div class="fw-bold text-success">$${order.total_amount.toFixed(2)}</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-12">
+                                            <small class="text-muted">Payment Method:</small>
+                                            <div class="fw-bold">${order.payment_method}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="btn-group w-100" role="group">
+                                        <button type="button" class="btn btn-outline-primary btn-sm"
+                                                onclick="reorderItems(${order.id})"
+                                                title="Reorder these items">
+                                            <i class="bi bi-arrow-repeat"></i> Reorder
+                                        </button>
+                                        <button type="button" class="btn btn-outline-info btn-sm"
+                                                onclick="viewOrderDetails(${order.id})"
+                                                title="View order details">
+                                            <i class="bi bi-eye"></i> View Details
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            // Add View More button if there are more than 3 orders
+            if (orders.length > 3) {
+                html += `
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-outline-success" id="completed-orders-view-more" onclick="toggleCompletedOrdersView()">
+                            <i class="bi bi-chevron-down"></i> View More Completed Orders (${orders.length - 3} more)
+                        </button>
+                        <button type="button" class="btn btn-outline-success" id="completed-orders-view-less" onclick="toggleCompletedOrdersView()" style="display: none;">
+                            <i class="bi bi-chevron-up"></i> View Less
+                        </button>
+                    </div>
+                `;
+            }
+
+            contentDiv.innerHTML = html;
+        }
+
+        // Render no completed orders message
+        function renderNoCompletedOrders() {
+            const contentDiv = document.getElementById('completed-orders-content');
+            if (!contentDiv) return;
+
+            contentDiv.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="bi bi-check-circle display-1 text-muted"></i>
+                    <h4 class="mt-3 text-muted">No Completed Orders Yet</h4>
+                    <p class="text-muted">You haven't completed any orders yet. Your completed purchases will appear here.</p>
+                </div>
+            `;
+        }
+
+        // Render error message
+        function renderCompletedOrdersError() {
+            const contentDiv = document.getElementById('completed-orders-content');
+            if (!contentDiv) return;
+
+            contentDiv.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Unable to load completed orders at this time. Please try refreshing the page.
+                </div>
+            `;
+        }
+
+        // Placeholder functions for reorder and view details (can be implemented later)
+        function reorderItems(orderId) {
+            alert(`Reorder functionality for order #${orderId} - Coming soon!`);
+        }
+
+        function viewOrderDetails(orderId) {
+            alert(`View details for order #${orderId} - Coming soon!`);
+        }
+
+        // Toggle Pre-Orders View More/Less
+        function togglePreOrdersView() {
+            const items = document.querySelectorAll('.preorder-item');
+            const viewMoreBtn = document.getElementById('preorders-view-more');
+            const viewLessBtn = document.getElementById('preorders-view-less');
+
+            let isExpanded = viewMoreBtn.style.display === 'none';
+
+            items.forEach((item, index) => {
+                if (index >= 3) {
+                    item.style.display = isExpanded ? 'none' : 'block';
+                }
+            });
+
+            if (isExpanded) {
+                // Collapse - show "View More" button
+                viewMoreBtn.style.display = 'inline-block';
+                viewLessBtn.style.display = 'none';
+            } else {
+                // Expand - show "View Less" button
+                viewMoreBtn.style.display = 'none';
+                viewLessBtn.style.display = 'inline-block';
+            }
+        }
+
+        // Toggle Completed Orders View More/Less
+        function toggleCompletedOrdersView() {
+            const items = document.querySelectorAll('.completed-order-item');
+            const viewMoreBtn = document.getElementById('completed-orders-view-more');
+            const viewLessBtn = document.getElementById('completed-orders-view-less');
+
+            if (!viewMoreBtn || !viewLessBtn) return;
+
+            let isExpanded = viewMoreBtn.style.display === 'none';
+
+            items.forEach((item, index) => {
+                if (index >= 3) {
+                    item.style.display = isExpanded ? 'none' : 'block';
+                }
+            });
+
+            if (isExpanded) {
+                // Collapse - show "View More" button
+                viewMoreBtn.style.display = 'inline-block';
+                viewLessBtn.style.display = 'none';
+            } else {
+                // Expand - show "View Less" button
+                viewMoreBtn.style.display = 'none';
+                viewLessBtn.style.display = 'inline-block';
+            }
+        }
+
+        // Navigation fix - ensure dropdowns work consistently
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add small delay to ensure all CSS is loaded
+            setTimeout(function() {
+                try {
+                    // Ensure dropdown functionality works
+                    const dropdownParents = document.querySelectorAll('nav ul li');
+                    dropdownParents.forEach(parent => {
+                        const dropdown = parent.querySelector('.dropdown');
+                        if (dropdown) {
+                            // Add hover event listeners as backup
+                            parent.addEventListener('mouseenter', function() {
+                                dropdown.style.display = 'block';
+                            });
+                            parent.addEventListener('mouseleave', function() {
+                                dropdown.style.display = 'none';
+                            });
+                        }
+                    });
+
+                    // Ensure navigation links work properly
+                    const navLinks = document.querySelectorAll('nav a[href]');
+                    navLinks.forEach(link => {
+                        link.addEventListener('click', function(e) {
+                            console.log('Navigation link clicked:', this.href);
+                            // Don't prevent default for navigation links
+                            if (this.href && !this.href.includes('#')) {
+                                // Let the browser handle the navigation normally
+                                return true;
+                            }
+                        });
+                    });
+
+                    // Specific fix for My Pre-Orders link
+                    const preOrdersLink = document.querySelector('a[href*="customer_preorders"]');
+                    if (preOrdersLink) {
+                        preOrdersLink.addEventListener('click', function(e) {
+                            console.log('Pre-orders link clicked, navigating to:', this.href);
+                            // Force navigation if needed
+                            if (!e.defaultPrevented) {
+                                window.location.href = this.href;
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error initializing navigation:', error);
+                }
+            }, 50);
+        });
+
+        // Notification system
+        let notifications = [];
+
+        // Load notifications when page loads (for logged-in customers)
+    </script>
+
+    {% if session.username and session.role == 'customer' %}
+    <script>
+        // Consolidated DOMContentLoaded to prevent conflicts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load notifications for logged-in customers
+            try {
+                loadNotifications();
+                // Check for new notifications every 30 seconds
+                setInterval(loadNotifications, 30000);
+            } catch (error) {
+                console.error('Error initializing notifications:', error);
+            }
+
+            // Temporarily disable completed orders button initialization
+            // // Initialize reorder and view details buttons
+            // try {
+            //     // Reorder button event listeners
+            //     document.querySelectorAll('.reorder-btn').forEach(button => {
+            //         button.addEventListener('click', function() {
+            //             const orderId = this.dataset.orderId;
+            //             reorderItems(orderId);
+            //         });
+            //     });
+
+            //     // View details button event listeners
+            //     document.querySelectorAll('.view-details-btn').forEach(button => {
+            //         button.addEventListener('click', function() {
+            //             const orderId = this.dataset.orderId;
+            //             viewOrderDetails(orderId);
+            //         });
+            //     });
+            // } catch (error) {
+            //     console.error('Error initializing order buttons:', error);
+            // }
+
+            // Confirm final payment button event listener
+            try {
+                const confirmPaymentBtn = document.getElementById('confirm-final-payment');
+                if (confirmPaymentBtn) {
+                    confirmPaymentBtn.addEventListener('click', confirmFinalPayment);
+                }
+            } catch (error) {
+                console.error('Error initializing payment button:', error);
+            }
+
+            // Load completed orders via AJAX (after navigation is ready)
+            setTimeout(function() {
+                loadCompletedOrders();
+            }, 1000); // 1 second delay to ensure navigation works first
+        });
+    </script>
+    {% endif %}
+
+    <script>
+        function loadNotifications() {
+            return fetch('/api/customer/notifications')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        notifications = data.notifications;
+                        updateNotificationBadge();
+
+                        // Show custom notification for new unread notifications (only once per session)
+                        const unreadNotifications = notifications.filter(n => !n.is_read);
+                        if (unreadNotifications.length > 0) {
+                            const newNotifications = unreadNotifications.filter(n => {
+                                return !sessionStorage.getItem(`notification_shown_${n.id}`);
+                            });
+
+                            if (newNotifications.length > 0) {
+                                // Mark as shown in session storage
+                                newNotifications.forEach(n => {
+                                    sessionStorage.setItem(`notification_shown_${n.id}`, 'true');
+                                });
+
+                                // Show custom notification popup (no browser permission needed)
+                                const latestNotification = newNotifications[0];
+                                setTimeout(() => {
+                                    showCustomNotificationPopup(latestNotification.message);
+                                }, 1000);
+                            }
+                        }
+                    }
+                    return data; // Return the data for chaining
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                    throw error; // Re-throw for proper error handling
+                });
+        }
+
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notification-badge');
+            const unreadCount = notifications.filter(n => !n.is_read).length;
+
+            // Show badge only for unread notifications
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'inline-flex';
+                badge.style.backgroundColor = '#dc3545'; // Red for unread
+                // Set balanced size styles
+                badge.style.fontSize = '0.75rem';
+                badge.style.minWidth = '20px';
+                badge.style.height = '20px';
+                badge.style.padding = '2px 6px';
+                badge.style.marginLeft = '5px';
+            } else {
+                // Hide badge completely when all notifications are read
+                badge.style.display = 'none';
+            }
+        }
+
+        function showNotifications() {
+            const modal = document.getElementById('notificationModal');
+            const list = document.getElementById('notificationsList');
+
+            if (notifications.length === 0) {
+                list.innerHTML = '<p>No notifications</p>';
+            } else {
+                let html = '';
+                const now = new Date();
+                const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+                notifications.forEach(notification => {
+                    const readClass = notification.is_read ? '' : 'unread';
+                    const typeClass = notification.type || '';
+                    const notificationDate = new Date(notification.created_date);
+                    const isRecent = notificationDate > oneDayAgo;
+                    const recentClass = isRecent ? 'recent' : '';
+
+                    html += `
+                        <div class="notification-item ${readClass} ${typeClass} ${recentClass}" data-id="${notification.id}">
+                            <div>${notification.message} ${isRecent && notification.is_read ? '<span style="color: #28a745; font-size: 12px;">(Recent)</span>' : ''}</div>
+                            <div class="notification-date">${notificationDate.toLocaleString()}</div>
+                            ${!notification.is_read ? '<button onclick="markAsRead(' + notification.id + ')" class="btn btn-sm btn-outline-primary" style="margin-top: 5px;">Mark as Read</button>' : ''}
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            }
+
+            modal.style.display = 'block';
+        }
+
+        function closeNotifications() {
+            document.getElementById('notificationModal').style.display = 'none';
+        }
+
+        function markAsRead(notificationId) {
+            // Disable the button immediately to prevent double clicks
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Marking...';
+
+            fetch(`/api/customer/notifications/${notificationId}/read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Only refresh the notifications data and modal once
+                    loadNotifications().then(() => {
+                        showNotifications(); // Refresh modal display after data is loaded
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error marking notification as read:', error);
+                // Re-enable button on error
+                button.disabled = false;
+                button.textContent = 'Mark as Read';
+            });
+        }
+
+        function markAllAsRead() {
+            // Disable the button to prevent double clicks
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Marking All...';
+
+            fetch('/api/customer/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Only refresh once with proper chaining
+                    loadNotifications().then(() => {
+                        showNotifications(); // Refresh modal display after data is loaded
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error marking all notifications as read:', error);
+                // Re-enable button on error
+                button.disabled = false;
+                button.textContent = 'Mark All as Read';
+            });
+        }
+
+        function clearAllNotifications() {
+            // Confirm before clearing all notifications
+            if (!confirm('Are you sure you want to clear all notifications? This action cannot be undone.')) {
+                return;
+            }
+
+            // Disable the button to prevent double clicks
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Clearing All...';
+
+            fetch('/api/customer/notifications/clear-all', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Refresh notifications and update badge
+                    loadNotifications().then(() => {
+                        showNotifications(); // Refresh modal display after data is loaded
+                    });
+                } else {
+                    alert('Error clearing notifications: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error clearing all notifications:', error);
+                alert('An error occurred while clearing notifications.');
+            })
+            .finally(() => {
+                // Re-enable button
+                button.disabled = false;
+                button.textContent = 'Clear All';
+            });
+        }
+
+        function showCustomNotificationPopup(message) {
+            // Create custom notification popup (no browser permission needed)
+            const popup = document.createElement('div');
+            popup.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #007bff, #0056b3);
+                color: white;
+                padding: 16px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                max-width: 350px;
+                animation: slideInRight 0.3s ease-out;
+            `;
+
+            popup.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <div style="font-weight: bold; margin-bottom: 8px;">New Notification</div>
+                        <div style="font-size: 14px; line-height: 1.4;">${message}</div>
+                        <div style="margin-top: 12px;">
+                            <button onclick="showNotifications(); this.parentElement.parentElement.parentElement.remove();" style="background: white; color: #007bff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 8px;">View All</button>
+                            <button onclick="this.parentElement.parentElement.parentElement.remove();" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">Dismiss</button>
+                        </div>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove();" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; padding: 0; margin-left: 10px;">&times;</button>
+                </div>
+            `;
+
+            document.body.appendChild(popup);
+
+            // Auto-remove after 8 seconds
+            setTimeout(() => {
+                if (popup.parentNode) {
+                    popup.remove();
+                }
+            }, 8000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('notificationModal');
+            if (event.target == modal) {
+                closeNotifications();
+            }
+        }
+
+        // Search functionality
+        function validateSearch() {
+            const searchInput = document.querySelector('.search-input');
+            const query = searchInput.value.trim();
+            return query.length > 0;
+        }
+
+        function generateSlug(name) {
+            return name.toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim('-');
+        }
+
+        // Initialize search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add small delay to ensure all elements are loaded
+            setTimeout(function() {
+                const searchContainer = document.querySelector('.search-container');
+                const searchIcon = document.querySelector('.search-icon');
+                const searchInput = document.querySelector('.search-input');
+                const suggestionsContainer = document.querySelector('.search-suggestions');
+
+                // Check if elements exist before adding event listeners
+                if (!searchContainer || !searchIcon || !searchInput) {
+                    console.warn('Search elements not found, skipping search initialization');
+                    return;
+                }
+
+            if (searchContainer) {
+                searchContainer.style.position = 'relative';
+            }
+
+            function clearSuggestions() {
+                if (suggestionsContainer) {
+                    suggestionsContainer.innerHTML = '';
+                    suggestionsContainer.style.display = 'none';
+                }
+            }
+
+            function createSuggestionItem(suggestion) {
+                const item = document.createElement('div');
+                item.textContent = suggestion.name;
+                item.style.padding = '8px 12px';
+                item.style.borderBottom = '1px solid #333';
+                item.style.color = '#000000';
+                item.style.backgroundColor = '#ffffff';
+                item.addEventListener('click', () => {
+                    window.location.href = `/products/${generateSlug(suggestion.name)}`;
+                });
+                item.addEventListener('mouseover', () => {
+                    item.style.backgroundColor = '#0c0c0c';
+                    item.style.color = '#ffffff';
+                });
+                item.addEventListener('mouseout', () => {
+                    item.style.backgroundColor = '#ffffff';
+                    item.style.color = '#000000';
+                });
+                return item;
+            }
+
+            async function fetchSuggestions(query) {
+                if (!query) {
+                    clearSuggestions();
+                    return;
+                }
+                try {
+                    const response = await fetch(`/api/search_suggestions?q=${encodeURIComponent(query)}`);
+                    if (!response.ok) {
+                        clearSuggestions();
+                        return;
+                    }
+                    const data = await response.json();
+                    if (data.success && data.suggestions.length > 0 && suggestionsContainer) {
+                        suggestionsContainer.innerHTML = '';
+                        data.suggestions.forEach(suggestion => {
+                            const item = createSuggestionItem(suggestion);
+                            suggestionsContainer.appendChild(item);
+                        });
+                        suggestionsContainer.style.display = 'block';
+                    } else {
+                        clearSuggestions();
+                    }
+                } catch (error) {
+                    console.error('Error fetching suggestions:', error);
+                    clearSuggestions();
+                }
+            }
+
+            if (searchContainer && searchIcon && searchInput) {
+                // Handle hover events for search icon
+                searchIcon.addEventListener('mouseenter', (event) => {
+                    searchContainer.classList.add('active');
+                    searchIcon.setAttribute('aria-expanded', 'true');
+                    searchInput.focus();
+                });
+
+                // Handle click events for search icon
+                searchIcon.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    event.preventDefault();
+
+                    if (!searchContainer.classList.contains('active')) {
+                        searchContainer.classList.add('active');
+                        searchIcon.setAttribute('aria-expanded', 'true');
+                        setTimeout(() => {
+                            searchInput.focus();
+                        }, 10);
+                    } else {
+                        const query = searchInput.value.trim();
+                        if (query) {
+                            const form = searchContainer.closest('form');
+                            if (form) {
+                                form.submit();
+                            }
+                        } else {
+                            searchContainer.classList.remove('active');
+                            searchIcon.setAttribute('aria-expanded', 'false');
+                            clearSuggestions();
+                        }
+                    }
+                });
+
+                // Handle input events
+                searchInput.addEventListener('input', (event) => {
+                    const query = event.target.value.trim();
+                    fetchSuggestions(query);
+                });
+
+                searchInput.addEventListener('focus', (event) => {
+                    searchContainer.classList.add('active');
+                    searchIcon.setAttribute('aria-expanded', 'true');
+                    const query = event.target.value.trim();
+                    if (query) {
+                        fetchSuggestions(query);
+                    }
+                });
+
+                searchInput.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        const query = searchInput.value.trim();
+                        if (query) {
+                            const form = searchContainer.closest('form');
+                            if (form) {
+                                form.submit();
+                            } else {
+                                window.location.href = `/search?q=${encodeURIComponent(query)}`;
+                            }
+                        }
+                    } else if (event.key === 'Escape') {
+                        event.preventDefault();
+                        searchContainer.classList.remove('active');
+                        searchIcon.setAttribute('aria-expanded', 'false');
+                        clearSuggestions();
+                        searchInput.blur();
+                    }
+                });
+
+                // Handle clicks outside search container
+                document.addEventListener('click', (event) => {
+                    // Don't interfere with navigation links
+                    if (event.target.tagName === 'A' && event.target.href) {
+                        return; // Let navigation links work normally
+                    }
+
+                    if (!searchContainer.contains(event.target)) {
+                        if (!searchInput.value.trim()) {
+                            searchContainer.classList.remove('active');
+                            searchIcon.setAttribute('aria-expanded', 'false');
+                            clearSuggestions();
+                        } else {
+                            clearSuggestions();
+                        }
+                    }
+                });
+            }
+            }, 100); // 100ms delay to ensure DOM is fully loaded
+        });
+    </script>
+    </div> <!-- Close content div -->
+</body>
+</html>

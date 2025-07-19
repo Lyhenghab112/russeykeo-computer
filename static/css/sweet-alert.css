@@ -1,0 +1,335 @@
+/* SweetAlert2-Style Custom Modal Notification System */
+
+.sweet-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.sweet-alert-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.sweet-alert {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    text-align: center;
+    padding: 0;
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+    position: relative;
+}
+
+.sweet-alert-overlay.show .sweet-alert {
+    transform: scale(1);
+}
+
+/* Alert Header */
+.sweet-alert-header {
+    padding: 30px 30px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.sweet-alert-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: white;
+    position: relative;
+    animation: sweetAlertIconPulse 1.5s ease-in-out;
+}
+
+.sweet-alert-icon.success {
+    background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.sweet-alert-icon.error {
+    background: linear-gradient(45deg, #dc3545, #e74c3c);
+}
+
+.sweet-alert-icon.warning {
+    background: linear-gradient(45deg, #ffc107, #fd7e14);
+}
+
+.sweet-alert-icon.info {
+    background: linear-gradient(45deg, #17a2b8, #007bff);
+}
+
+.sweet-alert-icon.question {
+    background: linear-gradient(45deg, #6f42c1, #007bff);
+}
+
+@keyframes sweetAlertIconPulse {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.sweet-alert-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 10px;
+    line-height: 1.2;
+}
+
+.sweet-alert-text {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Alert Body */
+.sweet-alert-body {
+    padding: 20px 30px;
+}
+
+.sweet-alert-html {
+    text-align: left;
+}
+
+/* Alert Footer */
+.sweet-alert-footer {
+    padding: 20px 30px 30px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Buttons */
+.sweet-alert-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    min-width: 80px;
+    outline: none;
+}
+
+.sweet-alert-btn:focus {
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.sweet-alert-btn.confirm {
+    background: #007bff;
+    color: white;
+}
+
+.sweet-alert-btn.confirm:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+.sweet-alert-btn.cancel {
+    background: #6c757d;
+    color: white;
+}
+
+.sweet-alert-btn.cancel:hover {
+    background: #545b62;
+    transform: translateY(-1px);
+}
+
+.sweet-alert-btn.success {
+    background: #28a745;
+    color: white;
+}
+
+.sweet-alert-btn.success:hover {
+    background: #1e7e34;
+    transform: translateY(-1px);
+}
+
+.sweet-alert-btn.danger {
+    background: #dc3545;
+    color: white;
+}
+
+.sweet-alert-btn.danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.sweet-alert-btn.warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.sweet-alert-btn.warning:hover {
+    background: #e0a800;
+    transform: translateY(-1px);
+}
+
+/* Close Button */
+.sweet-alert-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.sweet-alert-close:hover {
+    color: #666;
+}
+
+/* Input Fields */
+.sweet-alert-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-top: 15px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.sweet-alert-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Loading State */
+.sweet-alert-loading {
+    pointer-events: none;
+}
+
+.sweet-alert-loading .sweet-alert-icon {
+    animation: sweetAlertLoading 1s linear infinite;
+}
+
+@keyframes sweetAlertLoading {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .sweet-alert {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .sweet-alert-header {
+        padding: 20px 20px 15px;
+    }
+    
+    .sweet-alert-body {
+        padding: 15px 20px;
+    }
+    
+    .sweet-alert-footer {
+        padding: 15px 20px 20px;
+        flex-direction: column;
+    }
+    
+    .sweet-alert-btn {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+    
+    .sweet-alert-btn:last-child {
+        margin-bottom: 0;
+    }
+    
+    .sweet-alert-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 30px;
+        margin-bottom: 15px;
+    }
+    
+    .sweet-alert-title {
+        font-size: 20px;
+    }
+    
+    .sweet-alert-text {
+        font-size: 14px;
+    }
+}
+
+/* Special Effects */
+.sweet-alert-icon::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    animation: sweetAlertIconBorder 2s ease-in-out infinite;
+}
+
+.sweet-alert-icon.success::after {
+    border-color: rgba(40, 167, 69, 0.3);
+}
+
+.sweet-alert-icon.error::after {
+    border-color: rgba(220, 53, 69, 0.3);
+}
+
+.sweet-alert-icon.warning::after {
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+.sweet-alert-icon.info::after {
+    border-color: rgba(23, 162, 184, 0.3);
+}
+
+@keyframes sweetAlertIconBorder {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.5;
+    }
+}

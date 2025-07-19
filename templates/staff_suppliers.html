@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+   
+   
+{% extends "base.html" %}
+
+{% block title %}Suppliers{% endblock %}
+
+{% block content %}
+<h1>Suppliers</h1>
+
+<div class="mb-3" style="max-width: 400px; text-align: left; white-space: nowrap;">
+    <input type="text" id="supplierSearchInput" class="form-control" placeholder="Search suppliers by name, contact person, or email" style="width: 230%; display: inline-block; vertical-align: middle;">
+    <button id="supplierSearchButton" class="btn btn-primary" style="width: 20%; display: inline-block; margin-left: 5%; vertical-align: middle;">Search</button>
+</div>
+
+<div class="mb-3" style="text-align: left;width: 100%;">
+    <button id="addSupplierButton" class="btn btn-sm btn-success">Add New</button>
+</div>
+
+<table style="width: 100%; border-collapse: collapse; border: 1px solid #aaa; font-weight: 400;" id="suppliersTable">
+    <thead>
+        <tr>
+            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Name</th>
+            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Contact Person</th>
+            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Phone</th>
+            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Email</th>
+            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Address</th>
+            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Actions</th>
+            <th style="width: 120px; text-align: right; padding: 12px; border-bottom: 1px solid #888; background-color: #f5f5f5;">
+            </th>
+        </tr>
+    </thead>
+    <tbody id="suppliersTableBody">
+        {% for supplier in suppliers %}
+        <tr>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ supplier.name }}</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ supplier.contact_person or '' }}</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ supplier.phone or '' }}</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ supplier.email or '' }}</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ supplier.address or '' }}</td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+                <button style="padding:  10px; margin: 5px 5px 5px 5px;" class="btn btn-sm btn-warning edit-btn" data-id="{{ supplier.id }}">Edit</button>
+                <button style="padding:  10px; margin: 5px 5px 5px 5px;" class="btn btn-sm btn-danger delete-btn" data-id="{{ supplier.id }}">Delete</button>
+            </td>
+            <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;"></td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="7" style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">No suppliers found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal for editing supplier -->
+<div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="editSupplierForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editSupplierModalLabel">Edit Supplier</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editSupplierId" name="id">
+          <div class="mb-3">
+            <label for="editSupplierName" class="form-label">Name</label>
+            <input type="text" class="form-control" id="editSupplierName" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label for="editSupplierContact" class="form-label">Contact Person</label>
+            <input type="text" class="form-control" id="editSupplierContact" name="contact_person">
+          </div>
+          <div class="mb-3">
+            <label for="editSupplierPhone" class="form-label">Phone</label>
+            <input type="text" class="form-control" id="editSupplierPhone" name="phone">
+          </div>
+          <div class="mb-3">
+            <label for="editSupplierEmail" class="form-label">Email</label>
+            <input type="email" class="form-control" id="editSupplierEmail" name="email">
+          </div>
+          <div class="mb-3">
+            <label for="editSupplierAddress" class="form-label">Address</label>
+            <textarea class="form-control" id="editSupplierAddress" name="address" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+ <script src="/static/js/staff_suppliers.js"></script>
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+{% endblock %}
+
+</body>
+</html>
+

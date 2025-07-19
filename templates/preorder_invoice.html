@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Order Payment Receipt #{{ preorder.id }} - Computer Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .invoice-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+        .invoice-details {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .invoice-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .total-section {
+            background: #e9ecef;
+            padding: 1rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .print-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .print-btn:hover {
+            background: #0056b3;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .invoice-header {
+                background: #28a745 !important;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+        .status-pending { background: #ffc107; color: #000; }
+        .status-confirmed { background: #28a745; color: #fff; }
+        .status-partially_paid { background: #17a2b8; color: #fff; }
+        .status-ready_for_pickup { background: #fd7e14; color: #fff; }
+        .status-completed { background: #6f42c1; color: #fff; }
+        .status-cancelled { background: #dc3545; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="invoice-header text-center">
+            <h1>💳 Pre-Order Payment Receipt</h1>
+            <p class="mb-0">Thank you for your pre-order payment!</p>
+        </div>
+
+        <!-- Receipt Details -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="invoice-details">
+                    <h4>📋 Receipt Details</h4>
+                    <p><strong>Pre-Order #:</strong> {{ preorder.id }}</p>
+                    <p><strong>Receipt Date:</strong> {{ latest_payment.payment_date.strftime('%B %d, %Y') if latest_payment else 'N/A' }}</p>
+                    <p><strong>Receipt Time:</strong> {{ latest_payment.payment_date.strftime('%I:%M %p') if latest_payment else 'N/A' }}</p>
+                    <p><strong>Payment Method:</strong> {{ latest_payment.payment_method if latest_payment else 'N/A' }}</p>
+                    <p><strong>Payment Type:</strong> 
+                        <span class="badge bg-info">
+                            {{ latest_payment.payment_type.title() if latest_payment else 'N/A' }} Payment
+                        </span>
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="invoice-details">
+                    <h4>👤 Customer Information</h4>
+                    <p><strong>Name:</strong> {{ customer.first_name }} {{ customer.last_name }}</p>
+                    <p><strong>Email:</strong> {{ customer.email }}</p>
+                    <p><strong>Phone:</strong> {{ customer.phone or 'N/A' }}</p>
+                    <p><strong>Address:</strong> {{ customer.address or 'N/A' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pre-Order Information -->
+        <div class="invoice-table">
+            <table class="table table-striped mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Expected Price</th>
+                        <th>Total Value</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ preorder.product_name }}</td>
+                        <td>{{ preorder.quantity }}</td>
+                        <td>${{ "%.2f"|format(preorder.expected_price) }}</td>
+                        <td>${{ "%.2f"|format(preorder.expected_price * preorder.quantity) }}</td>
+                        <td>
+                            <span class="badge status-{{ preorder.status }}">
+                                {{ preorder.status.replace('_', ' ').title() }}
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Payment Summary -->
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="invoice-details">
+                    <h4>💰 Payment Summary</h4>
+                    <div class="row">
+                        <div class="col-6"><strong>Total Pre-Order Value:</strong></div>
+                        <div class="col-6 text-end">${{ "%.2f"|format(preorder.expected_price * preorder.quantity) }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6"><strong>Total Paid to Date:</strong></div>
+                        <div class="col-6 text-end text-success">${{ "%.2f"|format(preorder.total_paid or 0) }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6"><strong>Remaining Balance:</strong></div>
+                        <div class="col-6 text-end text-warning">
+                            ${{ "%.2f"|format((preorder.expected_price * preorder.quantity) - (preorder.total_paid or 0)) }}
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6"><strong>This Payment Amount:</strong></div>
+                        <div class="col-6 text-end">
+                            <h5 class="text-primary">${{ "%.2f"|format(latest_payment.payment_amount) if latest_payment else '0.00' }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="invoice-details text-center">
+                    <h5>✅ Payment Confirmed</h5>
+                    <p class="text-muted">Your payment has been successfully processed and recorded.</p>
+                    {% if (preorder.expected_price * preorder.quantity) - (preorder.total_paid or 0) > 0 %}
+                        <div class="alert alert-info mt-3">
+                            <small>
+                                <strong>Next Steps:</strong><br>
+                                You can make additional payments anytime. We'll notify you when your item is ready for pickup.
+                            </small>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success mt-3">
+                            <small>
+                                <strong>Fully Paid!</strong><br>
+                                Your pre-order is fully paid. We'll notify you when it's ready for pickup.
+                            </small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        {% if payment_history and payment_history|length > 1 %}
+        <div class="invoice-details mt-4">
+            <h4>📜 Payment History</h4>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payment_history %}
+                        <tr {% if loop.last %}class="table-primary"{% endif %}>
+                            <td>{{ payment.payment_date.strftime('%m/%d/%Y %I:%M %p') }}</td>
+                            <td>${{ "%.2f"|format(payment.payment_amount) }}</td>
+                            <td>{{ payment.payment_type.title() }}</td>
+                            <td>{{ payment.payment_method }}</td>
+                            <td>
+                                <span class="badge bg-success">{{ payment.payment_status.title() }}</span>
+                                {% if loop.last %}<span class="badge bg-primary ms-1">Latest</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="text-center mt-4 no-print" style="margin: 10px;">
+            <button onclick="window.print()" class="btn print-btn me-3">
+                🖨️ Print Receipt
+            </button>
+            <a href="/customer/preorders" class="btn btn-secondary me-3">
+                ← Back to Pre-Orders
+            </a>
+            <a href="/" class="btn btn-outline-primary">
+                🏠 Home
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-4 text-muted no-print">
+            <small>
+                Thank you for choosing our computer shop!<br>
+                For questions about your pre-order, please contact us with Pre-Order #{{ preorder.id }}
+            </small>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

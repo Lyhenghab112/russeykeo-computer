@@ -1,0 +1,9 @@
+.order-item-row select.form-select {
+    min-width: 300px !important;
+    max-width: 400px !important;
+}
+
+.order-item-row input.form-control {
+    min-width: 100px !important;
+    max-width: 160px !important;
+}

@@ -1,0 +1,43 @@
+.staff-container {
+    padding: 20px;
+    max-width: 1600px; /* Increased max-width for wider content */
+    margin: 0 auto;
+}
+
+.order-info, .order-items {
+    margin: 20px 0;
+    padding: 20px;
+    background: #d3d3d3; /* Softer, less bright background color */
+    border-radius: 4px;
+}
+
+.order-info {
+    max-width: 100%; /* Make customer information section full width */
+    width: 100%;
+}
+
+.order-items {
+    max-width: 100%; /* Make order items section full width */
+    width: 100%;
+}
+
+.order-items table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.order-items th, 
+.order-items td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.order-items th {
+    background-color: #f5f5f5;
+}
+
+.actions {
+    margin-top: 20px;
+}

@@ -1,0 +1,19 @@
+import os
+from dotenv import load_dotenv
+import secrets
+
+load_dotenv()
+
+class Config:
+    SECRET_KEY = os.getenv('SECRET_KEY') or secrets.token_hex(32)
+    MYSQL_HOST = os.getenv('MYSQL_HOST') or 'localhost'
+    MYSQL_USER = os.getenv('MYSQL_USER') or 'root'
+    MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD') or '12345'
+    MYSQL_DB = os.getenv('MYSQL_DB') or 'computer_shop3'
+    SQLALCHEMY_DATABASE_URI = f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
+
+    # File upload configuration
+    UPLOAD_FOLDER = 'static/uploads/products'
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+

@@ -1,0 +1,8 @@
+flask
+flask-mysqldb
+werkzeug
+mysql-connector-python
+python-dotenv
+flask_sqlalchemy
+qrcode[pil]
+bakong-khqr

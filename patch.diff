@@ -1,0 +1,70 @@
+<<<<<<< document.addEventListener('DOMContentLoaded', function() {
+    const btnAllMonths = document.getElementById('btnAllMonths');
+    const btnCurrentMonth = document.getElementById('btnCurrentMonth');
+    const allMonthsAmountEl = document.getElementById('allMonthsAmount');
+    const currentMonthAmountEl = document.getElementById('currentMonthAmount');
+=======
+document.addEventListener('DOMContentLoaded', function() {
+    const btnAllMonths = document.getElementById('btnAllMonths');
+    const btnCurrentMonth = document.getElementById('btnCurrentMonth');
+    const allMonthsAmountEl = document.getElementById('allMonthsAmount');
+    const currentMonthAmountEl = document.getElementById('currentMonthAmount');
+
+    // New: Get label elements
+    const allMonthsLabelEl = btnAllMonths ? btnAllMonths.querySelector('.monthly-sales-toggle-label') : null;
+    const currentMonthLabelEl = btnCurrentMonth ? btnCurrentMonth.querySelector('.monthly-sales-toggle-label') : null;
+
+    // New: Array of month names
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+                        "July", "August", "September", "October", "November", "December"];
+
+    // New: Set dynamic labels based on current month
+    function setDynamicLabels() {
+        const now = new Date();
+        const currentMonthName = monthNames[now.getMonth()];
+        if (allMonthsLabelEl) {
+            allMonthsLabelEl.textContent = `Jan to ${currentMonthName} income`;
+        }
+        if (currentMonthLabelEl) {
+            currentMonthLabelEl.textContent = `${currentMonthName} income`;
+        }
+    }
+>>>>>>> document.addEventListener('DOMContentLoaded', function() {
+<<<<<<<     // Function to show sales detail popup for all months
+    function showAllMonthsSalesDetail() {
+        if (window.showSalesDetailPopup) {
+            // List all months in the year
+            const months = [];
+            for (let m = 1; m <= 12; m++) {
+                months.push(`2025-${m.toString().padStart(2, '0')}`);
+            }
+            window.showSalesDetailPopup(months, 'completed,processing');
+        } else {
+            console.log('showSalesDetailPopup function is not defined.');
+        }
+    }
+=======
+    // Function to show sales detail popup for all months
+    function showAllMonthsSalesDetail() {
+        if (window.showSalesDetailPopup) {
+            // List all months in the year up to current month
+            const now = new Date();
+            const months = [];
+            for (let m = 1; m <= now.getMonth() + 1; m++) {
+                months.push(`${now.getFullYear()}-${m.toString().padStart(2, '0')}`);
+            }
+            window.showSalesDetailPopup(months, 'completed,processing');
+        } else {
+            console.log('showSalesDetailPopup function is not defined.');
+        }
+    }
+>>>>>>>     // Function to show sales detail popup for all months
+<<<<<<<
+    updateAmounts();
+});
+=======
+
+    setDynamicLabels();
+    updateAmounts();
+});
+>>>>>>>

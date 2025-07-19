@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Inventory Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-red-600 mb-6">Error</h1>
+        <p class="text-gray-600">{{ message }}</p>
+        <a href="{{ url_for('index') }}" class="text-blue-600 hover:underline mt-4 inline-block">Back to Home</a>
+    </div>
+</body>
+</html>

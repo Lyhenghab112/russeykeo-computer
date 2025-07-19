@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Summary - Computer Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .header-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .summary-card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        .summary-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+        }
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+        .status-completed {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-confirmed {
+            background-color: #cce7ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+        .amount-highlight {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .print-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .print-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .header-section {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="header-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0">
+                        <i class="fas fa-receipt me-3"></i>
+                        Payment Summary
+                    </h1>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="d-flex justify-content-end gap-2 no-print">
+                        <button onclick="window.print()" class="btn print-btn">
+                            <i class="fas fa-print me-2"></i>Print Summary
+                        </button>
+                        <a href="{{ url_for('show_dashboard') }}" class="btn btn-outline-light">
+                            <i class="fas fa-home me-2"></i>Homepage
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Customer Information -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card summary-card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-user me-2"></i>Customer Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Name:</strong> {{ customer.first_name }} {{ customer.last_name }}</p>
+                                <p><strong>Email:</strong> {{ customer.email }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Phone:</strong> {{ customer.phone or 'N/A' }}</p>
+                                <p><strong>Address:</strong> {{ customer.address or 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Section -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card summary-card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Order #{{ order.id }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span><strong>Status:</strong></span>
+                            <span class="status-badge status-completed">
+                                <i class="fas fa-check-circle me-1"></i>{{ order.status }}
+                            </span>
+                        </div>
+                        
+                        <p><strong>Date:</strong> {{ order.order_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        <p><strong>Payment Method:</strong> {{ order.payment_method }}</p>
+                        
+                        <hr>
+                        
+                        <h6><strong>Items:</strong></h6>
+                        {% for item in order_items %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <strong>{{ item.product_name }}</strong>
+                                {% if item.brand %}<br><small class="text-muted">{{ item.brand }}</small>{% endif %}
+                                <br><small>Qty: {{ item.quantity }}</small>
+                            </div>
+                            <div class="text-end">
+                                <strong>${{ "%.2f"|format(item.price * item.quantity) }}</strong>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>Total:</strong>
+                            <strong class="amount-highlight">${{ "%.2f"|format(order.total_amount) }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pre-order Section -->
+            <div class="col-md-6">
+                <div class="card summary-card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Pre-order #{{ preorder.id }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span><strong>Status:</strong></span>
+                            <span class="status-badge status-confirmed">
+                                <i class="fas fa-calendar-check me-1"></i>{{ preorder.status|title }}
+                            </span>
+                        </div>
+                        
+                        <p><strong>Product:</strong> {{ preorder.product_name }}</p>
+                        <p><strong>Quantity:</strong> {{ preorder.quantity }}</p>
+                        <p><strong>Expected Price:</strong> ${{ "%.2f"|format(preorder.expected_price) }}</p>
+                        
+                        {% if latest_payment %}
+                        <hr>
+                        <h6><strong>Latest Payment:</strong></h6>
+                        <p><strong>Amount:</strong> ${{ "%.2f"|format(latest_payment.payment_amount) }}</p>
+                        <p><strong>Type:</strong> {{ latest_payment.payment_type|title }}</p>
+                        <p><strong>Method:</strong> {{ latest_payment.payment_method }}</p>
+                        <p><strong>Date:</strong> {{ latest_payment.payment_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        {% endif %}
+                        
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>Total Paid:</strong>
+                            <strong class="amount-highlight">${{ "%.2f"|format(preorder.deposit_amount or 0) }}</strong>
+                        </div>
+                        
+                        {% set remaining = (preorder.expected_price * preorder.quantity) - (preorder.deposit_amount or 0) %}
+                        {% if remaining > 0 %}
+                        <div class="d-flex justify-content-between text-warning">
+                            <strong>Remaining:</strong>
+                            <strong>${{ "%.2f"|format(remaining) }}</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Summary -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card summary-card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <h6>Order Total</h6>
+                                <div class="amount-highlight">${{ "%.2f"|format(order.total_amount) }}</div>
+                                <small class="text-muted">Paid in full</small>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <h6>Pre-order Payment</h6>
+                                <div class="amount-highlight">${{ "%.2f"|format(preorder.deposit_amount or 0) }}</div>
+                                <small class="text-muted">{{ latest_payment.payment_type|title if latest_payment else 'Deposit' }}</small>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <h6>Total Processed</h6>
+                                <div class="amount-highlight">${{ "%.2f"|format(order.total_amount + (preorder.deposit_amount or 0)) }}</div>
+                                <small class="text-success"><i class="fas fa-check-circle me-1"></i>Payment Confirmed</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="row no-print">
+            <div class="col-12 text-center">
+                <div class="d-flex justify-content-center gap-3 mb-4">
+                    <a href="{{ url_for('view_invoice', order_id=order.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-file-invoice me-2"></i>View Order Invoice
+                    </a>
+                    <a href="{{ url_for('view_preorder_invoice', preorder_id=preorder.id) }}" class="btn btn-outline-info">
+                        <i class="fas fa-file-alt me-2"></i>View Pre-order Invoice
+                    </a>
+                    <a href="{{ url_for('show_dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Homepage
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

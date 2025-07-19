@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Order Management{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/order_modal.css') }}">
+    <link rel="stylesheet" href="/static/css/staff_orders.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/staff_notifications.css') }}">
+</head>
+<body>
+{% extends "base.html" %}
+{% block content %}
+<div class="staff-container">
+    <h1>Order Management</h1>
+
+    <!-- New Order Form -->
+    <button type="button" class="btn btn-success mb-3" id="openAddOrderModalBtn">Add New Order</button>
+
+    <!-- Add Order Modal -->
+    <div class="modal fade" id="addOrderModal" tabindex="-1" aria-labelledby="addOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addOrderModalLabel">Add New Order</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addOrderForm">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div style="flex: 1 1 200px;">
+                        <label for="firstNameInput">First Name</label>
+                        <input type="text" id="firstNameInput" name="first_name" required class="form-control" />
+                    </div>
+                    <div style="flex: 1 1 200px;">
+                        <label for="lastNameInput">Last Name</label>
+                        <input type="text" id="lastNameInput" name="last_name" required class="form-control" />
+                    </div>
+                    <div style="flex: 1 1 300px;">
+                        <label for="emailInput">Email</label>
+                        <input type="email" id="emailInput" name="email" required class="form-control" />
+                    </div>
+                    <div style="flex: 1 1 200px;">
+                        <label for="orderDateInput">Order Date</label>
+                        <input type="date" id="orderDateInput" name="order_date" required class="form-control" />
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                <label>Order Items</label>
+                <div id="orderItemsContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 4px;">
+                    <!-- Dynamic product items will be added here -->
+                </div>
+                <button type="button" class="btn btn-secondary mt-2" id="addOrderItemBtn">Add Product</button>
+                <small>Select products and specify quantity and price for each.</small>
+                </div>
+                <button type="submit" class="btn btn-success mt-3">Add Order</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="order-summary">
+        <div class="summary-item total-orders-amount">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div>
+                    <h3>Total Orders Amount</h3>
+                </div>
+            </div>
+            <p class="total-amount">${{ '%.2f'|format(total_orders_amount) }}</p>
+            <div class="status-badges">
+                {% for item in summary %}
+                    <span class="status-badge {{ item.status|lower }}">
+                        {{ item.status }} ({{ item.count }})
+                    </span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="summary-item total-completed-amount">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <h3>Completed Orders Amount</h3>
+                </div>
+            </div>
+            <p class="total-amount">${{ '%.2f'|format(total_completed_amount) }}</p>
+            <div class="card-footer">
+                <span class="card-subtitle">
+                    <i class="fas fa-trending-up" style="color: #10b981; margin-right: 4px;"></i>
+                    Revenue from completed orders
+                </span>
+            </div>
+        </div>
+    </div>
+  
+    {% set total_count = 0 %}
+    {% set total_amount = 0 %}
+    {% for item in summary %}
+        {% if item.status|trim|lower == 'completed' %}
+            {% set total_count = total_count + item.count %}
+            {% set total_amount = total_amount + (item.total or 0) %}
+        {% endif %}
+    {% endfor %}
+
+    <div class="order-filters">
+        <div class="filter-group">
+            <label for="search-input">Search by Customer Name:</label>
+            <input type="text" id="search-input" placeholder="Enter customer name" aria-label="Search by customer name" value="{{ search|default('') }}">
+            <button class="btn btn-primary" id="search-btn" aria-label="Search orders">Search</button>
+        </div>
+        <div class="filter-group">
+            <label for="status-filter">Filter by Status:</label>
+            <select id="status-filter" aria-label="Order status filter">
+                <option value="all">All Orders</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="date-filter">Filter by Date:</label>
+            <input type="date" id="date-filter" aria-label="Order date filter">
+        </div>
+        <button class="btn btn-success" id="apply-filters" aria-label="Apply filters">Apply</button>
+    </div>
+
+    <div class="orders-list">
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #aaa; font-weight: 400;">
+            <thead>
+                <tr>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">No.</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Order ID</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Customer</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Date</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Total</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Payment Method</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Status</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ loop.index }}</td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ order.id }}</td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ order.first_name }} {{ order.last_name }}</td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ order.order_date }}</td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">${{ "%.2f"|format(order.total) }}</td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ order.payment_method|default('QR Payment') }}</td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+                        <span class="status-badge status-{{ order.status|lower }}">
+                            {{ order.status|title }}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+                        <div style="display: flex; flex-direction: column; gap: 5px; min-width: 120px;">
+                            <a href="{{ url_for('auth.order_details', order_id=order.id) }}" class="btn btn-primary btn-sm" style="width: 100%; text-align: center;">Details</a>
+                            {% if order.status|lower == 'pending' %}
+                            <button type="button" class="btn btn-danger btn-sm" onclick="cancelOrder({{ order.id }})" style="width: 100%;">Cancel Order</button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div id="mobile-orders-list"></div>
+        <nav aria-label="Page navigation example" class="mt-3">
+            <ul class="pagination justify-content-center" id="pagination">
+                <!-- Pagination buttons will be dynamically added here -->
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Message Container for Notifications -->
+<div id="message-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/staff_messages.js') }}"></script>
+<script src="{{ url_for('static', filename='js/staff_orders.js') }}"></script>
+<script src="{{ url_for('static', filename='js/staff_orders_pagination.js') }}"></script>
+
+<style>
+/* Responsive Styles for Orders Page */
+@media (max-width: 768px) {
+    .staff-container {
+        padding: 10px;
+    }
+
+    .orders-list table {
+        display: none;
+    }
+
+    .orders-list .mobile-card {
+        display: block;
+    }
+
+    .order-filters {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filter-group {
+        flex: 1 1 100%;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+        font-size: 0.9rem;
+    }
+
+    #apply-filters {
+        width: 100%;
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Mobile card styling */
+.mobile-card {
+    display: none;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-card:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-card .action-buttons {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.mobile-card .action-buttons .btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+    .mobile-card {
+        display: block;
+    }
+}
+</style>
+{% endblock %}
+</body>
+</html>

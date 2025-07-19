@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+
+{% block title %}Order Details - {{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="modern-order-container">
+    <!-- Header Section -->
+    <div class="order-header">
+        <div class="header-content">
+            <h1><i class="fas fa-receipt"></i> Order Details - #{{ order.id }}</h1>
+            <div class="status-badge status-{{ order.status.lower() }}">
+                {{ order.status.title() }}
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="/auth/staff/orders" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Orders
+            </a>
+        </div>
+    </div>
+
+    <!-- Customer Information Card -->
+    <div class="info-card">
+        <div class="card-header">
+            <h2><i class="fas fa-user"></i> Customer Information</h2>
+        </div>
+        <div class="card-content">
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Name:</label>
+                    <span>{{ order.first_name }} {{ order.last_name }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Email:</label>
+                    <span>{{ order.email }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Phone:</label>
+                    <span>{{ order.phone }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Order Date:</label>
+                    <span>{{ order.order_date.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Payment Method:</label>
+                    <span>{{ order.payment_method or 'QR Payment' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Total Amount:</label>
+                    <span class="amount">${{ "%.2f"|format(order.total_amount) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items Card -->
+    <div class="info-card">
+        <div class="card-header">
+            <h2><i class="fas fa-shopping-cart"></i> Order Items</h2>
+        </div>
+        <div class="card-content">
+            <div class="items-table-container">
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                            {% if order.status.lower() == 'pending' %}
+                            <th>Stock Status</th>
+                            <th>Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr class="item-row" data-product-id="{{ item.product_id }}">
+                            <td class="product-name">
+                                <div class="product-info">
+                                    <strong>{{ item.product_name }}</strong>
+                                </div>
+                            </td>
+                            <td class="quantity">{{ item.quantity }}</td>
+                            <td class="price">${{ "%.2f"|format(item.price) }}</td>
+                            <td class="total">${{ "%.2f"|format(item.quantity * item.price) }}</td>
+                            {% if order.status.lower() == 'pending' %}
+                            <td class="stock-status">
+                                <span class="stock-badge" id="stock-{{ item.product_id }}">
+                                    <i class="fas fa-spinner fa-spin"></i> Checking...
+                                </span>
+                            </td>
+                            <td class="actions">
+                                <button class="btn btn-danger btn-sm cancel-item-btn"
+                                        data-product-id="{{ item.product_id }}"
+                                        data-product-name="{{ item.product_name }}"
+                                        data-quantity="{{ item.quantity }}"
+                                        data-order-id="{{ order.id }}"
+                                        style="display: none;">
+                                    <i class="fas fa-times"></i> Cancel Item
+                                </button>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Item Modal -->
+<div id="cancelItemModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Cancel Order Item</h3>
+            <span class="close" onclick="closeCancelModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to cancel this item from the order?</p>
+            <div class="cancel-item-details">
+                <p><strong>Product:</strong> <span id="cancelProductName"></span></p>
+                <p><strong>Quantity:</strong> <span id="cancelQuantity"></span></p>
+                <div style="margin-top: 15px;">
+                    <label for="cancelReason" style="display: block; margin-bottom: 5px; font-weight: bold;">Reason for cancellation:</label>
+                    <select id="cancelReason" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="Out of stock">Out of stock</option>
+                        <option value="Product damaged/broken">Product damaged/broken</option>
+                        <option value="Supplier delivery delay">Supplier delivery delay</option>
+                        <option value="Quality issues">Quality issues</option>
+                        <option value="Customer request">Customer request</option>
+                        <option value="Payment issue">Payment issue</option>
+                        <option value="Supplier issue">Supplier issue</option>
+                        <option value="Discontinued product">Discontinued product</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label for="cancelNotes" style="display: block; margin-bottom: 5px; font-weight: bold;">Additional notes (optional):</label>
+                    <textarea id="cancelNotes" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 60px;" placeholder="Enter any additional details..."></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-danger" onclick="confirmCancelItem()" style="background-color: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+                <i class="fas fa-check"></i> Confirm Cancellation
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.modern-order-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.header-content h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending { background: #fbbf24; color: #92400e; }
+.status-processing { background: #60a5fa; color: #1e40af; }
+.status-completed { background: #34d399; color: #065f46; }
+.status-cancelled { background: #f87171; color: #991b1b; }
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+}
+
+.info-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.card-header {
+    background: #f8fafc;
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.card-header h2 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-item label {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-item span {
+    color: #1e293b;
+    font-size: 1rem;
+}
+
+.amount {
+    font-weight: 700;
+    color: #059669;
+    font-size: 1.1rem;
+}
+
+.items-table-container {
+    overflow-x: auto;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.items-table th {
+    background: #f1f5f9;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.items-table td {
+    padding: 15px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.item-row:hover {
+    background: #f8fafc;
+}
+
+.product-info strong {
+    color: #1e293b;
+}
+
+.stock-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.stock-in { background: #dcfce7; color: #166534; }
+.stock-out { background: #fee2e2; color: #991b1b; }
+.stock-low { background: #fef3c7; color: #92400e; }
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 25px rgba(0,0,0,0.1);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #1e293b;
+}
+
+.close {
+    font-size: 24px;
+    cursor: pointer;
+    color: #64748b;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.cancel-item-details {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+/* Hide any empty or invisible elements */
+.modal-footer *:empty {
+    display: none !important;
+}
+
+.modal-footer input[type="text"] {
+    display: none !important;
+}
+
+.modal-footer button {
+    min-width: 80px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-block;
+    text-align: center;
+}
+
+.modal-footer .btn-secondary {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+.modal-footer .btn-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+</style>
+
+<script>
+let currentCancelData = {};
+
+// Check stock status for pending orders
+{% if order.status.lower() == 'pending' %}
+document.addEventListener('DOMContentLoaded', function() {
+    checkStockStatus();
+});
+
+function checkStockStatus() {
+    const productRows = document.querySelectorAll('.item-row');
+
+    productRows.forEach(row => {
+        const productId = row.dataset.productId;
+        const stockBadge = document.getElementById(`stock-${productId}`);
+        const cancelBtn = row.querySelector('.cancel-item-btn');
+
+        // Simulate stock check (replace with actual API call)
+        fetch(`/api/products/${productId}/stock`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const stock = data.stock;
+                    let badgeClass, badgeText;
+
+                    if (stock === 0) {
+                        badgeClass = 'stock-out';
+                        badgeText = '<i class="fas fa-times-circle"></i> Out of Stock';
+                    } else if (stock < 5) {
+                        badgeClass = 'stock-low';
+                        badgeText = `<i class="fas fa-exclamation-triangle"></i> Low Stock (${stock})`;
+                    } else {
+                        badgeClass = 'stock-in';
+                        badgeText = `<i class="fas fa-check-circle"></i> In Stock (${stock})`;
+                    }
+
+                    stockBadge.className = `stock-badge ${badgeClass}`;
+                    stockBadge.innerHTML = badgeText;
+
+                    // Show cancel button for all items in pending orders (regardless of stock)
+                    cancelBtn.style.display = 'inline-flex';
+                } else {
+                    stockBadge.className = 'stock-badge stock-out';
+                    stockBadge.innerHTML = '<i class="fas fa-question-circle"></i> Unknown';
+                }
+            })
+            .catch(error => {
+                console.error('Error checking stock:', error);
+                stockBadge.className = 'stock-badge stock-out';
+                stockBadge.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error';
+            });
+    });
+}
+{% endif %}
+
+function showCancelModal(productId, productName, quantity, orderId) {
+    currentCancelData = { productId, productName, quantity, orderId };
+
+    document.getElementById('cancelProductName').textContent = productName;
+    document.getElementById('cancelQuantity').textContent = quantity;
+    document.getElementById('cancelItemModal').style.display = 'flex';
+}
+
+function closeCancelModal() {
+    document.getElementById('cancelItemModal').style.display = 'none';
+    currentCancelData = {};
+}
+
+function confirmCancelItem() {
+    const { productId, orderId } = currentCancelData;
+    const reason = document.getElementById('cancelReason').value;
+    const notes = document.getElementById('cancelNotes').value;
+
+    fetch(`/api/orders/${orderId}/cancel-single-item`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            reason: reason,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Item cancelled successfully!');
+            location.reload();
+        } else {
+            alert('Error cancelling item: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error cancelling item');
+    });
+
+    closeCancelModal();
+}
+
+// Add event listeners for cancel buttons
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.cancel-item-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const productName = this.dataset.productName;
+            const quantity = this.dataset.quantity;
+            const orderId = this.dataset.orderId;
+
+            showCancelModal(productId, productName, quantity, orderId);
+        });
+    });
+});
+</script>
+{% endblock %}

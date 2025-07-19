@@ -1,0 +1,218 @@
+
+.staff-container {
+    padding: 20px 20px 20px 270px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.inventory-actions {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+    gap: 20px;
+}
+
+.inventory-search {
+    display: flex;
+    gap: 10px;
+}
+
+.inventory-search input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 300px;
+}
+
+.inventory-list table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #aaa;
+    font-weight: 400;
+}
+
+.inventory-list th, 
+.inventory-list td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #888;
+}
+
+.inventory-list th {
+    background-color: #f5f5f5;
+}
+
+.stock-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.action-buttons .btn {
+    width: 80px;
+}
+
+.stock-input {
+    width: 50px;
+    padding: 6px;
+    /* Removed border */
+    border: none; /* This line removes the border */
+    border-radius: 4px;
+    background-color: transparent; /* Ensures no background color from a default border */
+}
+
+/* Removed specific border-color classes as they are no longer needed for a border */
+/* .stock-input.in-stock {
+    border-color: #28a745;
+}
+
+.stock-input.out-of-stock {
+    border-color: #dc3545;
+} */
+
+.badge {
+    padding: 5px 8px;
+    font-size: 0.8em;
+    border-radius: 4px;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.9em;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+    overflow: auto;
+}
+
+.modal.show-slide {
+    display: block;
+    animation: slideDown 0.3s ease forwards;
+}
+
+@keyframes slideDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+    max-width: 600px;
+    border-radius: 5px;
+}
+
+.close-modal {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: black;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-actions {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.product-image {
+    max-width: 50px;
+    max-height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.inventory-filter select.form-control {
+    min-width: 150px;
+}
+
+#add-product-btn {
+    padding: 6px 12px;
+    font-size: 0.9em;
+    height: 36px;
+    width: 120px;
+}
+
+#search-btn {
+    padding: 6px 12px;
+    font-size: 0.9em;
+    height: 36px;
+    width: 80px;
+}
+
+/* Added styles for stock color coding */
+.low-stock {
+    border-radius: 5px;
+    width: 40px;
+    background-color: #f04c59; /* light red */
+    color: #721c24; /* dark red */
+    font-weight: bold;
+}
+
+.sufficient-stock {
+    border-radius: 5px;
+    width: 40px;
+    background-color: #89e49e; /* light green */
+    color: #155724; /* dark green */
+    font-weight: bold;
+}

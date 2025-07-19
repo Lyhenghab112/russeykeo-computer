@@ -1,0 +1,1174 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+    <div class="staff-widgets">
+        <!-- Monthly Sales Overview -->
+        <div class="widget full-width-widget">
+            <h2>Money Insight</h2>
+            <div class="widget-content">
+                
+                <div class="monthly-sales-toggle-container">
+                    <div id="btnAllMonths" class="monthly-sales-toggle-button big-button active" role="button" tabindex="0">
+                        <div class="monthly-sales-toggle-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="monthly-sales-toggle-content">
+                        <div class="monthly-sales-toggle-label">Total Earning</div>
+                            <div class="monthly-sales-toggle-amount" id="allMonthsAmount">$0</div>
+                            <div class="monthly-sales-toggle-profit" id="allMonthsProfit">Profit: $0 (0%)</div>
+                        </div>
+                    </div>
+                    <div id="btnCurrentMonth" class="monthly-sales-toggle-button big-button" role="button" tabindex="0">
+                        <div class="monthly-sales-toggle-icon"><i class="fas fa-calendar-day"></i></div>
+                        <div class="monthly-sales-toggle-content">
+                        <div class="monthly-sales-toggle-label">Total Income for Month</div>
+                            <div class="monthly-sales-toggle-amount" id="currentMonthAmount">$0</div>
+                            <div class="monthly-sales-toggle-profit" id="currentMonthProfit">Profit: $0 (0%)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <a  href="{{ url_for('auth.staff_reports') }}" class="btn">View Report</a>
+        </div>
+
+        <!-- Unified Orders Management Widget -->
+        <div class="widget todays-orders-widget">
+            <h2><i class="fas fa-list-alt"></i> Customer Orders</h2>
+            <div class="widget-content">
+                <div id="unified-orders-container" style="height: 100%; display: flex; flex-direction: column;">
+                    <p style="text-align: center; padding: 20px;">Loading orders...</p>
+                </div>
+            </div>
+        </div>
+
+    <!-- Modal for displaying monthly sales details -->
+    <div id="monthlySalesDetailModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-button" onclick="document.getElementById('monthlySalesDetailModal').style.display='none'">&times;</span>
+            <h3 id="salesDetailsTitle">Sales Details</h3>
+            <div id="salesDetailsContent">
+                <p>Loading sales details...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for displaying today's orders sale details -->
+    <div id="todaysOrdersDetailModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span id="todaysOrdersDetailClose" class="close-button">&times;</span>
+            <h3 id="todaysOrdersDetailTitle">Sale Details</h3>
+            <div id="todaysOrdersDetailContent">
+                <p>Loading sale details...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for displaying product details of an order -->
+    <div id="productDetailsModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span id="productDetailsClose" class="close-button">&times;</span>
+            <h3 id="productDetailsTitle">Product Details</h3>
+            <div id="productDetailsContent">
+                <p>Loading product details...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="widget custom-sized-widget">
+        <h2>Low Stock Product List</h2>
+        <div class="widget-content" id="notifications-container">
+            <p>Loading notifications...</p>
+        </div>
+    </div>
+
+    <!-- Inventory Management -->
+    <div class="widget">
+    <h2>Product details</h2>
+    <div class="widget-content brand-panel-container" id="product-name-count-list">
+        <!-- Product count by brand buttons will be rendered here -->
+    </div>
+    <div class="button-group">
+        <a href="{{ url_for('auth.staff_inventory') }}" class="btn manage-btn">Manage Inventory</a>
+    </div>
+    <div id="lastUpdated" style="font-size: 0.75em; color: #666; margin-top: 8px;"></div>
+</div>
+
+<!-- Message Container for Notifications -->
+<div id="message-container"></div>
+
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/monthly_sales_toggle.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventory_widget.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/todays_orders_chart.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fullscreen_modal.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_notifications.css') }}">
+<!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}"> -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+
+</style>
+
+<script src="{{ url_for('static', filename='js/staff_messages.js') }}"></script>
+<script src="{{ url_for('static', filename='js/monthly_sales_toggle.js') }}"></script>
+<script src="{{ url_for('static', filename='js/staff_reports.js') }}"></script>
+<script src="{{ url_for('static', filename='js/inventory_widget.js') }}"></script>
+<script src="{{ url_for('static', filename='js/staff_notifications.js') }}"></script>
+
+
+<script>
+// Load unified orders table
+document.addEventListener('DOMContentLoaded', function() {
+    loadUnifiedOrdersTable();
+});
+
+function loadUnifiedOrdersTable() {
+    fetch('/api/staff/orders/unified')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                renderUnifiedOrdersTable(data.orders, data.summary);
+            } else {
+                console.error('Error loading unified orders:', data.error);
+                document.getElementById('unified-orders-container').innerHTML = '<p style="text-align: center; padding: 20px; color: red;">Error loading orders.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching unified orders:', error);
+            document.getElementById('unified-orders-container').innerHTML = '<p style="text-align: center; padding: 20px; color: red;">Error loading orders.</p>';
+        });
+}
+
+function renderUnifiedOrdersTable(orders, summary) {
+    const container = document.getElementById('unified-orders-container');
+
+    if (!orders || orders.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">No orders found.</p>';
+        return;
+    }
+
+    let html = `
+        <div style="padding: 15px; height: 100%; display: flex; flex-direction: column;">
+            <div style="flex: 1; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; background: white; min-height: 0; max-height: 350px;">
+                <table style="width: 100%; border-collapse: collapse; border: 1px solid #aaa; font-weight: 400; font-size: 14px;">
+                    <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                        <tr>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Type</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Order #</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Customer</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Details</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Amount</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Status</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+
+    orders.forEach(order => {
+        const typeBadge = getOrderTypeBadge(order.type);
+        const statusBadge = getUnifiedStatusBadge(order.status, order.type);
+        const actionButton = getUnifiedActionButton(order);
+        const orderNumber = order.type === 'preorder' ? `#P${order.id}` : `#${order.id}`;
+        const amount = order.type === 'preorder' ? 'Pre-Order' : `$${order.amount.toFixed(2)}`;
+
+        html += `
+            <tr>
+                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">${typeBadge}</td>
+                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888; font-weight: bold;">${orderNumber}</td>
+                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">${order.customer_name}</td>
+                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">${order.details}</td>
+                <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">${amount}</td>
+                <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">${statusBadge}</td>
+                <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">
+                    ${actionButton}
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+function getOrderTypeBadge(type) {
+    if (type === 'order') {
+        return `<span style="background-color: #007bff; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">Order</span>`;
+    } else {
+        return `<span style="background-color: #fd7e14; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">Pre-Order</span>`;
+    }
+}
+
+function getUnifiedStatusBadge(status, type) {
+    let statusColors = {};
+
+    if (type === 'order') {
+        statusColors = {
+            'completed': '#28a745',
+            'pending': '#ffc107',
+            'processing': '#17a2b8',
+            'cancelled': '#dc3545'
+        };
+    } else {
+        statusColors = {
+            'pending': '#ffc107',
+            'confirmed': '#17a2b8',
+            'ready': '#28a745',
+            'completed': '#6c757d',
+            'cancelled': '#dc3545'
+        };
+    }
+
+    const color = statusColors[status] || '#6c757d';
+    return `<span style="background-color: ${color}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+}
+
+function getUnifiedActionButton(order) {
+    if (order.type === 'order') {
+        // Create a vertical button container like pre-orders
+        let buttons = `<div style="display: flex; flex-direction: column; gap: 3px; width: 100%;">`;
+
+        buttons += `<button class="btn btn-sm btn-primary" onclick="showOrderDetails(${order.id})" style="background-color: #007bff; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
+
+        // Add cancel button ONLY for pending orders (not completed or cancelled)
+        if (order.status && order.status.toLowerCase() === 'pending') {
+            buttons += `<button class="btn btn-sm btn-danger" onclick="cancelOrder(${order.id})" style="background-color: #dc3545; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Cancel Order</button>`;
+        }
+
+        buttons += `</div>`;
+        return buttons;
+    } else if (order.type === 'preorder') {
+        let buttons = '';
+
+        // Create a vertical button container
+        buttons += `<div style="display: flex; flex-direction: column; gap: 3px; width: 100%;">`;
+
+        if (order.status === 'pending') {
+            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="background-color: #17a2b8; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
+            buttons += `<button class="btn btn-sm btn-success" onclick="confirmPreOrder(${order.id})" style="background-color: #28a745; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Confirm</button>`;
+            buttons += `<button class="btn btn-sm btn-danger" onclick="deletePreOrder(${order.id})" style="background-color: #dc3545; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Delete</button>`;
+        } else if (order.status === 'confirmed') {
+            // Always show Complete button for confirmed pre-orders (stock validation handled in backend)
+            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="background-color: #17a2b8; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
+            buttons += `<button class="btn btn-sm btn-primary" onclick="completePreOrder(${order.id})" style="background-color: #007bff; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Complete</button>`;
+        } else if (order.status === 'ready_for_pickup') {
+            // Only show view details for ready_for_pickup (active status)
+            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="background-color: #17a2b8; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
+        } else if (order.status === 'completed') {
+            // For completed pre-orders, only show view details (no delete)
+            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="background-color: #17a2b8; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
+        } else {
+            // For all other statuses (cancelled, etc.), show view details + delete
+            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="background-color: #17a2b8; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
+            buttons += `<button class="btn btn-sm btn-danger" onclick="deletePreOrder(${order.id})" style="background-color: #dc3545; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Delete</button>`;
+        }
+
+        buttons += `</div>`;
+
+        return buttons;
+    }
+}
+
+async function confirmPreOrder(preorderId) {
+    const confirmed = await showConfirmation('Confirm Pre-Order', 'Are you sure you want to confirm this pre-order? The customer will be notified.');
+    if (confirmed) {
+        fetch(`/api/staff/preorders/${preorderId}/confirm`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('Pre-order confirmed successfully!', 'success');
+                loadUnifiedOrdersTable(); // Reload the unified table
+            } else {
+                showMessage('Error confirming pre-order: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error confirming pre-order', 'error');
+        });
+    }
+}
+
+async function deletePreOrder(preorderId) {
+    const confirmed = await showDeleteConfirmation('Delete Pre-Order', 'Are you sure you want to permanently delete this pre-order? This action cannot be undone.');
+    if (confirmed) {
+        fetch(`/api/staff/preorders/${preorderId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('Pre-order deleted successfully!', 'success');
+                loadUnifiedOrdersTable(); // Reload the unified table
+            } else {
+                showMessage('Error deleting pre-order: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error deleting pre-order', 'error');
+        });
+    }
+}
+
+function showPreOrderDetails(preorderId) {
+    // Fetch pre-order details
+    fetch(`/auth/staff/api/pre_order/${preorderId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayPreOrderDetailsModal(data.pre_order);
+            } else {
+                showMessage('Error loading pre-order details: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error loading pre-order details', 'error');
+        });
+}
+
+function displayPreOrderDetailsModal(preorder) {
+    // Create modal HTML
+    const modalHtml = `
+        <div id="preorderDetailsModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 30px; border-radius: 10px; max-width: 600px; width: 90%; max-height: 80%; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0; color: #333;">Pre-Order #${preorder.id} Details</h3>
+                    <span onclick="closePreOrderDetailsModal()" style="font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;">&times;</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <strong>Customer:</strong><br>
+                        ${preorder.first_name} ${preorder.last_name}<br>
+                        <small style="color: #666;">${preorder.email}</small><br>
+                        <small style="color: #666;">${preorder.phone || 'No phone'}</small>
+                    </div>
+                    <div>
+                        <strong>Status:</strong><br>
+                        <span style="background-color: ${getStatusColor(preorder.status)}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                            ${preorder.status.charAt(0).toUpperCase() + preorder.status.slice(1)}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <img src="/static/uploads/products/${preorder.product_photo}" alt="${preorder.product_name}"
+                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;">
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 5px 0;">${preorder.product_name}</h4>
+                            <p style="margin: 0; color: #666;">Quantity: ${preorder.quantity}</p>
+                            <p style="margin: 0; color: #666;">Expected Price: $${parseFloat(preorder.expected_price || 0).toFixed(2)}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <strong>Created Date:</strong><br>
+                        ${new Date(preorder.created_date).toLocaleDateString()} ${new Date(preorder.created_date).toLocaleTimeString()}
+                    </div>
+                    <div>
+                        <strong>Expected Availability:</strong><br>
+                        ${preorder.expected_availability_date ? new Date(preorder.expected_availability_date).toLocaleDateString() : 'Not specified'}
+                    </div>
+                </div>
+
+                ${preorder.notes ? `
+                    <div style="margin-bottom: 20px;">
+                        <strong>Notes:</strong><br>
+                        <div style="background-color: #f8f9fa; padding: 10px; border-radius: 4px; border-left: 4px solid #007bff;">
+                            ${preorder.notes}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div style="text-align: right;">
+                    <button onclick="closePreOrderDetailsModal()" style="background-color: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closePreOrderDetailsModal() {
+    const modal = document.getElementById('preorderDetailsModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'pending': '#ffc107',
+        'confirmed': '#17a2b8',
+        'ready': '#28a745',
+        'completed': '#6c757d',
+        'cancelled': '#dc3545'
+    };
+    return colors[status] || '#6c757d';
+}
+
+function completePreOrder(preorderId) {
+    fetch(`/api/staff/preorders/${preorderId}/complete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('✅ Pre-order completed and customer notified!', 'success');
+        } else if (data.stock_issue) {
+            showMessage('⚠️ Product is out of stock. Admin has been notified. Pre-order remains confirmed until restocked.', 'warning');
+        } else {
+            showMessage('❌ Error: ' + data.error, 'error');
+        }
+        // Always reload table after any action
+        loadUnifiedOrdersTable();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('❌ An error occurred while completing the pre-order.', 'error');
+    });
+}
+
+
+
+function showOrderDetails(orderId) {
+    // Create and show order details modal
+    showOrderDetailsModal(orderId);
+}
+
+function showOrderDetailsModal(orderId) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('orderDetailsModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'orderDetailsModal';
+        modal.style.cssText = `
+            display: none;
+            position: fixed;
+            z-index: 10001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        `;
+
+        modalContent.innerHTML = `
+            <span style="position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;" onclick="document.getElementById('orderDetailsModal').style.display='none'">&times;</span>
+            <h2 id="orderDetailsTitle">Order Details</h2>
+            <div id="orderDetailsContent">Loading...</div>
+        `;
+
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Close modal when clicking outside
+        modal.onclick = function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+    }
+
+    // Show modal and load content
+    modal.style.display = 'block';
+    document.getElementById('orderDetailsTitle').textContent = `Order #${orderId} Details`;
+    document.getElementById('orderDetailsContent').innerHTML = 'Loading order details...';
+
+    // Fetch both order details and cancellation options
+    Promise.all([
+        fetch(`/api/orders/today_details_by_order/${orderId}`),
+        fetch(`/api/staff/orders/${orderId}/cancellation-options`).catch(err => {
+            console.log('Cancellation options API failed:', err);
+            return { json: () => ({ success: false, error: 'API not available' }) };
+        })
+    ])
+    .then(responses => {
+        console.log('API responses:', responses);
+        return Promise.all(responses.map(r => r.json()));
+    })
+    .then(([orderData, cancellationData]) => {
+        console.log('Order data:', orderData);
+        console.log('Cancellation data:', cancellationData);
+        if (orderData.success && orderData.products && orderData.products.length > 0) {
+            let html = '<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">';
+            html += '<thead><tr style="background-color: #f8f9fa;"><th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Product Name</th><th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Quantity</th><th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Price</th><th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Original Price</th><th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Total</th><th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Actions</th></tr></thead>';
+            html += '<tbody>';
+
+            let grandTotal = 0;
+            let totalProfit = 0;
+            orderData.products.forEach(product => {
+                const totalPrice = product.quantity * product.price;
+                grandTotal += totalPrice;
+
+                // Calculate profit for this item
+                let originalPriceDisplay = 'N/A';
+                let itemProfit = 0;
+                if (product.original_price) {
+                    originalPriceDisplay = `$${product.original_price.toFixed(2)}`;
+                    itemProfit = (product.price - product.original_price) * product.quantity;
+                    totalProfit += itemProfit;
+                }
+
+                // Debug: Log the cancellation data to see what we're getting
+                console.log('Cancellation data:', cancellationData);
+                console.log('Looking for product:', product.product_name);
+
+                // Find corresponding cancellation info by matching product name
+                let cancellationInfo = null;
+                if (cancellationData.success && cancellationData.items) {
+                    cancellationInfo = cancellationData.items.find(ci => ci.product_name === product.product_name);
+                    console.log('Found cancellation info:', cancellationInfo);
+                }
+
+                // Only show cancel buttons for pending orders, not completed orders
+                const canCancel = false; // Remove cancel buttons from completed order details
+
+                // Create a mock cancellation info if none found
+                if (!cancellationInfo) {
+                    cancellationInfo = {
+                        id: product.product_id || 1, // Use product_id or fallback
+                        available_to_cancel: product.quantity,
+                        can_cancel: true
+                    };
+                }
+
+                const cancelButton = canCancel ?
+                    `<button onclick="showPartialCancellationModal(${orderId}, ${cancellationInfo.id}, '${product.product_name.replace(/'/g, "\\'")}', ${cancellationInfo.available_to_cancel}, ${product.price})"
+                            style="background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">
+                        Cancel Item
+                    </button>` :
+                    '<span style="color: #6c757d; font-size: 11px;">N/A</span>';
+
+                html += `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 12px;">${product.product_name}</td>
+                        <td style="border: 1px solid #ddd; padding: 12px; text-align: center;">${product.quantity}</td>
+                        <td style="border: 1px solid #ddd; padding: 12px; text-align: right;">$${product.price.toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 12px; text-align: right;">${originalPriceDisplay}</td>
+                        <td style="border: 1px solid #ddd; padding: 12px; text-align: right;">$${totalPrice.toFixed(2)}</td>
+                        <td style="border: 1px solid #ddd; padding: 12px; text-align: center;">${cancelButton}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                <tr style="background-color: #f8f9fa; font-weight: bold;">
+                    <td colspan="5" style="border: 1px solid #ddd; padding: 12px; text-align: right;">Grand Total:</td>
+                    <td style="border: 1px solid #ddd; padding: 12px; text-align: right; color: #28a745;">$${grandTotal.toFixed(2)}</td>
+                </tr>
+                <tr style="background-color: #f8f9fa; font-weight: bold;">
+                    <td colspan="5" style="border: 1px solid #ddd; padding: 12px; text-align: right; color: ${totalProfit >= 0 ? '#28a745' : '#dc3545'};">Total Profit:</td>
+                    <td style="border: 1px solid #ddd; padding: 12px; text-align: right; color: ${totalProfit >= 0 ? '#28a745' : '#dc3545'};">$${totalProfit.toFixed(2)}</td>
+                </tr>
+            `;
+            html += '</tbody></table>';
+
+            document.getElementById('orderDetailsContent').innerHTML = html;
+        } else {
+            document.getElementById('orderDetailsContent').innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No products found for this order.</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching order details:', error);
+        document.getElementById('orderDetailsContent').innerHTML = '<p style="text-align: center; color: #dc3545; padding: 20px;">Error loading order details.</p>';
+    });
+}
+
+
+
+function cancelOrder(orderId) {
+    // Create a custom modal for cancellation
+    const modalHtml = `
+        <div id="cancelModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+                <h3 style="margin-bottom: 20px; color: #dc3545;">Cancel Order #${orderId}</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Reason for cancellation:</label>
+                    <select id="cancelReason" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="Out of stock">Out of stock</option>
+                        <option value="Customer request">Customer request</option>
+                        <option value="Payment issue">Payment issue</option>
+                        <option value="Supplier issue">Supplier issue</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Additional notes (optional):</label>
+                    <textarea id="cancelNotes" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 80px;" placeholder="Enter any additional details..."></textarea>
+                </div>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #dc3545;">
+                    <p style="margin: 0; color: #dc3545; font-weight: bold;">This action cannot be undone.</p>
+                </div>
+                <div style="text-align: right;">
+                    <button onclick="closeCancelModal()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-right: 10px; cursor: pointer;">Cancel</button>
+                    <button onclick="confirmCancellation(${orderId})" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Confirm Cancellation</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeCancelModal() {
+    const modal = document.getElementById('cancelModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function confirmCancellation(orderId) {
+    const reason = document.getElementById('cancelReason').value;
+    const notes = document.getElementById('cancelNotes').value;
+
+    // Disable the confirm button to prevent double-clicks
+    const confirmBtn = event.target;
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Cancelling...';
+
+    fetch(`/api/staff/orders/${orderId}/cancel`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            reason: reason,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        closeCancelModal();
+        if (data.success) {
+            // Show single success notification
+            showNotification('Order cancelled successfully! Customer has been notified.', 'success');
+            loadUnifiedOrdersTable(); // Refresh the orders list
+        } else {
+            showNotification('Error cancelling order: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        closeCancelModal();
+        console.error('Error:', error);
+        showNotification('Error cancelling order', 'error');
+    });
+}
+
+// showNotification function is now provided by staff_messages.js
+// This provides backward compatibility while using the standardized system
+
+// =====================================================
+// PARTIAL ORDER CANCELLATION FUNCTIONS
+// =====================================================
+
+let currentCancellationData = {};
+
+function showPartialCancellationModal(orderId, itemId, productName, availableQuantity, itemPrice) {
+    currentCancellationData = {
+        orderId: orderId,
+        itemId: itemId,
+        productName: productName,
+        availableQuantity: availableQuantity,
+        itemPrice: itemPrice
+    };
+
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('partialCancellationModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'partialCancellationModal';
+        modal.style.cssText = `
+            display: none;
+            position: fixed;
+            z-index: 10002;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 8px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        `;
+
+        modalContent.innerHTML = `
+            <span style="position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa;" onclick="closePartialCancellationModal()">&times;</span>
+            <h2>Cancel Order Item</h2>
+            <div id="partialCancellationContent">
+                <form id="partialCancellationForm">
+                    <div style="margin-bottom: 15px;">
+                        <label><strong>Product:</strong></label>
+                        <span id="cancelProductName"></span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label><strong>Available to Cancel:</strong></label>
+                        <span id="cancelAvailableQuantity"></span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label><strong>Cancel Quantity:</strong></label>
+                        <span id="cancelQuantityDisplay"></span>
+                        <input type="hidden" id="cancelQuantity" name="cancel_quantity" />
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="cancelReason"><strong>Reason:</strong></label>
+                        <select id="cancelReason" name="reason" required style="width: 200px; padding: 5px;">
+                            <option value="out_of_stock">Out of Stock</option>
+                            <option value="customer_request">Customer Request</option>
+                            <option value="damaged_product">Damaged Product</option>
+                            <option value="pricing_error">Pricing Error</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="cancelNotes"><strong>Notes (Optional):</strong></label>
+                        <textarea id="cancelNotes" name="notes" rows="3" style="width: 100%; padding: 5px;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label><strong>Refund Amount:</strong></label>
+                        <span id="refundAmount" style="color: #28a745; font-weight: bold;">$0.00</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <button type="button" onclick="closePartialCancellationModal()" style="background-color: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; margin-right: 10px;">Cancel</button>
+                        <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px;">Cancel Item</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Close modal when clicking outside
+        modal.onclick = function(event) {
+            if (event.target === modal) {
+                closePartialCancellationModal();
+            }
+        };
+
+        // Handle form submission
+        document.getElementById('partialCancellationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitPartialCancellation();
+        });
+
+        // Quantity is automatically set to full available amount
+    }
+
+    // Populate modal with current data
+    document.getElementById('cancelProductName').textContent = productName;
+    document.getElementById('cancelAvailableQuantity').textContent = availableQuantity;
+
+    // Set quantity to full available amount automatically
+    document.getElementById('cancelQuantityDisplay').textContent = availableQuantity;
+    document.getElementById('cancelQuantity').value = availableQuantity;
+
+    // Update refund amount
+    updateRefundAmount();
+
+    // Show modal
+    modal.style.display = 'block';
+}
+
+function closePartialCancellationModal() {
+    const modal = document.getElementById('partialCancellationModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function updateRefundAmount() {
+    const quantity = parseInt(document.getElementById('cancelQuantity').value) || 0;
+    const refundAmount = quantity * currentCancellationData.itemPrice;
+    document.getElementById('refundAmount').textContent = `$${refundAmount.toFixed(2)}`;
+}
+
+function submitPartialCancellation() {
+    const formData = {
+        cancel_quantity: parseInt(document.getElementById('cancelQuantity').value),
+        reason: document.getElementById('cancelReason').value,
+        notes: document.getElementById('cancelNotes').value,
+        notify_customer: true  // Always send notification automatically
+    };
+
+    // Show loading state
+    const submitButton = document.querySelector('#partialCancellationForm button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.textContent = 'Processing...';
+    submitButton.disabled = true;
+
+    fetch(`/api/staff/orders/${currentCancellationData.orderId}/items/${currentCancellationData.itemId}/cancel`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.order_deleted) {
+                showNotification(`Successfully cancelled ${formData.cancel_quantity} item(s). Order completely removed. Refund: $${data.refund_amount.toFixed(2)}`, 'success');
+                closePartialCancellationModal();
+                // Close order details modal since order no longer exists
+                const orderModal = document.getElementById('orderDetailsModal');
+                if (orderModal) {
+                    orderModal.style.display = 'none';
+                }
+                // Refresh the main dashboard orders table
+                loadUnifiedOrdersTable();
+            } else {
+                showNotification(`Successfully cancelled ${formData.cancel_quantity} item(s). Refund: $${data.refund_amount.toFixed(2)}`, 'success');
+                closePartialCancellationModal();
+                // Refresh the order details
+                showOrderDetails(currentCancellationData.orderId);
+                // Refresh the main dashboard orders table
+                loadUnifiedOrdersTable();
+            }
+        } else {
+            showNotification(`Error: ${data.error}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error cancelling item:', error);
+        showNotification('Error cancelling item. Please try again.', 'error');
+    })
+    .finally(() => {
+        // Restore button state
+        submitButton.textContent = originalText;
+        submitButton.disabled = false;
+    });
+}
+
+// Professional confirmation modal for actions
+function showConfirmation(title, message) {
+    return new Promise((resolve) => {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'confirmation-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(2px);
+        `;
+
+        // Create modal content
+        const modal = document.createElement('div');
+        modal.className = 'confirmation-modal';
+        modal.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.2s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+
+        modal.innerHTML = `
+            <div style="padding: 24px 24px 16px 24px; text-align: center;">
+                <div style="width: 64px; height: 64px; background: #dbeafe; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="32" height="32" fill="#2563eb" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #111827;">${title}</h3>
+                <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${message}</p>
+            </div>
+            <div style="padding: 16px 24px 24px 24px; display: flex; gap: 12px; justify-content: center;">
+                <button class="cancel-btn" style="
+                    background: #f3f4f6;
+                    color: #374151;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Cancel</button>
+                <button class="confirm-btn" style="
+                    background: #2563eb;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Confirm</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            modal.style.transform = 'scale(1)';
+        });
+
+        // Add hover effects
+        const cancelBtn = modal.querySelector('.cancel-btn');
+        const confirmBtn = modal.querySelector('.confirm-btn');
+
+        cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.backgroundColor = '#e5e7eb';
+        });
+        cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.backgroundColor = '#f3f4f6';
+        });
+
+        confirmBtn.addEventListener('mouseenter', () => {
+            confirmBtn.style.backgroundColor = '#1d4ed8';
+        });
+        confirmBtn.addEventListener('mouseleave', () => {
+            confirmBtn.style.backgroundColor = '#2563eb';
+        });
+
+        // Handle button clicks
+        const cleanup = () => {
+            modal.style.transform = 'scale(0.9)';
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+            }, 200);
+        };
+
+        cancelBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(false);
+        });
+
+        confirmBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(true);
+        });
+
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                cleanup();
+                resolve(false);
+            }
+        });
+
+        // Close on Escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                resolve(false);
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    });
+}
+
+// Professional delete confirmation modal
+function showDeleteConfirmation(title, message) {
+    return new Promise((resolve) => {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'delete-confirmation-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(2px);
+        `;
+
+        // Create modal content
+        const modal = document.createElement('div');
+        modal.className = 'delete-confirmation-modal';
+        modal.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.2s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+
+        modal.innerHTML = `
+            <div style="padding: 24px 24px 16px 24px; text-align: center;">
+                <div style="width: 64px; height: 64px; background: #fee2e2; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="32" height="32" fill="#dc2626" viewBox="0 0 24 24">
+                        <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                    </svg>
+                </div>
+                <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #111827;">${title}</h3>
+                <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${message}</p>
+            </div>
+            <div style="padding: 16px 24px 24px 24px; display: flex; gap: 12px; justify-content: center;">
+                <button class="cancel-btn" style="
+                    background: #f3f4f6;
+                    color: #374151;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Cancel</button>
+                <button class="delete-btn" style="
+                    background: #dc2626;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Delete</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            modal.style.transform = 'scale(1)';
+        });
+
+        // Add hover effects
+        const cancelBtn = modal.querySelector('.cancel-btn');
+        const deleteBtn = modal.querySelector('.delete-btn');
+
+        cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.backgroundColor = '#e5e7eb';
+        });
+        cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.backgroundColor = '#f3f4f6';
+        });
+
+        deleteBtn.addEventListener('mouseenter', () => {
+            deleteBtn.style.backgroundColor = '#b91c1c';
+        });
+        deleteBtn.addEventListener('mouseleave', () => {
+            deleteBtn.style.backgroundColor = '#dc2626';
+        });
+
+        // Handle button clicks
+        const cleanup = () => {
+            modal.style.transform = 'scale(0.9)';
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+            }, 200);
+        };
+
+        cancelBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(false);
+        });
+
+        deleteBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(true);
+        });
+
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                cleanup();
+                resolve(false);
+            }
+        });
+
+        // Close on Escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                resolve(false);
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    });
+}
+
+</script>
+
+    
+{% endblock %}

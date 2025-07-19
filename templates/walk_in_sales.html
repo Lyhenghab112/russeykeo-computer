@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Walk-in Sales - POS System{% endblock %}
+
+{% block content %}
+<div class="walk-in-container">
+    <div class="walk-in-header">
+        <h1><i class="fas fa-store"></i> Walk-in Sales</h1>
+        <div class="header-actions">
+            <button id="clear-cart-btn" class="btn btn-warning">
+                <i class="fas fa-trash"></i> Clear Cart
+            </button>
+            <button id="new-sale-btn" class="btn btn-success">
+                <i class="fas fa-plus"></i> New Sale
+            </button>
+        </div>
+    </div>
+
+    <div class="walk-in-layout">
+        <!-- Left Panel - Product Selection -->
+        <div class="product-panel">
+            <div class="search-section">
+                <div class="search-bar">
+                    <input type="text" id="product-search" placeholder="Search products by name or model number..." class="form-control">
+                </div>
+                <div class="quick-filters">
+                    <button class="filter-btn active" data-category="all">All Products</button>
+                    <button class="filter-btn" data-category="laptops">Laptops</button>
+                    <button class="filter-btn" data-category="accessories">Accessories</button>
+                    <button class="filter-btn" data-category="components">Components</button>
+                </div>
+            </div>
+
+            <div class="products-grid" id="products-grid">
+                <!-- Products will be loaded here dynamically -->
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i> Loading products...
+                </div>
+            </div>
+
+            <div class="pagination-container" id="pagination-container">
+                <!-- Pagination will be added here -->
+            </div>
+        </div>
+
+        <!-- Right Panel - Cart & Checkout -->
+        <div class="cart-panel">
+            <div class="cart-header">
+                <h3><i class="fas fa-shopping-cart"></i> Current Sale</h3>
+                <span class="cart-count" id="cart-count">0 items</span>
+            </div>
+
+            <div class="cart-items" id="cart-items">
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-cart"></i>
+                    <p>No items in cart</p>
+                    <small>Search and select products to add to cart</small>
+                </div>
+            </div>
+
+            <div class="cart-summary" id="cart-summary" style="display: none;">
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (0%):</span>
+                    <span id="tax">$0.00</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span id="total">$0.00</span>
+                </div>
+            </div>
+
+            <!-- Customer Information -->
+            <div class="customer-section" id="customer-section" style="display: none;">
+                <h4><i class="fas fa-user"></i> Customer Information (Optional)</h4>
+                <div class="customer-form">
+                    <div class="form-row">
+                        <input type="text" id="customer-name" placeholder="Customer Name" class="form-control">
+                    </div>
+                    <div class="form-row">
+                        <input type="email" id="customer-email" placeholder="Email (optional)" class="form-control">
+                        <input type="tel" id="customer-phone" placeholder="Phone (optional)" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Section -->
+            <div class="payment-section" id="payment-section" style="display: none;">
+                <h4><i class="fas fa-credit-card"></i> Payment Method</h4>
+                <div class="payment-methods">
+                    <button class="payment-btn active" data-method="khqr">
+                        <i class="fas fa-qrcode"></i>
+                        <span>KHQR Payment</span>
+                    </button>
+                    <button class="payment-btn" data-method="cash">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Cash Payment</span>
+                    </button>
+                </div>
+
+                <!-- KHQR Payment Details -->
+                <div class="payment-details khqr-details active" id="khqr-details">
+                    <div class="qr-container">
+                        <div class="qr-placeholder">
+                            <i class="fas fa-qrcode"></i>
+                            <p>QR Code will be generated</p>
+                        </div>
+                    </div>
+                    <p class="payment-instruction">Customer scans QR code to pay</p>
+                </div>
+
+                <!-- Cash Payment Details -->
+                <div class="payment-details cash-details" id="cash-details">
+                    <div class="cash-input">
+                        <label for="cash-received">Cash Received:</label>
+                        <input type="number" id="cash-received" placeholder="0.00" step="0.01" class="form-control">
+                    </div>
+                    <div class="change-display" id="change-display" style="display: none;">
+                        <span>Change Due:</span>
+                        <span class="change-amount" id="change-amount">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons" id="action-buttons" style="display: none;">
+                <button id="process-payment-btn" class="btn btn-success btn-lg">
+                    <i class="fas fa-check"></i> Process Payment
+                </button>
+                <button id="save-quote-btn" class="btn btn-secondary">
+                    <i class="fas fa-save"></i> Save as Quote
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice Modal -->
+<div class="modal fade" id="invoice-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-receipt"></i> Invoice Generated
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" title="Close">
+                    <span class="visually-hidden">Close</span>
+                </button>
+            </div>
+            <div class="modal-body" id="invoice-content">
+                <!-- Invoice content will be generated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="print-invoice-btn" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print Invoice
+                </button>
+                <button type="button" id="email-invoice-btn" class="btn btn-info">
+                    <i class="fas fa-envelope"></i> Email Invoice
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="success-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle"></i> Sale Completed
+                </h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h4>Payment Successful!</h4>
+                <p id="success-message">Sale has been processed successfully.</p>
+                <div class="sale-summary" id="sale-summary">
+                    <!-- Sale summary will be displayed here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="new-sale-modal-btn">
+                    <i class="fas fa-plus"></i> New Sale
+                </button>
+                <button type="button" class="btn btn-primary" id="view-invoice-btn">
+                    <i class="fas fa-receipt"></i> View Invoice
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Container -->
+<div id="notification-container" class="notification-container"></div>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/walk_in_sales.css') }}">
+<script src="{{ url_for('static', filename='js/walk_in_sales.js') }}"></script>
+{% endblock %}
