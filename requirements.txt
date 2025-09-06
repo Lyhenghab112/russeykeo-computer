@@ -13,4 +13,3 @@ Pillow
 pdf2image
 pyzbar
 gunicorn
-opencv-python-headless
