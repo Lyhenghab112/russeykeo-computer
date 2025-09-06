@@ -7,9 +7,9 @@ try:
     import cv2
     import numpy as np
     OPENCV_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError) as e:
     OPENCV_AVAILABLE = False
-    print("⚠️ OpenCV not available. QR code reading will be limited.")
+    print(f"⚠️ OpenCV not available: {e}. QR code reading will be limited.")
 
 from PIL import Image
 import io
