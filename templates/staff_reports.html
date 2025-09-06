@@ -7,71 +7,268 @@
     <h1><i class="fas fa-chart-bar"></i> Sales Reports</h1>
 
     <div class="staff-widgets">
-        <!-- This Month Revenue Widget -->
-        <div class="widget">
+        <!-- This Year Revenue Widget -->
+        <div class="widget yearly-revenue-widget">
             <div class="widget-header">
-                <h2>This Month Revenue</h2>
-                <button type="button" class="btn btn-sm export-csv" id="exportMonthlyRevenueCSV">Export to CSV</button>
+                <div class="header-content">
+                    <h2><i class="fas fa-calendar-year"></i> This Year Revenue</h2>
+                    <p class="widget-subtitle">Monthly revenue breakdown with detailed order information</p>
+                </div>
+                <div class="header-actions">
+                    <button type="button" class="btn btn-sm btn-export-pdf" id="exportYearlyRevenuePDF">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                </div>
             </div>
             <div class="widget-content">
-                <table style="width: 100%; border-collapse: collapse; border: 1px solid #aaa; font-weight: 400;">
-                    <thead>
-                        <tr>
-                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Date</th>
-                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Orders Count</th>
-                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Daily Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody id="monthlyRevenueTable">
-                        <tr><td colspan="3">Loading this month's revenue...</td></tr>
-                    </tbody>
-                </table>
-                <p id="monthlyRevenueMessage" class="no-data-message" style="display: none;">No revenue data available for this month.</p>
+                <!-- Yearly Revenue Summary Cards - REMOVED -->
+
+                <!-- Yearly Revenue Table -->
+                <div class="revenue-table-container">
+                    <div class="table-header">
+                        <h4><i class="fas fa-table"></i> Monthly Revenue Breakdown</h4>
+                        <div class="period-info">
+                            <div class="year-selector">
+                                <button id="yearlyRevenueYearBtn" class="btn btn-outline-primary btn-sm" onclick="toggleYearSelector()">
+                                    <i class="fas fa-calendar"></i> <span id="yearlyRevenueYear">2025</span> <i class="fas fa-chevron-down"></i>
+                                </button>
+                                <div id="yearSelectorDropdown" class="year-dropdown" style="display: none;">
+                                    <div class="year-option" onclick="selectYear(2025)">2025</div>
+                                    <div class="year-option" onclick="selectYear(2024)">2024</div>
+                                    <div class="year-option" onclick="selectYear(2023)">2023</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover revenue-table">
+                            <thead>
+                                <tr>
+                                    <th class="date-column">Month</th>
+                                    <th class="orders-column">Orders</th>
+                                    <th class="revenue-column">Monthly Revenue</th>
+                                    <th class="trend-column">Trend</th>
+                                    <th class="actions-column">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="yearlyRevenueTable">
+                                <tr><td colspan="5" class="loading-message">Loading yearly data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p id="yearlyRevenueMessage" class="no-data-message" style="display: none;">No yearly revenue data available.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- This Month Revenue Widget -->
+        <div class="widget monthly-revenue-widget">
+            <div class="widget-header">
+                <div class="header-content">
+                    <h2><i class="fas fa-calendar-alt"></i> This Month Revenue</h2>
+                    <p class="widget-subtitle">Click any date to see detailed order information</p>
+                </div>
+                <div class="header-actions">
+                    <button type="button" class="btn btn-sm btn-export-pdf" id="exportMonthlyRevenuePDF">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                </div>
+            </div>
+            <div class="widget-content">
+                <!-- Revenue Summary Cards -->
+                <div class="revenue-summary-cards">
+                    <div class="revenue-summary-card total-revenue">
+                        <div class="card-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="monthlyTotalRevenue">$0</h3>
+                            <p>Total Revenue</p>
+                        </div>
+                    </div>
+                    <div class="revenue-summary-card total-orders">
+                        <div class="card-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="monthlyTotalOrders">0</h3>
+                            <p>Total Orders</p>
+                        </div>
+                    </div>
+                    <div class="revenue-summary-card avg-daily">
+                        <div class="card-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="monthlyAvgDaily">$0</h3>
+                            <p>Avg. Daily Revenue</p>
+                        </div>
+                    </div>
+                    <div class="revenue-summary-card best-day">
+                        <div class="card-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="monthlyBestDay">-</h3>
+                            <p>Best Day</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Table with Better Styling -->
+                <div class="revenue-table-container">
+                    <div class="table-header">
+                        <h4><i class="fas fa-table"></i> Daily Revenue Breakdown</h4>
+                        <div class="period-info">
+                            <span class="period-badge">
+                                <i class="fas fa-calendar"></i> Aug 5-12, 2025
+                            </span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover revenue-table">
+                            <thead>
+                                <tr>
+                                    <th class="date-column">Date</th>
+                                    <th class="orders-column">Orders</th>
+                                    <th class="revenue-column">Daily Revenue</th>
+                                    <th class="trend-column">Trend</th>
+                                    <th class="actions-column">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monthlyRevenueTable">
+                                <tr><td colspan="5" class="loading-message">Loading revenue data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p id="monthlyRevenueMessage" class="no-data-message" style="display: none;">No revenue data available for this period.</p>
+                </div>
+
+
             </div>
         </div>
 
         <!-- Top Selling Products Widget -->
-        <div class="widget">
+        <div class="widget top-selling-products-widget">
             <div class="widget-header">
-                <h2>Top Selling Products</h2>
-                <button type="button" class="btn btn-sm export-csv" id="exportTopSellingProductsCSV">Export to CSV</button>
+                <div class="header-content">
+                    <h2><i class="fas fa-chart-line"></i> Top Selling Products</h2>
+                    <p class="widget-subtitle">Best performing products by revenue and quantity</p>
+                </div>
+                <div class="header-actions">
+                    <button type="button" class="btn btn-sm export-pdf" id="exportTopSellingProductsPDF">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline" id="toggleTopProductsView">
+                        <i class="fas fa-chart-bar"></i> Chart View
+                    </button>
+                </div>
             </div>
             <div class="widget-content">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Product Name</th>
-                            <th>Quantity Sold</th>
-                            <th>Total Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody id="topSellingProductsTable">
-                        <tr><td colspan="3">Loading top selling products...</td></tr>
-                    </tbody>
-                </table>
+                <!-- Summary Cards -->
+                <div class="summary-cards">
+                    <div class="summary-card total-revenue">
+                        <div class="card-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="totalRevenue">$0</h3>
+                            <p>Total Revenue</p>
+                        </div>
+                    </div>
+                    <div class="summary-card total-products">
+                        <div class="card-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="totalProducts">0</h3>
+                            <p>Products Sold</p>
+                        </div>
+                    </div>
+                    <div class="summary-card avg-price">
+                        <div class="card-icon">
+                            <i class="fas fa-tag"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3 id="avgPrice">$0</h3>
+                            <p>Avg. Price</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart View (Hidden by default) -->
+                <div class="chart-container" id="topProductsChartContainer" style="display: none;">
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+
+                <!-- Table View -->
+                <div class="table-container" id="topProductsTableContainer">
+                    <div class="table-header">
+                        <div class="table-filters">
+                            <select id="topProductsSortBy" class="form-control form-control-sm">
+                                <option value="revenue">Sort by Revenue</option>
+                                <option value="quantity">Sort by Quantity</option>
+                                <option value="name">Sort by Name</option>
+                            </select>
+                            <input type="text" id="topProductsSearch" class="form-control form-control-sm" placeholder="Search products...">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover enhanced-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="rank">#</th>
+                                    <th class="sortable" data-sort="name">Product Name</th>
+                                    <th class="sortable" data-sort="quantity">Quantity Sold</th>
+                                    <th class="sortable" data-sort="revenue">Total Revenue</th>
+                                    <th class="sortable" data-sort="avgPrice">Avg. Price</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topSellingProductsTable">
+                                <tr><td colspan="6" class="loading-row">Loading top selling products...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
                 <p id="topSellingProductsMessage" class="no-data-message" style="display: none;">No top selling products data available.</p>
             </div>
         </div>
 
         <!-- Top Selling Products by Category Widget -->
-        <div class="widget">
+        <div class="widget top-selling-products-by-category-widget">
             <div class="widget-header">
-                <h2>Top Selling Products by Category</h2>
-                <button type="button" class="btn btn-sm export-csv" id="exportTopSellingProductsByCategoryCSV">Export to CSV</button>
+                <div class="header-content">
+                    <h2><i class="fas fa-chart-pie"></i> Top Selling Products by Category</h2>
+                    <p class="widget-subtitle">Category performance analysis by revenue and sales volume</p>
+                </div>
+                <div class="header-actions">
+                    <button type="button" class="btn btn-sm export-pdf" id="exportTopSellingProductsByCategoryPDF">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
+                    </button>
+                </div>
             </div>
             <div class="widget-content">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Category Name</th>
-                            <th>Total Products Sold</th>
-                            <th>Total Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody id="topSellingProductsByCategoryTable">
-                        <tr><td colspan="3">Loading top selling products by category...</td></tr>
-                    </tbody>
-                </table>
+                <!-- Table View -->
+                <div class="table-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover enhanced-table">
+                            <thead>
+                                <tr>
+                                    <th>Category Name</th>
+                                    <th>Total Products Sold</th>
+                                    <th>Total Revenue</th>
+                                    <th>Performance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topSellingProductsByCategoryTable">
+                                <tr><td colspan="5">Loading top selling products by category...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 <p id="topSellingProductsByCategoryMessage" class="no-data-message" style="display: none;">No top selling products by category data available.</p>
             </div>
         </div>
@@ -80,7 +277,7 @@
         <div class="widget">
             <div class="widget-header">
                 <h2><i class="fas fa-users"></i> Customer Discount History</h2>
-                <button type="button" class="btn btn-sm export-csv" id="exportCustomerHistoryCSV">Export to CSV</button>
+                <button type="button" class="btn btn-sm export-pdf" id="exportCustomerHistoryPDF">Export to PDF</button>
             </div>
             <div class="widget-content">
                 <!-- Customer Search -->
@@ -181,6 +378,104 @@
     </div>
 </div>
 
+<!-- Product Details Modal -->
+<div class="modal fade" id="productDetailsModal" tabindex="-1" aria-labelledby="productDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productDetailsModalLabel">
+                    <i class="fas fa-info-circle"></i> Product Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="product-details-content">
+                    <!-- Product details will be populated here -->
+                </div>
+                
+                <!-- Order List Section -->
+                <div class="order-list-section" id="orderListSection" style="display: none;">
+                    <h6><i class="fas fa-list"></i> Order List</h6>
+                    
+                    <!-- Pagination Controls -->
+                    <div class="pagination-controls">
+                        <div class="pagination-info">
+                            <span class="pagination-text">Orders per page:</span>
+                            <select class="pagination-settings" id="productOrdersPerPage">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="pagination-buttons">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="changeProductPage('prev')">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="page-numbers" id="productPageNumbers">
+                                <!-- Page numbers will be populated here -->
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="changeProductPage('next')">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Orders Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover orders-table" id="productOrdersTable">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                    <th>Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productOrdersTableBody">
+                                <!-- Orders will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="exportProductDetails">
+                    <i class="fas fa-file-pdf"></i> Export to PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Day Detail Modal -->
+<div class="modal fade" id="dayDetailModal" tabindex="-1" aria-labelledby="dayDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 100vw; width: 100vw; margin: 0;">
+        <div class="modal-content" style="min-height: 100vh; border-radius: 0;">
+            <div class="modal-header">
+                <button type="button" class="btn-close-left" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h5 class="modal-title" id="dayDetailModalLabel">
+                    <i class="fas fa-calendar-day"></i> Day Details
+                </h5>
+            </div>
+            <div class="modal-body">
+                <div class="day-details-content">
+                    <!-- Day details will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Message Container for Notifications -->
 <div id="message-container"></div>
 {% endblock %}
@@ -188,13 +483,18 @@
 {% block styles %}
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/staff_reports.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/staff_notifications.css') }}">
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
+<!-- Chart.js for enhanced charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- jsPDF library for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script src="{{ url_for('static', filename='js/staff_messages.js') }}"></script>
+<script src="{{ url_for('static', filename='js/yearly_revenue.js') }}"></script>
 <script src="{{ url_for('static', filename='js/monthly_revenue.js') }}"></script>
 <script src="{{ url_for('static', filename='js/top_selling_products.js') }}"></script>
 <script src="{{ url_for('static', filename='js/top_selling_products_by_category.js') }}"></script>

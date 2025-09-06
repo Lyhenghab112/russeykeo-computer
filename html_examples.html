@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Examples - Learn by Doing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .example {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .example h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .code {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .output {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        form {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .highlight {
+            background-color: yellow;
+            padding: 2px 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>HTML Examples - Learn by Doing</h1>
+        <nav>
+            <ul>
+                <li><a href="#basic-elements">Basic Elements</a></li>
+                <li><a href="#text-formatting">Text Formatting</a></li>
+                <li><a href="#links">Links</a></li>
+                <li><a href="#images">Images</a></li>
+                <li><a href="#lists">Lists</a></li>
+                <li><a href="#tables">Tables</a></li>
+                <li><a href="#forms">Forms</a></li>
+                <li><a href="#semantic">Semantic HTML</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Basic Elements Section -->
+        <section id="basic-elements" class="example">
+            <h3>Basic HTML Elements</h3>
+            
+            <h4>Headings</h4>
+            <div class="code">
+&lt;h1&gt;Main Heading&lt;/h1&gt;
+&lt;h2&gt;Subheading&lt;/h2&gt;
+&lt;h3&gt;Section Heading&lt;/h3&gt;
+            </div>
+            <div class="output">
+                <h1>Main Heading</h1>
+                <h2>Subheading</h2>
+                <h3>Section Heading</h3>
+            </div>
+
+            <h4>Paragraphs</h4>
+            <div class="code">
+&lt;p&gt;This is a paragraph of text. It can contain multiple sentences and will automatically wrap to new lines.&lt;/p&gt;
+&lt;p&gt;This is another paragraph with some &lt;strong&gt;bold text&lt;/strong&gt; and &lt;em&gt;italic text&lt;/em&gt;.&lt;/p&gt;
+            </div>
+            <div class="output">
+                <p>This is a paragraph of text. It can contain multiple sentences and will automatically wrap to new lines.</p>
+                <p>This is another paragraph with some <strong>bold text</strong> and <em>italic text</em>.</p>
+            </div>
+
+            <h4>Line Breaks and Horizontal Rules</h4>
+            <div class="code">
+&lt;p&gt;This text will break&lt;br&gt;to a new line here.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;This paragraph appears after a horizontal line.&lt;/p&gt;
+            </div>
+            <div class="output">
+                <p>This text will break<br>to a new line here.</p>
+                <hr>
+                <p>This paragraph appears after a horizontal line.</p>
+            </div>
+        </section>
+
+        <!-- Text Formatting Section -->
+        <section id="text-formatting" class="example">
+            <h3>Text Formatting</h3>
+            
+            <div class="code">
+&lt;strong&gt;Bold text (semantic importance)&lt;/strong&gt;&lt;br&gt;
+&lt;b&gt;Bold text (visual only)&lt;/b&gt;&lt;br&gt;
+&lt;em&gt;Italic text (semantic emphasis)&lt;/em&gt;&lt;br&gt;
+&lt;i&gt;Italic text (visual only)&lt;/i&gt;&lt;br&gt;
+&lt;mark&gt;Highlighted text&lt;/mark&gt;&lt;br&gt;
+&lt;small&gt;Smaller text&lt;/small&gt;&lt;br&gt;
+&lt;del&gt;Deleted text&lt;/del&gt;&lt;br&gt;
+&lt;ins&gt;Inserted text&lt;/ins&gt;&lt;br&gt;
+&lt;sub&gt;Subscript&lt;/sub&gt; and &lt;sup&gt;Superscript&lt;/sup&gt;
+            </div>
+            <div class="output">
+                <strong>Bold text (semantic importance)</strong><br>
+                <b>Bold text (visual only)</b><br>
+                <em>Italic text (semantic emphasis)</em><br>
+                <i>Italic text (visual only)</i><br>
+                <mark>Highlighted text</mark><br>
+                <small>Smaller text</small><br>
+                <del>Deleted text</del><br>
+                <ins>Inserted text</ins><br>
+                <sub>Subscript</sub> and <sup>Superscript</sup>
+            </div>
+
+            <h4>Code and Preformatted Text</h4>
+            <div class="code">
+&lt;code&gt;inline code&lt;/code&gt;
+&lt;pre&gt;
+This text preserves
+    spaces and line breaks
+        exactly as written
+&lt;/pre&gt;
+            </div>
+            <div class="output">
+                <code>inline code</code>
+                <pre>
+This text preserves
+    spaces and line breaks
+        exactly as written
+                </pre>
+            </div>
+        </section>
+
+        <!-- Links Section -->
+        <section id="links" class="example">
+            <h3>Links and Navigation</h3>
+            
+            <div class="code">
+&lt;!-- External link --&gt;
+&lt;a href="https://www.example.com"&gt;Visit Example.com&lt;/a&gt;&lt;br&gt;
+
+&lt;!-- Internal link --&gt;
+&lt;a href="#section1"&gt;Go to Section 1&lt;/a&gt;&lt;br&gt;
+
+&lt;!-- Email link --&gt;
+&lt;a href="mailto:contact@example.com"&gt;Send us an email&lt;/a&gt;&lt;br&gt;
+
+&lt;!-- Phone link --&gt;
+&lt;a href="tel:+1234567890"&gt;Call us&lt;/a&gt;
+            </div>
+            <div class="output">
+                <!-- External link -->
+                <a href="https://www.example.com">Visit Example.com</a><br>
+                
+                <!-- Internal link -->
+                <a href="#section1">Go to Section 1</a><br>
+                
+                <!-- Email link -->
+                <a href="mailto:contact@example.com">Send us an email</a><br>
+                
+                <!-- Phone link -->
+                <a href="tel:+1234567890">Call us</a>
+            </div>
+
+            <h4>Link with Attributes</h4>
+            <div class="code">
+&lt;a href="https://www.example.com" 
+   target="_blank" 
+   rel="noopener noreferrer"
+   title="Visit our website"&gt;
+   Visit Example.com (opens in new tab)
+&lt;/a&gt;
+            </div>
+            <div class="output">
+                <a href="https://www.example.com" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   title="Visit our website">
+                   Visit Example.com (opens in new tab)
+                </a>
+            </div>
+        </section>
+
+        <!-- Images Section -->
+        <section id="images" class="example">
+            <h3>Images and Media</h3>
+            
+            <h4>Basic Image</h4>
+            <div class="code">
+&lt;img src="https://via.placeholder.com/200x100" alt="Placeholder image"&gt;
+            </div>
+            <div class="output">
+                <img src="https://via.placeholder.com/200x100" alt="Placeholder image">
+            </div>
+
+            <h4>Image with Attributes</h4>
+            <div class="code">
+&lt;img src="https://via.placeholder.com/300x200" 
+     alt="Large placeholder image" 
+     width="300" 
+     height="200"
+     title="This is a tooltip"&gt;
+            </div>
+            <div class="output">
+                <img src="https://via.placeholder.com/300x200" 
+                     alt="Large placeholder image" 
+                     width="300" 
+                     height="200"
+                     title="This is a tooltip">
+            </div>
+
+            <h4>Figure with Caption</h4>
+            <div class="code">
+&lt;figure&gt;
+    &lt;img src="https://via.placeholder.com/250x150" alt="Figure image"&gt;
+    &lt;figcaption&gt;This is a caption for the image above&lt;/figcaption&gt;
+&lt;/figure&gt;
+            </div>
+            <div class="output">
+                <figure>
+                    <img src="https://via.placeholder.com/250x150" alt="Figure image">
+                    <figcaption>This is a caption for the image above</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Lists Section -->
+        <section id="lists" class="example">
+            <h3>Lists</h3>
+            
+            <h4>Unordered List</h4>
+            <div class="code">
+&lt;ul&gt;
+    &lt;li&gt;First item&lt;/li&gt;
+    &lt;li&gt;Second item&lt;/li&gt;
+    &lt;li&gt;Third item&lt;/li&gt;
+&lt;/ul&gt;
+            </div>
+            <div class="output">
+                <ul>
+                    <li>First item</li>
+                    <li>Second item</li>
+                    <li>Third item</li>
+                </ul>
+            </div>
+
+            <h4>Ordered List</h4>
+            <div class="code">
+&lt;ol&gt;
+    &lt;li&gt;First step&lt;/li&gt;
+    &lt;li&gt;Second step&lt;/li&gt;
+    &lt;li&gt;Third step&lt;/li&gt;
+&lt;/ol&gt;
+            </div>
+            <div class="output">
+                <ol>
+                    <li>First step</li>
+                    <li>Second step</li>
+                    <li>Third step</li>
+                </ol>
+            </div>
+
+            <h4>Definition List</h4>
+            <div class="code">
+&lt;dl&gt;
+    &lt;dt&gt;HTML&lt;/dt&gt;
+    &lt;dd&gt;HyperText Markup Language&lt;/dd&gt;
+    
+    &lt;dt&gt;CSS&lt;/dt&gt;
+    &lt;dd&gt;Cascading Style Sheets&lt;/dd&gt;
+&lt;/dl&gt;
+            </div>
+            <div class="output">
+                <dl>
+                    <dt>HTML</dt>
+                    <dd>HyperText Markup Language</dd>
+                    
+                    <dt>CSS</dt>
+                    <dd>Cascading Style Sheets</dd>
+                </dl>
+            </div>
+
+            <h4>Nested Lists</h4>
+            <div class="code">
+&lt;ul&gt;
+    &lt;li&gt;Main item 1
+        &lt;ul&gt;
+            &lt;li&gt;Sub item 1.1&lt;/li&gt;
+            &lt;li&gt;Sub item 1.2&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;li&gt;Main item 2&lt;/li&gt;
+&lt;/ul&gt;
+            </div>
+            <div class="output">
+                <ul>
+                    <li>Main item 1
+                        <ul>
+                            <li>Sub item 1.1</li>
+                            <li>Sub item 1.2</li>
+                        </ul>
+                    </li>
+                    <li>Main item 2</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Tables Section -->
+        <section id="tables" class="example">
+            <h3>Tables</h3>
+            
+            <h4>Basic Table</h4>
+            <div class="code">
+&lt;table&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Name&lt;/th&gt;
+            &lt;th&gt;Age&lt;/th&gt;
+            &lt;th&gt;City&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        &lt;tr&gt;
+            &lt;td&gt;John Doe&lt;/td&gt;
+            &lt;td&gt;25&lt;/td&gt;
+            &lt;td&gt;New York&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Jane Smith&lt;/td&gt;
+            &lt;td&gt;30&lt;/td&gt;
+            &lt;td&gt;Los Angeles&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;
+            </div>
+            <div class="output">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>City</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>John Doe</td>
+                            <td>25</td>
+                            <td>New York</td>
+                        </tr>
+                        <tr>
+                            <td>Jane Smith</td>
+                            <td>30</td>
+                            <td>Los Angeles</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h4>Table with Merged Cells</h4>
+            <div class="code">
+&lt;table&gt;
+    &lt;tr&gt;
+        &lt;th colspan="2"&gt;Personal Information&lt;/th&gt;
+        &lt;th&gt;Contact&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td rowspan="2"&gt;John Doe&lt;/td&gt;
+        &lt;td&gt;25 years old&lt;/td&gt;
+        &lt;td&gt;john@email.com&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Software Developer&lt;/td&gt;
+        &lt;td&gt;+1-555-0123&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;
+            </div>
+            <div class="output">
+                <table>
+                    <tr>
+                        <th colspan="2">Personal Information</th>
+                        <th>Contact</th>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">John Doe</td>
+                        <td>25 years old</td>
+                        <td>john@email.com</td>
+                    </tr>
+                    <tr>
+                        <td>Software Developer</td>
+                        <td>+1-555-0123</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <!-- Forms Section -->
+        <section id="forms" class="example">
+            <h3>Forms</h3>
+            
+            <h4>Basic Contact Form</h4>
+            <div class="code">
+&lt;form action="#" method="POST"&gt;
+    &lt;label for="name"&gt;Name:&lt;/label&gt;
+    &lt;input type="text" id="name" name="name" required&gt;
+    
+    &lt;label for="email"&gt;Email:&lt;/label&gt;
+    &lt;input type="email" id="email" name="email" required&gt;
+    
+    &lt;label for="message"&gt;Message:&lt;/label&gt;
+    &lt;textarea id="message" name="message" rows="4"&gt;&lt;/textarea&gt;
+    
+    &lt;button type="submit"&gt;Send Message&lt;/button&gt;
+&lt;/form&gt;
+            </div>
+            <div class="output">
+                <form action="#" method="POST">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                    
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                    
+                    <label for="message">Message:</label>
+                    <textarea id="message" name="message" rows="4"></textarea>
+                    
+                    <button type="submit">Send Message</button>
+                </form>
+            </div>
+
+            <h4>Advanced Form Elements</h4>
+            <div class="code">
+&lt;form&gt;
+    &lt;fieldset&gt;
+        &lt;legend&gt;Personal Information&lt;/legend&gt;
+        
+        &lt;label for="gender"&gt;Gender:&lt;/label&gt;
+        &lt;input type="radio" id="male" name="gender" value="male"&gt;
+        &lt;label for="male"&gt;Male&lt;/label&gt;
+        &lt;input type="radio" id="female" name="gender" value="female"&gt;
+        &lt;label for="female"&gt;Female&lt;/label&gt;
+        
+        &lt;br&gt;&lt;br&gt;
+        
+        &lt;label for="interests"&gt;Interests:&lt;/label&gt;
+        &lt;input type="checkbox" id="sports" name="interests" value="sports"&gt;
+        &lt;label for="sports"&gt;Sports&lt;/label&gt;
+        &lt;input type="checkbox" id="music" name="interests" value="music"&gt;
+        &lt;label for="music"&gt;Music&lt;/label&gt;
+        &lt;input type="checkbox" id="reading" name="interests" value="reading"&gt;
+        &lt;label for="reading"&gt;Reading&lt;/label&gt;
+        
+        &lt;br&gt;&lt;br&gt;
+        
+        &lt;label for="country"&gt;Country:&lt;/label&gt;
+        &lt;select id="country" name="country"&gt;
+            &lt;option value=""&gt;Select a country&lt;/option&gt;
+            &lt;option value="us"&gt;United States&lt;/option&gt;
+            &lt;option value="ca"&gt;Canada&lt;/option&gt;
+            &lt;option value="uk"&gt;United Kingdom&lt;/option&gt;
+        &lt;/select&gt;
+        
+        &lt;br&gt;&lt;br&gt;
+        
+        &lt;label for="birthdate"&gt;Birth Date:&lt;/label&gt;
+        &lt;input type="date" id="birthdate" name="birthdate"&gt;
+        
+        &lt;br&gt;&lt;br&gt;
+        
+        &lt;label for="age"&gt;Age:&lt;/label&gt;
+        &lt;input type="number" id="age" name="age" min="18" max="120"&gt;
+        
+        &lt;br&gt;&lt;br&gt;
+        
+        &lt;button type="submit"&gt;Submit&lt;/button&gt;
+        &lt;button type="reset"&gt;Reset&lt;/button&gt;
+    &lt;/fieldset&gt;
+&lt;/form&gt;
+            </div>
+            <div class="output">
+                <form>
+                    <fieldset>
+                        <legend>Personal Information</legend>
+                        
+                        <label for="gender">Gender:</label>
+                        <input type="radio" id="male" name="gender" value="male">
+                        <label for="male">Male</label>
+                        <input type="radio" id="female" name="gender" value="female">
+                        <label for="female">Female</label>
+                        
+                        <br><br>
+                        
+                        <label for="interests">Interests:</label>
+                        <input type="checkbox" id="sports" name="interests" value="sports">
+                        <label for="sports">Sports</label>
+                        <input type="checkbox" id="music" name="interests" value="music">
+                        <label for="music">Music</label>
+                        <input type="checkbox" id="reading" name="interests" value="reading">
+                        <label for="reading">Reading</label>
+                        
+                        <br><br>
+                        
+                        <label for="country">Country:</label>
+                        <select id="country" name="country">
+                            <option value="">Select a country</option>
+                            <option value="us">United States</option>
+                            <option value="ca">Canada</option>
+                            <option value="uk">United Kingdom</option>
+                        </select>
+                        
+                        <br><br>
+                        
+                        <label for="birthdate">Birth Date:</label>
+                        <input type="date" id="birthdate" name="birthdate">
+                        
+                        <br><br>
+                        
+                        <label for="age">Age:</label>
+                        <input type="number" id="age" name="age" min="18" max="120">
+                        
+                        <br><br>
+                        
+                        <button type="submit">Submit</button>
+                        <button type="reset">Reset</button>
+                    </fieldset>
+                </form>
+            </div>
+        </section>
+
+        <!-- Semantic HTML Section -->
+        <section id="semantic" class="example">
+            <h3>Semantic HTML</h3>
+            
+            <div class="code">
+&lt;header&gt;
+    &lt;h1&gt;Website Title&lt;/h1&gt;
+    &lt;nav&gt;
+        &lt;ul&gt;
+            &lt;li&gt;&lt;a href="#home"&gt;Home&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href="#about"&gt;About&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href="#contact"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/nav&gt;
+&lt;/header&gt;
+
+&lt;main&gt;
+    &lt;article&gt;
+        &lt;header&gt;
+            &lt;h2&gt;Article Title&lt;/h2&gt;
+            &lt;time datetime="2024-01-15"&gt;January 15, 2024&lt;/time&gt;
+        &lt;/header&gt;
+        
+        &lt;section&gt;
+            &lt;h3&gt;Introduction&lt;/h3&gt;
+            &lt;p&gt;This is the introduction section of the article.&lt;/p&gt;
+        &lt;/section&gt;
+        
+        &lt;section&gt;
+            &lt;h3&gt;Main Content&lt;/h3&gt;
+            &lt;p&gt;This is the main content section with &lt;mark&gt;highlighted text&lt;/mark&gt;.&lt;/p&gt;
+            &lt;blockquote&gt;
+                &lt;p&gt;This is a blockquote from another source.&lt;/p&gt;
+                &lt;cite&gt;- Author Name&lt;/cite&gt;
+            &lt;/blockquote&gt;
+        &lt;/section&gt;
+    &lt;/article&gt;
+    
+    &lt;aside&gt;
+        &lt;h3&gt;Related Articles&lt;/h3&gt;
+        &lt;ul&gt;
+            &lt;li&gt;&lt;a href="#"&gt;Related Article 1&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href="#"&gt;Related Article 2&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/aside&gt;
+&lt;/main&gt;
+
+&lt;footer&gt;
+    &lt;p&gt;&copy; 2024 Your Company. All rights reserved.&lt;/p&gt;
+&lt;/footer&gt;
+            </div>
+            <div class="output">
+                <header style="background-color: #f8f9fa; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                    <h1>Website Title</h1>
+                    <nav>
+                        <ul>
+                            <li><a href="#home">Home</a></li>
+                            <li><a href="#about">About</a></li>
+                            <li><a href="#contact">Contact</a></li>
+                        </ul>
+                    </nav>
+                </header>
+
+                <main>
+                    <article style="background-color: #f8f9fa; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                        <header>
+                            <h2>Article Title</h2>
+                            <time datetime="2024-01-15">January 15, 2024</time>
+                        </header>
+                        
+                        <section>
+                            <h3>Introduction</h3>
+                            <p>This is the introduction section of the article.</p>
+                        </section>
+                        
+                        <section>
+                            <h3>Main Content</h3>
+                            <p>This is the main content section with <mark>highlighted text</mark>.</p>
+                            <blockquote style="border-left: 4px solid #007bff; padding-left: 15px; margin: 15px 0;">
+                                <p>This is a blockquote from another source.</p>
+                                <cite>- Author Name</cite>
+                            </blockquote>
+                        </section>
+                    </article>
+                    
+                    <aside style="background-color: #e9ecef; padding: 15px; border-radius: 5px;">
+                        <h3>Related Articles</h3>
+                        <ul>
+                            <li><a href="#">Related Article 1</a></li>
+                            <li><a href="#">Related Article 2</a></li>
+                        </ul>
+                    </aside>
+                </main>
+
+                <footer style="background-color: #f8f9fa; padding: 15px; margin-top: 20px; border-radius: 5px; text-align: center;">
+                    <p>&copy; 2024 Your Company. All rights reserved.</p>
+                </footer>
+            </div>
+        </section>
+
+        <!-- Practice Section -->
+        <section class="example">
+            <h3>Practice Exercises</h3>
+            
+            <h4>Exercise 1: Create a Personal Profile Page</h4>
+            <p>Create an HTML page that includes:</p>
+            <ul>
+                <li>Your name as the main heading</li>
+                <li>A profile picture</li>
+                <li>Personal information in a table</li>
+                <li>A list of your hobbies</li>
+                <li>A contact form</li>
+            </ul>
+
+            <h4>Exercise 2: Build a Recipe Page</h4>
+            <p>Create an HTML page for a recipe that includes:</p>
+            <ul>
+                <li>Recipe title and description</li>
+                <li>Ingredients list</li>
+                <li>Step-by-step instructions</li>
+                <li>Cooking time and difficulty</li>
+                <li>Nutritional information in a table</li>
+            </ul>
+
+            <h4>Exercise 3: Design a Product Catalog</h4>
+            <p>Create an HTML page for a product catalog with:</p>
+            <ul>
+                <li>Multiple product cards</li>
+                <li>Product images and descriptions</li>
+                <li>Pricing information</li>
+                <li>Add to cart buttons</li>
+                <li>Product categories</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>This HTML examples file was created to help you learn HTML by seeing real examples in action!</p>
+        <p>Open this file in a web browser to see how all the HTML elements are rendered.</p>
+    </footer>
+</body>
+</html>

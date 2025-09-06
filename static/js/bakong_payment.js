@@ -546,8 +546,8 @@ class BakongPayment {
         }
 
         try {
-            // Update status to show processing
-            this.updatePaymentStatus('Processing payment confirmation...', 'processing');
+            // Update status to show pending
+            this.updatePaymentStatus('Processing payment confirmation...', 'pending');
 
             // Disable the button to prevent double-clicks
             const completedButton = this.paymentModal.querySelector('#payment-completed-btn');
@@ -671,7 +671,12 @@ class BakongPayment {
      * Show error message
      */
     showError(message) {
-        alert(message); // Simple error display - could be enhanced with custom modal
+        // Use unified notifications if available, otherwise fall back to alert
+        if (window.unifiedNotifications) {
+            window.unifiedNotifications.error(message);
+        } else {
+            alert(message);
+        }
     }
 }
 

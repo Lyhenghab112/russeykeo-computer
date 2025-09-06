@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Account - Computer Shop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .header-section {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: block;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            object-fit: cover;
+        }
+        
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+        
+        .content-section {
+            padding: 40px 30px;
+        }
+        
+        .success-message {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 1px solid #28a745;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #155724;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+        }
+        
+        .success-message strong {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .verification-info {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .verification-info p {
+            margin: 8px 0;
+            color: #6c757d;
+            font-size: 15px;
+        }
+        
+        .verification-info .email {
+            font-weight: 700;
+            color: #495057;
+            font-size: 18px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            display: inline-block;
+            margin: 10px 0;
+            border: 2px solid #e9ecef;
+        }
+        
+        .otp-form {
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 16px;
+        }
+        
+        .otp-input {
+            width: 100%;
+            padding: 18px 20px;
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 4px;
+            border: 3px solid #e9ecef;
+            border-radius: 15px;
+            background: white;
+            transition: all 0.3s ease;
+            color: #495057;
+        }
+        
+        .otp-input:focus {
+            outline: none;
+            border-color: #28a745;
+            box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .otp-input::placeholder {
+            color: #adb5bd;
+            letter-spacing: 2px;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .resend-section {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 2px solid #e9ecef;
+        }
+        
+        .resend-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .resend-btn:hover {
+            color: #0056b3;
+            background: #f8f9fa;
+            border-color: #007bff;
+        }
+        
+        .resend-btn:disabled {
+            color: #6c757d;
+            cursor: not-allowed;
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        
+        .countdown {
+            color: #6c757d;
+            font-size: 13px;
+            margin-top: 12px;
+            font-weight: 500;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border-radius: 15px;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        
+        .alert-error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .alert-warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 2px solid #ffc107;
+            color: #856404;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header-section {
+                padding: 30px 20px;
+            }
+            
+            .content-section {
+                padding: 30px 20px;
+            }
+            
+            .header-title {
+                font-size: 24px;
+            }
+            
+            .otp-input {
+                font-size: 20px;
+                padding: 16px 18px;
+            }
+            
+            .submit-btn {
+                padding: 16px 25px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <img src="{{ url_for('static', filename='icons/logo.jpg') }}" alt="Computer Shop Logo" class="logo">
+            <h1 class="header-title">Welcome to Computer Shop!</h1>
+            <p class="header-subtitle">Just one more step to complete your registration</p>
+        </div>
+        
+        <div class="content-section">
+                         <!-- Success Message -->
+             <div class="success-message">
+                 <strong>Registration Started!</strong>
+                 Please check your email for the verification code to complete your registration.
+             </div>
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+                         <div class="verification-info">
+                 <p>We've sent a 6-digit verification code to:</p>
+                 <div class="email">{{ session.get('temp_customer_email', '') }}</div>
+                 <p><small>This code will expire in 15 minutes</small></p>
+             </div>
+            
+            <form class="otp-form" method="POST">
+                                 <div class="form-group">
+                     <label for="otp_code" class="form-label">Enter Verification Code:</label>
+                     <input type="text" 
+                            id="otp_code" 
+                            name="otp_code" 
+                            class="otp-input" 
+                            maxlength="6" 
+                            placeholder="000000" 
+                            required 
+                            autocomplete="off">
+                 </div>
+                
+                                 <button type="submit" class="submit-btn">
+                     Verify & Complete Registration
+                 </button>
+            </form>
+            
+            <div class="resend-section">
+                                 <button type="button" onclick="resendRegistrationOTP()" id="resendBtn" class="resend-btn">
+                     Didn't receive the code? Resend
+                 </button>
+                <div id="countdown" class="countdown"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let countdown = 60;
+        let canResend = false;
+        
+        // Auto-focus OTP input
+        document.getElementById('otp_code').focus();
+        
+        // Handle OTP input formatting
+        document.getElementById('otp_code').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            e.target.value = value;
+        });
+        
+        function resendRegistrationOTP() {
+            if (!canResend) return;
+            
+            const resendBtn = document.getElementById('resendBtn');
+            const countdownDiv = document.getElementById('countdown');
+            
+            resendBtn.disabled = true;
+            canResend = false;
+            countdown = 60;
+            
+            fetch('/resend-registration-otp', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                                         alert('Verification code sent successfully! Please check your email.');
+                    startCountdown();
+                } else {
+                                         alert('Error: ' + data.error);
+                    resendBtn.disabled = false;
+                    canResend = true;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                                 alert('Error resending verification code. Please try again.');
+                resendBtn.disabled = false;
+                canResend = true;
+            });
+        }
+        
+        function startCountdown() {
+            const resendBtn = document.getElementById('resendBtn');
+            const countdownDiv = document.getElementById('countdown');
+            
+            const timer = setInterval(() => {
+                                 countdownDiv.textContent = `Resend available in ${countdown} seconds`;
+                countdown--;
+                
+                if (countdown < 0) {
+                    clearInterval(timer);
+                    countdownDiv.textContent = '';
+                    resendBtn.disabled = false;
+                    canResend = true;
+                }
+            }, 1000);
+        }
+        
+        // Start initial countdown
+        startCountdown();
+    </script>
+</body>
+</html>

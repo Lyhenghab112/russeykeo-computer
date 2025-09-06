@@ -8,9 +8,12 @@
 
     <div class="order-status-tabs">
         <button class="tab-button active" data-status="all">All</button>
-        <button class="tab-button" data-status="pending">Pending</button>
-        <button class="tab-button" data-status="processing">Processing</button>
+        <button class="tab-button" data-status="pending">Pending Payments</button>
+        <button class="tab-button" data-status="completed">Completed</button>
         <button class="tab-button" data-status="cancelled">Cancelled</button>
+        <a href="/payment/recover-from-qr" class="qr-recovery-btn" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-left: 20px; display: inline-flex; align-items: center;">
+            <i class="fas fa-qrcode" style="margin-right: 8px;"></i> Upload QR Payment
+        </a>
     </div>
 
     <div id="orders-container">
@@ -25,12 +28,29 @@
             {% endif %}
             <p>Order Date: {{ order.order_date }}</p>
             <p>Total Amount: ${{ "%.2f"|format(order.total_amount) }}</p>
+            {% if order.transaction_id %}
+            <p>Transaction ID: <code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px; font-size: 0.9em;">{{ order.transaction_id }}</code></p>
+            {% endif %}
             <h4>Items:</h4>
             <ul>
                 {% for item in order.items %}
                 <li>{{ item.product_name }} - Quantity: {{ item.quantity }} - Price: ${{ "%.2f"|format(item.price) }}</li>
                 {% endfor %}
             </ul>
+            
+            {% if order.status|lower == 'pending' and order.payment_method == 'KHQR_BAKONG' %}
+            <div class="pending-payment-actions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                <p style="color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                    <i class="fas fa-clock"></i> This order is waiting for payment. You can complete payment using your banking app.
+                </p>
+                <button class="btn btn-success" onclick="completePendingPayment({{ order.id }})" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">
+                    <i class="fas fa-credit-card"></i> Complete Payment
+                </button>
+                <button class="btn btn-info" onclick="showQRCode({{ order.id }})" style="background: #17a2b8; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+                    <i class="fas fa-qrcode"></i> Show QR Code
+                </button>
+            </div>
+            {% endif %}
         </div>
         {% else %}
         <p>No orders found for this customer.</p>
@@ -59,6 +79,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Function to complete pending payment
+function completePendingPayment(orderId) {
+    // Redirect to payment page for this specific order
+    window.location.href = `/payment/process?order_id=${orderId}`;
+}
+
+// Function to show QR code for pending payment
+function showQRCode(orderId) {
+    // Redirect to QR save page to show the QR code
+    window.location.href = `/payment/save-qr?order_id=${orderId}`;
+}
+
+// Note: Removed syncCartWithPending function because pending orders should be independent of cart changes
 </script>
 
 <style>

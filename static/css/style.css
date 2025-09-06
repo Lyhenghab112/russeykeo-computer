@@ -128,3 +128,40 @@
 .add-to-cart-btn:not(:disabled):active {
     transform: translateY(0) scale(0.98);
 }
+
+/* Cart Badge Styles - Unified and Medium Size */
+.cart-badge {
+    position: absolute !important;
+    top: -5px !important;
+    right: -5px !important;
+    background-color: #dc3545 !important;
+    color: white !important;
+    border-radius: 50% !important;
+    padding: 2px 4px !important;
+    font-size: 0.65rem !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 14px !important;
+    height: 14px !important;
+    font-weight: bold !important;
+    z-index: 10 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2) !important;
+    line-height: 1 !important;
+}
+
+.cart-badge.show {
+    display: inline-flex !important;
+}
+
+/* Cart icon container */
+.cart-icon-container {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    margin-right: 8px !important;
+}
+
+.cart-icon-container i {
+    color: white !important;
+}

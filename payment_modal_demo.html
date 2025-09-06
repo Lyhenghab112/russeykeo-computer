@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Modal Demo - Redesigned</title>
+    <link rel="stylesheet" href="static/css/payment_modal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .demo-container {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .demo-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .demo-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+        
+        .demo-button {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+        }
+        
+        .demo-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 123, 255, 0.4);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 800px;
+            margin-top: 60px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .feature-description {
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1 class="demo-title">🎨 Redesigned Payment Modal</h1>
+        <p class="demo-subtitle">Modern, accessible, and beautiful payment method selection</p>
+        <button class="demo-button" onclick="showPaymentModal()">
+            <i class="fas fa-credit-card"></i> Try Payment Modal
+        </button>
+    </div>
+
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon">✨</div>
+            <h3 class="feature-title">Modern Design</h3>
+            <p class="feature-description">Clean, gradient-based design with smooth animations and hover effects</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h3 class="feature-title">Responsive</h3>
+            <p class="feature-description">Fully responsive design that works perfectly on all devices</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">♿</div>
+            <h3 class="feature-title">Accessible</h3>
+            <p class="feature-description">Keyboard navigation, screen reader support, and focus management</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🎭</div>
+            <h3 class="feature-title">Smooth Animations</h3>
+            <p class="feature-description">Beautiful entrance/exit animations with CSS keyframes</p>
+        </div>
+    </div>
+
+    <script>
+        function showPaymentModal() {
+            // Sample data for demo
+            const cartItems = [
+                { name: 'ASUS FX7', price: 571.50, quantity: 1 }
+            ];
+            const customerInfo = { first_name: 'John', last_name: 'Doe' };
+            const totalPrice = 457.20;
+
+            // Create payment method selection modal
+            const paymentModal = document.createElement('div');
+            paymentModal.id = 'payment-method-modal';
+            paymentModal.className = 'payment-modal';
+
+            paymentModal.innerHTML = `
+                <div class="payment-modal-content">
+                    <button class="payment-modal-close" onclick="closePaymentModal()" aria-label="Close modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    
+                    <div class="payment-modal-header">
+                        <h2>Choose Payment Method</h2>
+                        <div class="subtitle">Select your preferred way to complete your purchase</div>
+                    </div>
+                    
+                    <div class="payment-modal-body">
+                        <div class="order-summary">
+                            <h3>Order Summary</h3>
+                            <div class="summary-grid">
+                                <div class="summary-item">
+                                    <span class="summary-label">Customer</span>
+                                    <span class="summary-value">${customerInfo.first_name} ${customerInfo.last_name}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Total Amount</span>
+                                    <span class="summary-value amount">$${totalPrice.toFixed(2)}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Items</span>
+                                    <span class="summary-value">${cartItems.length} item(s)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-options">
+                            <!-- KHQR Payment Option -->
+                            <div class="payment-option featured" onclick="selectKHQRPayment()" tabindex="0" role="button" aria-label="Select KHQR Payment">
+                                <div class="payment-option-icon">📱</div>
+                                <h3>KHQR Payment</h3>
+                                <div class="payment-option-description">ACLEDA Mobile, ABA, Wing, Pi Pay</div>
+                                <div class="payment-option-subtitle">Scan QR code with your banking app</div>
+                            </div>
+
+                            <!-- Cash Payment Option -->
+                            <div class="payment-option cash" onclick="selectCashPayment()" tabindex="0" role="button" aria-label="Select Cash Payment">
+                                <div class="payment-option-icon">💵</div>
+                                <h3>Cash Payment</h3>
+                                <div class="payment-option-description">Walk-in customers</div>
+                                <div class="payment-option-subtitle">Pay with cash at the store</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-modal-footer">
+                        <button class="cancel-button" onclick="closePaymentModal()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(paymentModal);
+            
+            // Add keyboard navigation support
+            const paymentOptions = paymentModal.querySelectorAll('.payment-option');
+            paymentOptions.forEach(option => {
+                option.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        option.click();
+                    }
+                });
+            });
+            
+            // Add click outside to close functionality
+            paymentModal.addEventListener('click', (e) => {
+                if (e.target === paymentModal) {
+                    closePaymentModal();
+                }
+            });
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('payment-method-modal');
+            if (modal) {
+                // Add fade out animation before removing
+                modal.style.animation = 'modalFadeOut 0.3s ease-out forwards';
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }
+        }
+
+        function selectKHQRPayment() {
+            alert('KHQR Payment selected! This would initiate the QR payment process.');
+            closePaymentModal();
+        }
+
+        function selectCashPayment() {
+            alert('Cash Payment selected! This would process the cash payment.');
+            closePaymentModal();
+        }
+    </script>
+</body>
+</html>

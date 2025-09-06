@@ -111,12 +111,12 @@ class BakongQRGenerator:
         # Simple payment info for QR code
         payment_info = f"Pay ${amount} USD to {self.merchant_name} - Ref: {reference_id}"
 
-        # Generate QR code
+        # Generate QR code with optimized parameters for speed
         qr = qrcode.QRCode(
             version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,  # Lowest error correction for speed
+            box_size=8,  # Smaller box size for faster generation
+            border=2,    # Smaller border for faster generation
         )
         qr.add_data(payment_info)
         qr.make(fit=True)
@@ -124,9 +124,9 @@ class BakongQRGenerator:
         # Create image
         img = qr.make_image(fill_color="black", back_color="white")
 
-        # Convert to base64
+        # Convert to base64 with optimization
         buffer = io.BytesIO()
-        img.save(buffer, format='PNG')
+        img.save(buffer, format='PNG', optimize=True)
         img_data = buffer.getvalue()
 
         return base64.b64encode(img_data).decode('utf-8')

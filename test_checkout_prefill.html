@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Checkout Pre-fill Functionality</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-outline-primary {
+            background: transparent;
+            color: #007bff;
+            border: 1px solid #007bff;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-outline-primary:hover {
+            background: #007bff;
+            color: white;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .prefill-notification {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(40, 167, 69, 0.1);
+        }
+        
+        .prefill-message {
+            display: flex;
+            align-items: center;
+            color: #155724;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .prefill-message i {
+            font-size: 16px;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .user-info h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Checkout Pre-fill Functionality</h1>
+        
+        <div class="test-section">
+            <h2>📋 Current User Information</h2>
+            <div class="user-info">
+                <h3>Logged-in User Data:</h3>
+                <p><strong>Name:</strong> <span id="user-name">John Doe</span></p>
+                <p><strong>Email:</strong> <span id="user-email">john.doe@example.com</span></p>
+                <p><strong>Phone:</strong> <span id="user-phone">+855 12 345 678</span></p>
+                <p><strong>Address:</strong> <span id="user-address">123 Main Street, Phnom Penh, Cambodia</span></p>
+            </div>
+            
+            <button class="btn" onclick="simulateLogin()">🔐 Simulate Login</button>
+            <button class="btn" onclick="simulateLogout()">🚪 Simulate Logout</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>🛒 Checkout Form</h2>
+            
+            <div id="prefill-notification" class="prefill-notification" style="display: none;">
+                <div class="prefill-message">
+                    <i>✓</i>
+                    Your information has been pre-filled from your account
+                </div>
+            </div>
+            
+            <div id="prefill-button-container" style="display: none; margin-bottom: 20px;">
+                <button type="button" class="btn btn-outline-primary" onclick="prefillCustomerForm()">
+                    <i>🔄</i>
+                    Use My Info
+                </button>
+            </div>
+            
+            <form id="customer-form">
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone *</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="Enter your phone number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Address *</label>
+                    <input type="text" id="address" name="address" required placeholder="Enter your address">
+                </div>
+                
+                <button type="button" class="btn" onclick="openCheckoutContainer()">🛒 Open Checkout</button>
+                <button type="button" class="btn" onclick="resetForm()">🔄 Reset Form</button>
+            </form>
+        </div>
+        
+        <div class="test-section">
+            <h2>📝 Test Instructions</h2>
+            <ol>
+                <li>Click "Simulate Login" to set up user data</li>
+                <li>Click "Open Checkout" to see the pre-fill functionality</li>
+                <li>Notice how the form is automatically filled and the notification appears</li>
+                <li>Try editing some fields and click "Use My Info" to re-fill</li>
+                <li>Click "Reset Form" to clear everything</li>
+                <li>Click "Simulate Logout" to see how it behaves without user data</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Simulate logged-in user data
+        let loggedInUserInfo = null;
+        
+        function simulateLogin() {
+            loggedInUserInfo = {
+                name: document.getElementById('user-name').textContent,
+                email: document.getElementById('user-email').textContent,
+                phone: document.getElementById('user-phone').textContent,
+                address: document.getElementById('user-address').textContent
+            };
+            
+            console.log('User logged in:', loggedInUserInfo);
+            alert('✅ User logged in successfully!\n\nNow click "Open Checkout" to see the pre-fill functionality.');
+        }
+        
+        function simulateLogout() {
+            loggedInUserInfo = null;
+            console.log('User logged out');
+            alert('🚪 User logged out successfully!\n\nNow the pre-fill functionality will not work.');
+        }
+        
+        function openCheckoutContainer() {
+            // Show pre-fill button if user is logged in
+            const prefillButtonContainer = document.getElementById('prefill-button-container');
+            if (prefillButtonContainer) {
+                if (loggedInUserInfo) {
+                    prefillButtonContainer.style.display = 'block';
+                } else {
+                    prefillButtonContainer.style.display = 'none';
+                }
+            }
+            
+            // Pre-fill customer information if user is logged in
+            if (loggedInUserInfo) {
+                prefillCustomerForm();
+            }
+            
+            alert('🛒 Checkout container opened!\n\n' + 
+                  (loggedInUserInfo ? '✅ Form has been pre-filled with your information!' : '❌ No user logged in - form is empty.'));
+        }
+        
+        function prefillCustomerForm() {
+            if (loggedInUserInfo) {
+                // Pre-fill the customer form with logged-in user information
+                document.getElementById('name').value = loggedInUserInfo.name || '';
+                document.getElementById('email').value = loggedInUserInfo.email || '';
+                document.getElementById('phone').value = loggedInUserInfo.phone || '';
+                document.getElementById('address').value = loggedInUserInfo.address || '';
+                
+                // Show the pre-fill notification
+                const notification = document.getElementById('prefill-notification');
+                if (notification) {
+                    notification.style.display = 'block';
+                }
+                
+                console.log('Customer form pre-filled with user info:', loggedInUserInfo);
+            }
+        }
+        
+        function resetForm() {
+            document.getElementById('customer-form').reset();
+            
+            // Hide the pre-fill notification
+            const notification = document.getElementById('prefill-notification');
+            if (notification) {
+                notification.style.display = 'none';
+            }
+            
+            // Hide the pre-fill button
+            const prefillButtonContainer = document.getElementById('prefill-button-container');
+            if (prefillButtonContainer) {
+                prefillButtonContainer.style.display = 'none';
+            }
+            
+            console.log('Form reset');
+        }
+        
+        // Initialize
+        console.log('Test page loaded. Use the buttons to test the pre-fill functionality.');
+    </script>
+</body>
+</html>

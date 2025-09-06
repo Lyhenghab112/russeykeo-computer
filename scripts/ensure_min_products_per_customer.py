@@ -53,10 +53,14 @@ def ensure_min_products_per_customer(min_products=5):
             cur.execute("INSERT INTO orders (customer_id, status, order_date, total_amount) VALUES (%s, %s, NOW(), 0)", (customer_id, 'Pending'))
             order_id = cur.lastrowid
 
-            # Insert order_items
+            # Insert order_items with discount information
             for _ in range(needed):
                 quantity = 1
-                cur.execute("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (%s, %s, %s, %s)", (order_id, product_id, quantity, price))
+                # Set original_price equal to price (no discount for these test orders)
+                cur.execute("""
+                    INSERT INTO order_items (order_id, product_id, quantity, price, original_price, discount_percentage, discount_amount)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (order_id, product_id, quantity, price, price, 0.00, 0.00))
 
             # Update order total_amount
             total_amount = needed * price

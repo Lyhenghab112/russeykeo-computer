@@ -13,7 +13,10 @@
     <div class="app-container">
         <div class="sidebar">
             <div class="sidebar-header">
-                <h3>Menu</h3>
+                <div class="sidebar-brand">
+                    <img src="{{ url_for('static', filename='icons/logo.jpg') }}" alt="Russeykeo Computer Logo" class="sidebar-logo">
+                    <h3 class="sidebar-title">Russeykeo Computer</h3>
+                </div>
             </div>
             <div class="sidebar-profile">
                 <i class="fas fa-user-circle"></i>
@@ -26,11 +29,20 @@
                     <li><a href="{{ url_for('auth.staff_discounts') }}"><i class="fas fa-percentage"></i> Discounts</a></li>
                     <li><a href="{{ url_for('auth.staff_orders') }}"><i class="fas fa-shopping-cart"></i> Orders</a></li>
                     <li><a href="/auth/staff/walk-in-sales"><i class="fas fa-store"></i> Walk-in Sales</a></li>
-                    <li><a href="{{ url_for('staff_preorders') }}"><i class="fas fa-clock"></i> Pre-Orders</a></li>
                     <li><a href="{{ url_for('auth.staff_customers') }}" class="customer-link"><i class="fas fa-users"></i> Customers</a></li>
-                    <li><a href="{{ url_for('auth.staff_suppliers') }}"><i class="fas fa-truck"></i> Suppliers</a></li>
+                    <!-- <li><a href="{{ url_for('auth.staff_suppliers') }}"><i class="fas fa-truck"></i> Suppliers</a></li> -->
                     <li><a href="{{ url_for('auth.staff_reports') }}"><i class="fas fa-chart-bar"></i> Reports</a></li>
+
+                    <!-- Admin and Super Admin only -->
+                    {% if session.get('role') in ['admin', 'super_admin'] %}
                     <li><a href="{{ url_for('auth.staff_categories') }}"><i class="fas fa-tags"></i> Categories</a></li>
+                    {% endif %}
+
+                    <!-- Super Admin only -->
+                    {% if session.get('role') == 'super_admin' %}
+                    <li><a href="{{ url_for('auth.staff_users') }}"><i class="fas fa-user-cog"></i> User Management</a></li>
+                    <!--<li><a href="{{ url_for('auth.staff_roles') }}"><i class="fas fa-users-cog"></i> Role Management</a></li>-->
+                    {% endif %}
                 </ul>
                 <div class="logout-link">
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -45,7 +57,7 @@
 
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
     {% if session.get('role') in ['staff', 'admin', 'super_admin'] %}
-    <script src="{{ url_for('static', filename='js/staff.js') }}"></script>
+    
     {% endif %}
     {% block scripts %}{% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -101,8 +113,31 @@
         }
 
         .sidebar-header {
-            padding: 1.5rem;
+            padding: 1rem 1.5rem;
             background: #1a252f;
+            text-align: center;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--light);
+            line-height: 1.2;
             text-align: center;
         }
 
@@ -110,6 +145,7 @@
             padding: 1.5rem;
             text-align: center;
             border-bottom: 1px solid #444;
+            position: relative;
         }
 
         .sidebar-profile i {
@@ -121,6 +157,48 @@
         .sidebar-profile h3 {
             font-size: 1rem;
             margin: 0;
+        }
+
+        /* Notification Bell Styles */
+        .notification-bell {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            cursor: pointer;
+            color: #bdc3c7;
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+
+        .notification-bell:hover {
+            color: var(--primary);
+        }
+
+        .notification-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        .notification-count.show {
+            display: flex;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         .sidebar-nav {

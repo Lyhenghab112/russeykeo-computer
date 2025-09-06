@@ -4,22 +4,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('search-input');
     const statusFilter = document.getElementById('status-filter');
     const dateFilter = document.getElementById('date-filter');
-    const applyFiltersBtn = document.getElementById('apply-filters');
+    // Apply filters button removed - filters now work immediately
 
     let currentPage = 1;
     const pageSize = 10;
+    
+    // Auto-apply completed filter on page load
+    if (statusFilter && statusFilter.value === 'completed') {
+        // Small delay to ensure DOM is ready
+        setTimeout(() => {
+            fetchOrders(1);
+        }, 100);
+    }
 
     function fetchOrders(page = 1) {
         const search = searchInput.value.trim();
         const status = statusFilter.value;
         const date = dateFilter.value;
+        const approval = document.getElementById('approval-filter')?.value || 'all';
 
         const params = new URLSearchParams({
             page: page,
             page_size: pageSize,
             search: search,
             status: status,
-            date: date
+            date: date,
+            approval: approval
         });
 
         fetch(`/auth/staff/api/orders?${params.toString()}`)
@@ -29,24 +39,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.success) {
                     renderOrders(data.orders);
                     renderPagination(data.total_orders, page);
+                    currentPage = page; // Update current page
                 } else {
-                    ordersTableBody.innerHTML = '<tr><td colspan="8">Failed to load orders.</td></tr>';
+                    ordersTableBody.innerHTML = '<tr><td colspan="10">Failed to load orders.</td></tr>';
                     paginationContainer.innerHTML = '';
                 }
             })
             .catch(error => {
                 console.error('Error fetching orders:', error);
-                ordersTableBody.innerHTML = '<tr><td colspan="8">Error loading orders.</td></tr>';
+                ordersTableBody.innerHTML = '<tr><td colspan="10">Error loading orders.</td></tr>';
                 paginationContainer.innerHTML = '';
             });
     }
+
+    // Make fetchOrders available globally for immediate filtering
+    window.fetchOrdersFromPagination = fetchOrders;
 
     function renderOrders(orders) {
         const mobileOrdersList = document.getElementById('mobile-orders-list');
         const isMobile = window.innerWidth < 768;
 
         if (!orders || orders.length === 0) {
-            ordersTableBody.innerHTML = '<tr><td colspan="8">No orders found.</td></tr>';
+            ordersTableBody.innerHTML = '<tr><td colspan="10">No orders found.</td></tr>';
             if (mobileOrdersList) mobileOrdersList.innerHTML = '<p class="text-center">No orders found.</p>';
             return;
         }
@@ -62,6 +76,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Desktop table row
             const tr = document.createElement('tr');
+
+            // Create status badges
+            const mainStatusBadge = getMainStatusBadge(order.status);
+
+            // Create action buttons
+            const actionButtons = getOrderActionButtons(order);
+
+            // Create approval status badge
+            const approvalStatusBadge = getApprovalStatusBadge(order.approval_status, order.status);
+
             tr.innerHTML = `
                 <td>${serialNumber}</td>
                 <td>${order.id}</td>
@@ -69,20 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${order.order_date}</td>
                 <td>$${order.total.toFixed(2)}</td>
                 <td>${order.payment_method || 'QR Payment'}</td>
-                <td>
-                    <span class="status-badge status-${order.status.toLowerCase()}">
-                        ${order.status.charAt(0).toUpperCase() + order.status.slice(1).toLowerCase()}
-                    </span>
-                </td>
-                <td>
-                    <div style="display: flex; flex-direction: column; gap: 5px; min-width: 120px;">
-                        <a href="/auth/staff/orders/${order.id}/details" class="btn btn-primary btn-sm" style="width: 100%; text-align: center;">Details</a>
-                        ${order.status.toLowerCase() === 'pending' ?
-                            `<button type="button" class="btn btn-danger btn-sm" onclick="cancelOrder(${order.id})" style="width: 100%;">Cancel Order</button>` :
-                            ''
-                        }
-                    </div>
-                </td>
+                <td style="text-align: center;">${mainStatusBadge}</td>
+                <td style="text-align: center;">${approvalStatusBadge}</td>
+                <td>${actionButtons}</td>
             `;
             ordersTableBody.appendChild(tr);
 
@@ -90,6 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (mobileOrdersList) {
                 const card = document.createElement('div');
                 card.className = 'mobile-card';
+
+                const mainStatusBadge = getMainStatusBadge(order.status);
+                const approvalStatusBadge = getApprovalStatusBadge(order.approval_status, order.status);
+
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                         <div>
@@ -98,15 +115,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p><strong>Date:</strong> ${order.order_date}</p>
                             <p><strong>Total:</strong> $${order.total.toFixed(2)}</p>
                             <p><strong>Payment:</strong> ${order.payment_method || 'QR Payment'}</p>
+                            <p><strong>Payment Status:</strong> ${mainStatusBadge}</p>
+                            <p><strong>Approval Status:</strong> ${approvalStatusBadge}</p>
                         </div>
-                        <span class="status-badge status-${order.status.toLowerCase()}">
-                            ${order.status.charAt(0).toUpperCase() + order.status.slice(1).toLowerCase()}
-                        </span>
                     </div>
-                    <div class="action-buttons">
+                    <div class="action-buttons" style="display: flex; gap: 5px; flex-wrap: wrap;">
                         <a href="/auth/staff/orders/${order.id}/details" class="btn btn-primary btn-sm">Details</a>
-                        ${order.status.toLowerCase() === 'pending' ?
-                            `<button type="button" class="btn btn-danger btn-sm" onclick="cancelOrder(${order.id})">Cancel</button>` :
+                        ${order.status.toLowerCase() !== 'cancelled' && order.status.toLowerCase() !== 'pending' && order.approval_status === 'Pending Approval' ?
+                            `<button type="button" class="btn btn-success btn-sm" onclick="approveOrder(${order.id})">Confirm</button>
+                             <button type="button" class="btn btn-danger btn-sm" onclick="rejectOrder(${order.id})">Reject</button>` :
                             ''
                         }
                     </div>
@@ -189,9 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // updateOrderStatus function removed - orders are automatically managed
 
-    applyFiltersBtn.addEventListener('click', () => {
-        fetchOrders(1);
-    });
+    // Apply filters button removed - filters now trigger immediately via onchange events
 
     // Responsive handling
     let resizeTimeout;
@@ -208,3 +223,66 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial fetch
     fetchOrders(currentPage);
 });
+
+// Helper functions for status badges and action buttons
+function getMainStatusBadge(status) {
+    const statusColors = {
+        'pending': '#ffc107',
+        'completed': '#28a745',
+        'cancelled': '#dc3545'
+    };
+    const color = statusColors[status.toLowerCase()] || '#6c757d';
+    return `<span style="background-color: ${color}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+}
+
+function getApprovalStatusBadge(approvalStatus, orderStatus) {
+    // Don't show approval status for cancelled orders
+    if (orderStatus && orderStatus.toLowerCase() === 'cancelled') {
+        return '<span style="color: #6c757d; font-size: 12px;">N/A</span>';
+    }
+
+    if (!approvalStatus) {
+        return '<span style="color: #6c757d; font-size: 12px;">N/A</span>';
+    }
+
+    const approvalColors = {
+        'Pending Approval': '#ffc107',
+        'Approved': '#28a745',
+        'Rejected': '#dc3545'
+    };
+    const color = approvalColors[approvalStatus] || '#6c757d';
+    return `<span style="background-color: ${color}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">${approvalStatus}</span>`;
+}
+
+function getOrderActionButtons(order) {
+    let buttons = '<div style="display: flex; flex-direction: column; gap: 5px; min-width: 120px;">';
+
+    // Always show Details button
+    buttons += `<a href="/auth/staff/orders/${order.id}/details" class="btn btn-primary btn-sm" style="width: 100%; text-align: center;">Details</a>`;
+
+    // Debug logging
+    console.log('🔍 Order debug info:', {
+        id: order.id,
+        status: order.status,
+        approval_status: order.approval_status,
+        userRole: window.userRole
+    });
+
+    // Add approval buttons for orders that need approval:
+    // - Not cancelled
+    // - Payment status is COMPLETED (not pending)
+    // - Approval status is 'Pending Approval' (not already approved)
+    console.log('Order status:', order.status, 'Approval status:', order.approval_status, 'User role:', window.userRole);
+    if (order.status.toLowerCase() !== 'cancelled' && 
+        order.status.toLowerCase() !== 'pending' &&
+        order.approval_status === 'Pending Approval') {
+        console.log('✅ Adding approval buttons for order:', order.id);
+        buttons += `<button type="button" class="btn btn-success btn-sm" onclick="approveOrder(${order.id})" style="width: 100%;">Confirm</button>`;
+        buttons += `<button type="button" class="btn btn-danger btn-sm" onclick="rejectOrder(${order.id})" style="width: 100%;">Reject</button>`;
+    } else {
+        console.log('❌ Skipping approval buttons for order:', order.id, '- Status:', order.status, 'Approval:', order.approval_status);
+    }
+
+    buttons += '</div>';
+    return buttons;
+}

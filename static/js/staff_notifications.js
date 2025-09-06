@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 let notifications = data.notifications; // Get all notifications first
-                const lowStockNotifications = notifications.filter(note => note.type === 'low_stock').slice(0, 10); // Filter for low stock and then limit to 8
+                const lowStockNotifications = notifications.filter(note => note.type === 'low_stock').slice(0, 10); // Filter for low stock only and limit to 10
 
                 if (lowStockNotifications.length === 0) {
                     // If no low stock notifications are returned, display a message indicating that.
@@ -29,39 +29,64 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                const ul = document.createElement('ul');
-                ul.style.listStyleType = 'none';
-                ul.style.padding = '0';
+                const notificationsContainer = document.createElement('div');
+                notificationsContainer.className = 'enhanced-notifications';
 
                 lowStockNotifications.forEach(note => {
-                    const li = document.createElement('li');
-                    li.style.marginBottom = '10px';
+                    const notificationCard = document.createElement('div');
+                    notificationCard.className = 'notification-card';
+                    
                     let message = note.message;
-
                     // Remove prefixes for cleaner display
                     message = message.replace(/^(Out of stock alert:|Low stock alert:|In stock alert:)\s*/i, '');
-
-                    if (note.type === 'out_of_stock' || note.type === 'low_stock') {
-                        // Create clickable link for red notifications
-                        const link = document.createElement('a');
-                        link.href = `/auth/staff/inventory?product_id=${note.product_id}`;
-                        link.textContent = message;
-                        link.style.color = 'red';
-                        link.style.textDecoration = 'underline';
-                        li.appendChild(link);
-                    } else if (note.type === 'in_stock') {
-                        li.style.color = 'green';
-                        li.textContent = message;
+                    
+                    // Extract product name and stock info
+                    const stockMatch = message.match(/has only (\d+) items? left/);
+                    const stockCount = stockMatch ? parseInt(stockMatch[1]) : 0;
+                    const productName = message.replace(/ has only \d+ items? left\.?/, '');
+                    
+                    // Determine notification type and styling
+                    let notificationType, icon, stockText;
+                    if (note.type === 'out_of_stock' || stockCount === 0) {
+                        notificationType = 'critical';
+                        icon = 'fas fa-exclamation-triangle';
+                        stockText = 'Out of Stock';
+                    } else if (note.type === 'low_stock' || stockCount <= 5) {
+                        notificationType = 'warning';
+                        icon = 'fas fa-exclamation-circle';
+                        stockText = `${stockCount} left`;
                     } else {
-                        li.style.color = 'black'; // Default color
-                        li.textContent = message;
+                        notificationType = 'info';
+                        icon = 'fas fa-info-circle';
+                        stockText = 'In Stock';
                     }
-
-                    ul.appendChild(li);
+                    
+                    notificationCard.className += ` ${notificationType}`;
+                    
+                    notificationCard.innerHTML = `
+                        <div class="notification-content">
+                            <div class="notification-icon">
+                                <i class="${icon}"></i>
+                            </div>
+                            <div class="notification-details">
+                                <div class="product-name">${productName}</div>
+                                <div class="stock-info">
+                                    <span class="stock-count">${stockText}</span>
+                                </div>
+                            </div>
+                            <div class="notification-actions">
+                                <a href="/auth/staff/inventory?product_id=${note.product_id}" class="action-btn">
+                                    <i class="fas fa-cog"></i> Manage
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    
+                    notificationsContainer.appendChild(notificationCard);
                 });
 
                 container.innerHTML = ''; // Clear previous content
-                container.appendChild(ul); // Append the ul to the container
+                container.appendChild(notificationsContainer); // Append the enhanced notifications container
             })
             .catch(error => {
                 if (container) {

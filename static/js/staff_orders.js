@@ -1,37 +1,17 @@
-document.addEventListener('DOMContentLoaded', function() {
-    let productsList = [];
-
-    // Fetch products list for autocomplete
-    function fetchProductsList() {
-        console.log('Fetching products list for autocomplete...');
-        return fetch('/staff/inventory/search?q=&page=1&page_size=1000&sort_by=id&sort_dir=asc')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('Products list fetched:', data.products);
-                    productsList = data.products;
-                } else {
-                    alert('Failed to load products for autocomplete');
-                    console.error('Failed to load products:', data);
-                }
-            })
-            .catch(error => {
-                alert('Error loading products for autocomplete: ' + error);
-                console.error('Error:', error);
-            });
-    }
-
-    // Status update handling removed - orders are automatically managed
-
-    // Filter handling
-    function applyFilters() {
+// Make applyFilters function global so it can be called from HTML onchange attributes
+function applyFilters() {
+    // Use the pagination script's fetchOrders function to avoid page refresh
+    if (typeof window.fetchOrdersFromPagination === 'function') {
+        window.fetchOrdersFromPagination(1); // Reset to page 1 when filtering
+    } else {
+        // Fallback to page refresh if pagination script isn't loaded
         const status = document.getElementById('status-filter').value;
         const date = document.getElementById('date-filter').value;
         const search = document.getElementById('search-input').value.trim();
-        
+
         let url = '/auth/staff/orders';
         const params = new URLSearchParams();
-        
+
         if (status && status !== 'all') {
             params.append('status', status);
         }
@@ -41,19 +21,36 @@ document.addEventListener('DOMContentLoaded', function() {
         if (search) {
             params.append('search', search);
         }
-        
+
         // Append a large page size to try and fetch all orders
         params.append('page_size', '10000');
 
         if (params.toString()) {
             url += '?' + params.toString();
         }
-        
+
         window.location.href = url;
     }
+}
 
-    document.getElementById('apply-filters').addEventListener('click', applyFilters);
+document.addEventListener('DOMContentLoaded', function() {
+
     document.getElementById('search-btn').addEventListener('click', applyFilters);
+
+    // Add immediate search functionality
+    let searchTimeout;
+    document.getElementById('search-input').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(applyFilters, 500); // Wait 500ms after user stops typing
+    });
+
+    // Also trigger search on Enter key
+    document.getElementById('search-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            clearTimeout(searchTimeout);
+            applyFilters();
+        }
+    });
 
     // Set initial filter values from URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -62,6 +59,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (urlParams.has('date')) {
         document.getElementById('date-filter').value = urlParams.get('date');
+    }
+    if (urlParams.has('approval')) {
+        document.getElementById('approval-filter').value = urlParams.get('approval');
     }
 
     // Handle details button clicks
@@ -73,206 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Add New Order modal handling
-    const openAddOrderModalBtn = document.getElementById('openAddOrderModalBtn');
-    const addOrderModal = new bootstrap.Modal(document.getElementById('addOrderModal'));
-    const addOrderForm = document.getElementById('addOrderForm');
-    const addOrderItemBtn = document.getElementById('addOrderItemBtn');
-    const orderItemsContainer = document.getElementById('orderItemsContainer');
 
-    // Create datalist element for product autocomplete
-    const productDatalist = document.createElement('datalist');
-    productDatalist.id = 'products-list';
-    document.body.appendChild(productDatalist);
-
-    // Populate datalist options
-    function populateProductDatalist() {
-        console.log('Populating product datalist with products:', productsList);
-        productDatalist.innerHTML = '';
-        productsList.forEach(product => {
-            const option = document.createElement('option');
-            option.value = product.name;
-            productDatalist.appendChild(option);
-        });
-    }
-
-    // Function to create a new order item input group with autocomplete and price autofill
-    function createOrderItem() {
-        const div = document.createElement('div');
-        div.classList.add('order-item');
-        div.style.display = 'flex';
-        div.style.gap = '10px';
-        div.style.marginBottom = '10px';
-
-        const productInput = document.createElement('input');
-        productInput.type = 'text';
-        productInput.name = 'product_name[]';
-        productInput.placeholder = 'Product Name';
-        productInput.required = true;
-        productInput.classList.add('form-control');
-        productInput.style.flex = '3';
-        productInput.style.minWidth = '150px';
-        productInput.setAttribute('list', 'products-list');
-
-        const quantityInput = document.createElement('input');
-        quantityInput.type = 'number';
-        quantityInput.name = 'quantity[]';
-        quantityInput.placeholder = 'Quantity';
-        quantityInput.min = '1';
-        quantityInput.required = true;
-        quantityInput.classList.add('form-control');
-        quantityInput.style.flex = '2';
-        quantityInput.style.minWidth = '100px';
-
-        const priceInput = document.createElement('input');
-        priceInput.type = 'number';
-        priceInput.name = 'price[]';
-        priceInput.placeholder = 'Price';
-        priceInput.min = '0';
-        priceInput.step = '0.01';
-        priceInput.required = true;
-        priceInput.classList.add('form-control');
-        priceInput.style.flex = '2';
-        priceInput.style.minWidth = '100px';
-
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.textContent = 'Remove';
-        removeBtn.classList.add('btn', 'btn-danger');
-        removeBtn.style.flex = '0 0 auto';
-        removeBtn.addEventListener('click', () => {
-            div.remove();
-        });
-
-        // Autofill price when product name changes
-        productInput.addEventListener('input', () => {
-            console.log('Product input changed:', productInput.value);
-            const product = productsList.find(p => p.name === productInput.value);
-            if (product) {
-                console.log('Product found, autofilling price:', product.price);
-                priceInput.value = product.price.toFixed(2);
-            } else {
-                console.log('Product not found, clearing price input');
-                priceInput.value = '';
-            }
-        });
-
-        div.appendChild(productInput);
-        div.appendChild(quantityInput);
-        div.appendChild(priceInput);
-        div.appendChild(removeBtn);
-
-        return div;
-    }
-
-    // Fetch products list and populate datalist before showing modal
-    openAddOrderModalBtn.addEventListener('click', () => {
-        fetchProductsList().then(() => {
-            populateProductDatalist();
-            addOrderModal.show();
-        });
-    });
-
-    addOrderItemBtn.addEventListener('click', () => {
-        const orderItem = createOrderItem();
-        orderItemsContainer.appendChild(orderItem);
-    });
-
-    // Initialize with one order item input group
-    addOrderItemBtn.click();
-
-    // Handle form submission
-    addOrderForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        // Collect form data
-        const firstName = document.getElementById('firstNameInput').value.trim();
-        const lastName = document.getElementById('lastNameInput').value.trim();
-        const email = document.getElementById('emailInput').value.trim();
-        const orderDate = document.getElementById('orderDateInput').value;
-
-        if (!firstName || !lastName || !email || !orderDate) {
-            alert('Please fill in all required fields.');
-            return;
-        }
-
-        // Collect order items
-        const orderItems = [];
-        const orderItemDivs = orderItemsContainer.querySelectorAll('.order-item');
-        for (const div of orderItemDivs) {
-            const productName = div.querySelector('input[name="product_name[]"]').value.trim();
-            const quantityStr = div.querySelector('input[name="quantity[]"]').value;
-            const priceStr = div.querySelector('input[name="price[]"]').value;
-
-            if (!productName || !quantityStr || !priceStr) {
-                alert('Please fill in all order item fields.');
-                return;
-            }
-
-            const quantity = parseInt(quantityStr, 10);
-            const price = parseFloat(priceStr);
-
-            if (isNaN(quantity) || quantity <= 0) {
-                alert('Quantity must be a positive number.');
-                return;
-            }
-            if (isNaN(price) || price < 0) {
-                alert('Price must be a non-negative number.');
-                return;
-            }
-
-            // Find product_id by product_name
-            const product = productsList.find(p => p.name === productName);
-            if (!product) {
-                alert('Product "' + productName + '" not found in product list.');
-                return;
-            }
-
-            orderItems.push({
-                product_id: product.id,
-                quantity: quantity,
-                price: price
-            });
-        }
-
-        if (orderItems.length === 0) {
-            alert('Please add at least one order item.');
-            return;
-        }
-
-        // Prepare payload
-        const payload = {
-            first_name: firstName,
-            last_name: lastName,
-            email: email,
-            order_date: orderDate,
-            items: orderItems
-        };
-
-        // Send POST request to create order
-        fetch('/staff/orders/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Order created successfully! Order ID: ' + data.order_id);
-                addOrderModal.hide();
-                addOrderForm.reset();
-                orderItemsContainer.innerHTML = '';
-                addOrderItemBtn.click();
-            } else {
-                alert('Failed to create order: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            alert('Error creating order: ' + error);
-        });
-    });
 });
 
 // Order cancellation function
@@ -322,9 +123,11 @@ function confirmCancellation(orderId) {
     const notes = document.getElementById('cancelNotes').value;
 
     // Disable the confirm button to prevent double-clicks
-    const confirmBtn = event.target;
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = 'Cancelling...';
+    const confirmBtn = document.querySelector(`button[onclick="confirmCancellation(${orderId})"]`);
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Cancelling...';
+    }
 
     fetch(`/api/staff/orders/${orderId}/cancel`, {
         method: 'POST',
@@ -342,6 +145,12 @@ function confirmCancellation(orderId) {
         if (data.success) {
             // Show single success notification
             showNotification('Order cancelled successfully! Customer has been notified.', 'success');
+            
+            // Refresh the Money Insight Widget dashboard to update totals
+            if (window.refreshMoneyInsightDashboard) {
+                window.refreshMoneyInsightDashboard();
+            }
+            
             setTimeout(() => location.reload(), 1500); // Refresh after showing notification
         } else {
             showNotification('Error cancelling order: ' + data.error, 'error');
@@ -356,3 +165,114 @@ function confirmCancellation(orderId) {
 
 // showNotification function is now provided by staff_messages.js
 // This provides backward compatibility while using the standardized system
+
+// Order approval functions
+async function approveOrder(orderId) {
+    try {
+        const response = await fetch(`/api/orders/${orderId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showMessage('✅ Order approved successfully!', 'success');
+            // Refresh the orders list to update the UI
+            if (typeof window.fetchOrdersFromPagination === 'function') {
+                window.fetchOrdersFromPagination(1);
+            }
+        } else {
+            showMessage('❌ Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error approving order:', error);
+        showMessage('❌ An error occurred while approving the order.', 'error');
+    }
+}
+
+async function rejectOrder(orderId) {
+    try {
+        const response = await fetch(`/api/orders/${orderId}/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showMessage('✅ Order rejected successfully!', 'success');
+            // Refresh the orders list to update the UI
+            if (typeof window.fetchOrdersFromPagination === 'function') {
+                window.fetchOrdersFromPagination(1);
+            }
+        } else {
+            showMessage('❌ Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error rejecting order:', error);
+        showMessage('❌ An error occurred while rejecting the order.', 'error');
+    }
+}
+
+async function completeOrder(orderId) {
+    try {
+        const response = await fetch(`/api/orders/${orderId}/complete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showMessage('✅ Order marked as completed successfully!', 'success');
+            // Refresh the orders list to update the UI
+            if (typeof window.fetchOrdersFromPagination === 'function') {
+                window.fetchOrdersFromPagination(1);
+            }
+        } else {
+            showMessage('❌ Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error completing order:', error);
+        showMessage('❌ An error occurred while completing the order.', 'error');
+    }
+}
+
+function showMessage(message, type) {
+    // Create a simple notification
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    notification.style.position = 'fixed';
+    notification.style.top = '20px';
+    notification.style.right = '20px';
+    notification.style.zIndex = '9999';
+    notification.style.minWidth = '300px';
+    
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data="dismiss" aria-label="close"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+    
+    // Handle close button
+    notification.querySelector('.btn-close').addEventListener('click', () => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    });
+}

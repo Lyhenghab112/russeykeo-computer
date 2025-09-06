@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice #{{ order.id }} - Computer Shop</title>
+    <title>Invoice #{{ order.id }} - RusseyKeo Computer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .invoice-header {
@@ -12,6 +12,18 @@
             padding: 1rem; /* Reduced padding for print */
             border-radius: 10px;
             margin-bottom: 1rem;
+        }
+
+        .invoice-logo {
+            height: 60px;
+            width: auto;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+        }
+
+        .action-buttons {
+            margin: 10px;
         }
         .invoice-details {
             background: #f8f9fa;
@@ -80,9 +92,30 @@
     <div class="container mt-2">
         <!-- Header -->
         <div class="invoice-header text-center">
-            <h1>💻 Computer Shop Invoice</h1>
-            <p class="mb-0">Professional Computer Sales & Service</p>
+            <div class="d-flex align-items-center justify-content-center mb-3">
+                <img src="{{ url_for('static', filename='icons/logo.jpg') }}" alt="RusseyKeo Computer Logo" class="invoice-logo me-3">
+                <div>
+                    <h1 class="mb-1">RusseyKeo Computer</h1>
+                    <p class="mb-0">Professional Computer Sales & Service</p>
+                </div>
+            </div>
         </div>
+
+        <!-- Approval Status Message -->
+        {% if order.approval_status == 'Pending Approval' %}
+        <div class="alert alert-info text-center mb-3" role="alert">
+            <h5 class="alert-heading">📋 Order Confirmation</h5>
+            <p class="mb-0">Thank you for your payment! We will approve your order and notify you soon.</p>
+        </div>
+        {% elif order.approval_status == 'Rejected' %}
+        <div class="alert alert-danger text-center mb-3" role="alert">
+            <h5 class="alert-heading">❌ Order Rejected</h5>
+            <p class="mb-0">Your order has been rejected. Please contact us for more information.</p>
+            {% if order.approval_notes %}
+            <p class="mb-0"><strong>Reason:</strong> {{ order.approval_notes }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
 
         <!-- Invoice Details -->
         <div class="row">
@@ -93,7 +126,21 @@
                     <p><strong>Date:</strong> {{ order.order_date.strftime('%B %d, %Y') }}</p>
                     <p><strong>Time:</strong> {{ order.order_date.strftime('%I:%M %p') }}</p>
                     <p><strong>Payment Method:</strong> {{ order.payment_method or 'ACLEDA Bank QR Payment' }}</p>
-                    <p><strong>Status:</strong> <span class="badge bg-success">Paid</span></p>
+                    {% if order.transaction_id %}
+                    <p><strong>Transaction ID:</strong> <code class="bg-light p-1 rounded">{{ order.transaction_id }}</code></p>
+                    {% endif %}
+                    <p><strong>Payment Status:</strong> <span class="badge bg-success">Paid</span></p>
+                    {% if order.approval_status %}
+                    <p><strong>Order Status:</strong>
+                        {% if order.approval_status == 'Pending Approval' %}
+                            <span class="badge bg-warning">Pending Approval</span>
+                        {% elif order.approval_status == 'Approved' %}
+                            <span class="badge bg-success">Approved</span>
+                        {% elif order.approval_status == 'Rejected' %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% endif %}
+                    </p>
+                    {% endif %}
                 </div>
             </div>
             <div class="col-md-6">
@@ -116,7 +163,9 @@
                         <th>Product</th>
                         <th>Brand</th>
                         <th>Quantity</th>
-                        <th>Unit Price</th>
+                        <th>Original Price</th>
+                        <th>Discount</th>
+                        <th>Final Price</th>
                         <th>Total</th>
                     </tr>
                 </thead>
@@ -124,25 +173,82 @@
                     {% for item in order_items %}
                     <tr>
                         <td>{{ loop.index }}</td>
-                        <td>{{ item.product_name }}</td>
+                        <td>
+                            {{ item.product_name }}
+                            {% if item.has_discount %}
+                            <span class="badge bg-success ms-2">💰 Discounted</span>
+                            {% endif %}
+                        </td>
                         <td>{{ item.brand }}</td>
                         <td>{{ item.quantity }}</td>
-                        <td>${{ "%.2f"|format(item.price) }}</td>
-                        <td>${{ "%.2f"|format(item.quantity * item.price) }}</td>
+                        <td>
+                            {% if item.has_discount %}
+                            <span class="text-muted text-decoration-line-through">${{ "%.2f"|format(item.original_price) }}</span>
+                            {% else %}
+                            ${{ "%.2f"|format(item.original_price) }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.has_discount %}
+                            <span class="text-success fw-bold">
+                                -{{ "%.1f"|format(item.discount_percentage) }}%<br>
+                                <small>(-${{ "%.2f"|format(item.discount_amount) }})</small>
+                            </span>
+                            {% else %}
+                            <span class="text-muted">No discount</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.has_discount %}
+                            <span class="text-success fw-bold">${{ "%.2f"|format(item.price) }}</span>
+                            {% else %}
+                            ${{ "%.2f"|format(item.price) }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>${{ "%.2f"|format(item.quantity * item.price) }}</strong>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            
+
             <!-- Total Section -->
             <div class="total-section text-end">
                 <div class="row">
                     <div class="col-md-8"></div>
                     <div class="col-md-4">
+                        {% if invoice_summary.has_discounts %}
+                        <p class="mb-1">Original Subtotal: <span class="text-muted text-decoration-line-through">${{ "%.2f"|format(invoice_summary.original_total) }}</span></p>
+
+                        {% if invoice_summary.item_discount_total > 0 %}
+                        <p class="mb-1 text-success">Item Discounts: -${{ "%.2f"|format(invoice_summary.item_discount_total) }}</p>
+                        {% endif %}
+
+                        {% if invoice_summary.has_volume_discount %}
+                        <p class="mb-1">Subtotal after item discounts: ${{ "%.2f"|format(invoice_summary.subtotal_before_volume_discount) }}</p>
+                        <p class="mb-1 text-success">
+                            <i class="fas fa-gift"></i> {{ invoice_summary.volume_discount_rule_name }}:
+                            {{ "%.1f"|format(invoice_summary.volume_discount_percentage) }}% off
+                            (-${{ "%.2f"|format(invoice_summary.volume_discount_amount) }})
+                        </p>
+                        {% endif %}
+
+                        <p class="mb-1">Final Subtotal: ${{ "%.2f"|format(order.total_amount) }}</p>
+                        {% else %}
                         <p class="mb-1">Subtotal: ${{ "%.2f"|format(order.total_amount) }}</p>
-                        <p class="mb-1">Tax: $0.00</p>
+                        {% endif %}
+
                         <hr>
                         <h4>💰 Total Paid: ${{ "%.2f"|format(order.total_amount) }}</h4>
+                        {% if invoice_summary.has_discounts %}
+                        <p class="text-success mb-0">
+                            <small>🎉 You saved ${{ "%.2f"|format(invoice_summary.total_discount) }} on this order!</small>
+                            {% if invoice_summary.has_volume_discount %}
+                            <br><small>💡 Volume discount applied for orders over ${{ "%.0f"|format(500 if invoice_summary.volume_discount_percentage == 5 else (1000 if invoice_summary.volume_discount_percentage == 10 else 2000)) }}</small>
+                            {% endif %}
+                        </p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -158,7 +264,7 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="text-center mt-2 no-print" style="margin: 10px;">
+        <div class="text-center mt-2 no-print action-buttons">
             <button onclick="window.print()" class="btn print-btn me-3">
                 🖨️ Print Invoice
             </button>

@@ -1,3 +1,9 @@
+// Get user role from session
+function getUserRole() {
+    // This will be set by the template
+    return window.userRole || 'staff';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const addProductModal = document.getElementById('add-product-modal');
     const editProductModal = document.getElementById('edit-product-modal');
@@ -9,12 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileInventoryList = document.getElementById('mobile-inventory-list');
     const searchInput = document.getElementById('search-products');
     const searchBtn = document.getElementById('search-btn');
+
+    // Hide Add Product button for staff users
+    if (getUserRole() === 'staff' && addProductBtn) {
+        addProductBtn.style.display = 'none';
+    }
     const paginationContainer = document.getElementById('pagination');
 
     let currentPage = 1;
     let pageSize = 10;
     let sortBy = 'id';
-    let sortDir = 'asc';
+    let sortDir = 'desc';
     let currentQuery = '';
     let currentCategoryFilter = '';
     let currentBrandFilter = '';
@@ -25,17 +36,26 @@ document.addEventListener('DOMContentLoaded', () => {
     let editSelectedFiles = [null, null, null];
     const editLabels = ['Main Image', 'Back View', 'Left Rear View'];
 
+    // Initialize item counter
+    let itemCounter = null;
+    if (window.ItemCounter) {
+        itemCounter = new ItemCounter('inventory-container', {
+            itemName: 'products',
+            itemNameSingular: 'product',
+            position: 'bottom',
+            className: 'item-counter theme-primary'
+        });
+    }
+
     const imagesInput = document.getElementById('product-images');
     const previewContainer = document.getElementById('image-preview-container');
     const editImagesInput = document.getElementById('edit-product-images');
     const editPreviewContainer = document.getElementById('edit-image-preview-container');
 
-    // Responsive image preview handling
+    // Modern image preview handling
     function updatePreviews() {
         const previewImagesDiv = previewContainer.querySelector('.preview-images');
         previewImagesDiv.innerHTML = '';
-        const screenWidth = window.innerWidth;
-        const imageSize = screenWidth < 576 ? '80px' : '100px';
 
         const hasAnyFile = selectedFiles.some(file => file !== null);
         if (!hasAnyFile) {
@@ -43,33 +63,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        previewContainer.style.display = 'flex';
+        previewContainer.style.display = 'block';
         selectedFiles.forEach((file, index) => {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(readerEvent) {
                     const previewDiv = document.createElement('div');
-                    previewDiv.className = 'image-preview-item';
-                    previewDiv.style.cssText = `
-                        text-align: center;
-                        border: 1px solid #ddd;
-                        padding: 8px;
-                        border-radius: 6px;
-                        position: relative;
-                        background: #f9f9f9;
-                        width: ${screenWidth < 576 ? '100%' : 'auto'};
-                        max-width: ${imageSize};
-                    `;
+                    previewDiv.className = 'preview-image';
                     previewDiv.innerHTML = `
-                        <div style="font-size: ${screenWidth < 576 ? '10px' : '12px'}; font-weight: bold; margin-bottom: 5px; color: #495057;">
-                            ${labels[index]}
-                        </div>
-                        <img src="${readerEvent.target.result}" style="max-width: ${imageSize}; max-height: ${imageSize}; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
-                        <div style="font-size: ${screenWidth < 576 ? '8px' : '10px'}; margin-top: 4px; color: #6c757d; word-break: break-all;">
-                            ${file.name}
-                        </div>
-                        <button type="button" onclick="removeImage(${index})" style="position: absolute; top: 2px; right: 2px; background: none; color: #666; border: none; font-size: ${screenWidth < 576 ? '12px' : '14px'}; cursor: pointer; line-height: 1; padding: 0; width: 16px; height: 16px;" title="Remove image">×</button>
-                        <button type="button" onclick="replaceImage(${index})" style="position: absolute; bottom: 2px; right: 2px; background: #007bff; color: white; border: none; border-radius: 3px; padding: 2px 6px; font-size: ${screenWidth < 576 ? '8px' : '10px'}; cursor: pointer;" title="Replace image">Replace</button>
+                        <img src="${readerEvent.target.result}" alt="${labels[index]}">
+                        <div class="image-label">${labels[index]}</div>
+                        <button type="button" class="remove-btn" onclick="removeImage(${index})" title="Remove image">×</button>
                     `;
                     previewImagesDiv.appendChild(previewDiv);
                 };
@@ -81,8 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateEditPreviews() {
         const editPreviewImagesDiv = editPreviewContainer.querySelector('.preview-images');
         editPreviewImagesDiv.innerHTML = '';
-        const screenWidth = window.innerWidth;
-        const imageSize = screenWidth < 576 ? '80px' : '100px';
 
         const hasAnyFile = editSelectedFiles.some(file => file !== null);
         if (!hasAnyFile) {
@@ -90,33 +92,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        editPreviewContainer.style.display = 'flex';
+        editPreviewContainer.style.display = 'block';
         editSelectedFiles.forEach((file, index) => {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(readerEvent) {
                     const previewDiv = document.createElement('div');
-                    previewDiv.className = 'image-preview-item';
-                    previewDiv.style.cssText = `
-                        text-align: center;
-                        border: 1px solid #ddd;
-                        padding: 8px;
-                        border-radius: 6px;
-                        position: relative;
-                        background: #f9f9f9;
-                        width: ${screenWidth < 576 ? '100%' : 'auto'};
-                        max-width: ${imageSize};
-                    `;
+                    previewDiv.className = 'preview-image';
                     previewDiv.innerHTML = `
-                        <div style="font-size: ${screenWidth < 576 ? '10px' : '12px'}; font-weight: bold; margin-bottom: 5px; color: #495057;">
-                            ${editLabels[index]}
-                        </div>
-                        <img src="${readerEvent.target.result}" style="max-width: ${imageSize}; max-height: ${imageSize}; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
-                        <div style="font-size: ${screenWidth < 576 ? '8px' : '10px'}; margin-top: 4px; color: #6c757d; word-break: break-all;">
-                            ${file.name}
-                        </div>
-                        <button type="button" onclick="removeEditImage(${index})" style="position: absolute; top: 2px; right: 2px; background: none; color: #666; border: none; font-size: ${screenWidth < 576 ? '12px' : '14px'}; cursor: pointer; line-height: 1; padding: 0; width: 16px; height: 16px;" title="Remove image">×</button>
-                        <button type="button" onclick="replaceEditImage(${index})" style="position: absolute; bottom: 2px; right: 2px; background: #007bff; color: white; border: none; border-radius: 3px; padding: 2px 6px; font-size: ${screenWidth < 576 ? '8px' : '10px'}; cursor: pointer;" title="Replace image">Replace</button>
+                        <img src="${readerEvent.target.result}" alt="${editLabels[index]}">
+                        <div class="image-label">${editLabels[index]}</div>
+                        <button type="button" class="remove-btn" onclick="removeEditImage(${index})" title="Remove image">×</button>
                     `;
                     editPreviewImagesDiv.appendChild(previewDiv);
                 };
@@ -427,17 +413,40 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success) {
                 renderInventory(data.products, data.pagination);
                 renderPagination(data.pagination.total_count, currentPage);
+                updateItemCounter(data.pagination);
             } else {
-                inventoryTableBody.innerHTML = '<tr><td colspan="9">Error loading inventory.</td></tr>';
+                inventoryTableBody.innerHTML = '<tr><td colspan="10">Error loading inventory.</td></tr>';
                 mobileInventoryList.innerHTML = '<p>Error loading inventory.</p>';
                 paginationContainer.innerHTML = '';
+                updateItemCounter({ total_count: 0, page: 1, total_pages: 0 });
             }
         } catch (error) {
             console.error('Error:', error);
-            inventoryTableBody.innerHTML = '<tr><td colspan="9">Error loading inventory.</td></tr>';
+            inventoryTableBody.innerHTML = '<tr><td colspan="10">Error loading inventory.</td></tr>';
             mobileInventoryList.innerHTML = '<p>Error loading inventory.</p>';
             paginationContainer.innerHTML = '';
+            updateItemCounter({ total_count: 0, page: 1, total_pages: 0 });
         }
+    }
+
+    // Update item counter
+    function updateItemCounter(pagination) {
+        if (!itemCounter) return;
+
+        const totalItems = pagination.total_count || 0;
+        const currentPageNum = pagination.page || currentPage;
+        const totalPages = pagination.total_pages || Math.ceil(totalItems / pageSize);
+        const startItem = totalItems === 0 ? 0 : ((currentPageNum - 1) * pageSize) + 1;
+        const endItem = Math.min(currentPageNum * pageSize, totalItems);
+
+        itemCounter.update({
+            totalItems: totalItems,
+            currentPage: currentPageNum,
+            pageSize: pageSize,
+            totalPages: totalPages,
+            startItem: startItem,
+            endItem: endItem
+        });
     }
 
     // Render inventory
@@ -447,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const screenWidth = window.innerWidth;
         const isMobile = screenWidth < 768;
 
-        products.forEach(product => {
+        products.forEach((product, index) => {
             let stockClass = product.stock <= 20 ? 'low-stock' : 'sufficient-stock';
             let originalPriceDisplay = product.original_price ? `$${parseFloat(product.original_price).toFixed(2)}` : 'N/A';
             let profitMarginDisplay = 'N/A';
@@ -458,9 +467,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 profitMarginDisplay = ((profit / originalPrice) * 100).toFixed(1) + '%';
             }
 
+            // Calculate order number based on current page and position
+            const orderNumber = ((currentPage - 1) * pageSize) + index + 1;
+
             // Table row for desktop
             const row = document.createElement('tr');
             row.innerHTML = `
+                <td>${orderNumber}</td>
                 <td>${product.id}</td>
                 <td>${product.photo ? `<img src="/static/uploads/products/${product.photo}" class="product-image" alt="${product.name}" style="max-width: ${isMobile ? '40px' : '50px'}; max-height: ${isMobile ? '40px' : '50px'}; object-fit: cover; border-radius: 4px;">` : 'No image'}</td>
                 <td>${product.name}</td>
@@ -473,10 +486,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="number" class="stock-input" value="${product.stock}" min="0" data-id="${product.id}" readonly>
                     </div>
                 </td>
-                <td class="action-buttons">
-                    <button class="btn btn-sm btn-primary edit-product" data-id="${product.id}" style="padding: ${isMobile ? '4px 8px' : '6px 12px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">Edit</button>
-                    <button class="btn btn-sm btn-info view-product-detail" data-id="${product.id}" style="padding: ${isMobile ? '4px 8px' : '6px 12px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">View</button>
-                    <button class="btn btn-sm btn-danger delete-product" data-id="${product.id}" style="padding: ${isMobile ? '4px 8px' : '6px 12px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">Delete</button>
+                <td class="action-buttons ${getUserRole() === 'staff' ? 'staff-view' : ''}">
+                    ${getUserRole() !== 'staff' ? `
+                        <button class="btn btn-sm btn-primary edit-product" data-id="${product.id}" style="padding: ${isMobile ? '4px 8px' : '6px 12px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">Edit</button>
+                        <button class="btn btn-sm btn-info view-product-detail" data-id="${product.id}" style="padding: ${isMobile ? '4px 8px' : '6px 12px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">View</button>
+                        <button class="btn btn-sm btn-danger delete-product" data-id="${product.id}" style="padding: ${isMobile ? '4px 8px' : '6px 12px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">Delete</button>
+                        <button class="btn btn-sm btn-warning archive-product" data-id="${product.id}" style="padding: ${isMobile ? '4px 8px' : '6px 12px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">Archive</button>
+                    ` : `
+                        <button class="btn btn-sm btn-info view-product-detail" data-id="${product.id}" style="padding: ${isMobile ? '8px 16px' : '8px 12px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">View Details</button>
+                    `}
                 </td>
             `;
             inventoryTableBody.appendChild(row);
@@ -488,16 +506,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="display: flex; gap: 10px;">
                     ${product.photo ? `<img src="/static/uploads/products/${product.photo}" alt="${product.name}" style="max-width: ${isMobile ? '60px' : '80px'}; max-height: ${isMobile ? '60px' : '80px'}; object-fit: cover; border-radius: 4px;">` : '<div style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 4px;">No image</div>'}
                     <div>
+                        <p><strong>Order:</strong> ${orderNumber}</p>
                         <p><strong>ID:</strong> ${product.id}</p>
                         <p><strong>Name:</strong> ${product.name}</p>
                         <p><strong>Price:</strong> $${parseFloat(product.price).toFixed(2)}</p>
                         <p><strong>Stock:</strong> <span class="${stockClass}">${product.stock}</span></p>
                     </div>
                 </div>
-                <div class="action-buttons">
-                    <button class="btn btn-sm btn-primary edit-product" data-id="${product.id}" style="padding: 4px 8px; font-size: 0.8rem;">Edit</button>
-                    <button class="btn btn-sm btn-info view-product-detail" data-id="${product.id}" style="padding: 4px 8px; font-size: 0.8rem;">View</button>
-                    <button class="btn btn-sm btn-danger delete-product" data-id="${product.id}" style="padding: 4px 8px; font-size: 0.8rem;">Delete</button>
+                <div class="action-buttons ${getUserRole() === 'staff' ? 'staff-view' : ''}">
+                    ${getUserRole() !== 'staff' ? `
+                        <button class="btn btn-sm btn-primary edit-product" data-id="${product.id}" style="padding: 4px 8px; font-size: 0.8rem;">Edit</button>
+                        <button class="btn btn-sm btn-info view-product-detail" data-id="${product.id}" style="padding: 4px 8px; font-size: 0.8rem;">View</button>
+                        <button class="btn btn-sm btn-danger delete-product" data-id="${product.id}" style="padding: 4px 8px; font-size: 0.8rem;">Delete</button>
+                        <button class="btn btn-sm btn-warning archive-product" data-id="${product.id}" style="padding: 4px 8px; font-size: 0.8rem;">Archive</button>
+                    ` : `
+                        <button class="btn btn-sm btn-info view-product-detail" data-id="${product.id}" style="padding: 8px 16px; font-size: 0.8rem; width: 100%;">View Details</button>
+                    `}
                 </div>
             `;
             mobileInventoryList.appendChild(card);
@@ -514,23 +538,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.delete-product').forEach(button => {
             button.addEventListener('click', async () => {
-                const confirmed = await showDeleteConfirmation('Are you sure you want to delete this product?', 'This action cannot be undone.');
-                if (confirmed) {
-                    try {
-                        const response = await fetch(`/staff/inventory/${button.dataset.id}/delete`, {
-                            method: 'DELETE'
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            fetchInventory();
-                            showMessage('Product deleted successfully!', 'success');
-                        } else {
-                            showMessage('Error: ' + data.error, 'error');
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        showMessage('An error occurred while deleting the product.', 'error');
+                const confirmed = await showDeleteConfirmation(
+                    'Delete Product Permanently', 
+                    'This will permanently delete the product but preserve order history. This action cannot be undone.'
+                );
+                
+                if (!confirmed) {
+                    showMessage('Product deletion cancelled.', 'info');
+                    return;
+                }
+
+                try {
+                    // Use denormalized deletion - preserves order history
+                    const response = await fetch(`/staff/inventory/${button.dataset.id}/delete/denormalized?force=true`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        fetchInventory();
+                        showMessage('Product deleted successfully (order history preserved)!', 'success');
+                    } else {
+                        showMessage('Error: ' + data.error, 'error');
                     }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showMessage('An error occurred while deleting the product.', 'error');
+                }
+            });
+        });
+
+        // Handle archive buttons
+        document.querySelectorAll('.archive-product').forEach(button => {
+            button.addEventListener('click', async () => {
+                const confirmed = await showArchiveConfirmation(
+                    'Archive Product', 
+                    'This will move the product to archived state. You can restore it later from archived products.'
+                );
+                
+                if (!confirmed) {
+                    showMessage('Product archiving cancelled.', 'info');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/staff/inventory/${button.dataset.id}/archive`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        fetchInventory();
+                        showMessage('Product archived successfully!', 'success');
+                    } else {
+                        showMessage('Error: ' + data.error, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showMessage('An error occurred while archiving the product.', 'error');
                 }
             });
         });
@@ -912,6 +977,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     });
 
+    // Archived Products Modal Functionality
+    const archivedProductsModal = document.getElementById('archived-products-modal');
+    const viewArchivedBtn = document.getElementById('view-archived-btn');
+    
+    viewArchivedBtn.addEventListener('click', () => {
+        archivedProductsModal.classList.add('show-slide');
+        fetchArchivedProducts();
+    });
+
+    // Add close functionality for archived products modal
+    const archivedModalCloseBtn = archivedProductsModal.querySelector('.close-modal');
+    if (archivedModalCloseBtn) {
+        archivedModalCloseBtn.addEventListener('click', () => {
+            archivedProductsModal.classList.remove('show-slide');
+        });
+    }
+
+    // Close archived modal when clicking outside
+    archivedProductsModal.addEventListener('click', (e) => {
+        if (e.target === archivedProductsModal) {
+            archivedProductsModal.classList.remove('show-slide');
+        }
+    });
+
     // Initial load
     fetchInventory();
 });
@@ -938,8 +1027,136 @@ async function getTotalStockForBrand(brandName) {
     }
 }
 
+// Fetch and display archived products
+async function fetchArchivedProducts(silent = false) {
+    try {
+        const response = await fetch('/staff/inventory/archived');
+        const data = await response.json();
+        
+        if (data.success) {
+            renderArchivedProducts(data.products);
+        } else {
+            document.getElementById('archived-products-list').innerHTML = '<p>Error loading archived products.</p>';
+            if (!silent) {
+                showMessage('Error: ' + data.error, 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching archived products:', error);
+        document.getElementById('archived-products-list').innerHTML = '<p>Error loading archived products.</p>';
+        if (!silent) {
+            showMessage('An error occurred while fetching archived products.', 'error');
+        }
+    }
+}
+
+// Render archived products in the modal
+function renderArchivedProducts(products) {
+    const archivedProductsList = document.getElementById('archived-products-list');
+    const archivedProductsContent = document.getElementById('archived-products-content');
+    
+    archivedProductsContent.style.display = 'none';
+    
+    if (products.length === 0) {
+        archivedProductsList.innerHTML = `
+            <div class="no-archived-products">
+                <i class="fas fa-archive" style="font-size: 3em; color: #ccc; margin-bottom: 20px;"></i>
+                <h3>No Archived Products</h3>
+                <p>You don't have any archived products.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    archivedProductsList.innerHTML = products.map(product => `
+        <div class="archived-product-card">
+            <div class="archived-product-info">
+                <h4>${product.name}</h4>
+                <p><strong>ID:</strong> ${product.id}</p>
+                <p><strong>Category:</strong> ${product.category_name || 'No category'}</p>
+                <p><strong>Stock:</strong> ${product.stock}</p>
+                <p><strong>Price:</strong> $${product.price.toFixed(2)}</p>
+                ${product.original_price ? `<p><strong>Original Price:</strong> $${product.original_price.toFixed(2)}</p>` : ''}
+            </div>
+            <div class="archived-product-actions">
+                <button class="restore-btn" onclick="restoreProduct(${product.id}, '${product.name}')">
+                    <i class="fas fa-undo"></i> Restore
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Track restore operations to prevent duplicates
+const restoreInProgress = new Set();
+
+// Restore (unarchive) a product
+async function restoreProduct(productId, productName) {
+    // Prevent duplicate executions
+    if (restoreInProgress.has(productId)) {
+        console.log('Restore already in progress for product', productId);
+        return;
+    }
+    
+    const confirmed = await showDeleteConfirmation(
+        'Restore Product',
+        `Are you sure you want to restore "${productName}"? This will make it visible in your regular inventory.`,
+        'Restore'
+    );
+    
+    if (!confirmed) return;
+    
+    // Mark restore as in progress
+    restoreInProgress.add(productId);
+    
+    try {
+        const response = await fetch(`/staff/inventory/${productId}/restore`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('Product restored successfully!', 'success');
+            
+            // Refresh both lists immediately
+            try {
+                // First refresh archived products to remove the restored product
+                await fetchArchivedProducts(true);
+                
+                // Then refresh main inventory to show the restored product
+                await fetchInventory(1); // Always go to page 1 to see the restored product
+                
+                // Update the item counter to reflect the new total
+                const itemCounterElement = document.querySelector('.item-counter');
+                if (itemCounterElement) {
+                    itemCounterElement.style.display = 'block';
+                }
+            } catch (refreshError) {
+                console.error('Error refreshing lists:', refreshError);
+                // Even if refresh fails, show success message
+                showMessage('Product restored successfully! Please refresh the page to see changes.', 'success');
+            }
+        } else {
+            showMessage('Error: ' + (data.error || 'Unknown error occurred'), 'error');
+        }
+    } catch (error) {
+        console.error('Error restoring product:', error);
+        showMessage('An error occurred while restoring the product.', 'error');
+    } finally {
+        // Remove from in-progress set after a delay to prevent rapid re-clicks
+        setTimeout(() => {
+            restoreInProgress.delete(productId);
+        }, 1000);
+    }
+}
+
 // Professional delete confirmation modal
-function showDeleteConfirmation(title, message) {
+function showDeleteConfirmation(title, message, actionButtonText = 'Delete') {
     return new Promise((resolve) => {
         // Create modal overlay
         const overlay = document.createElement('div');
@@ -1007,7 +1224,7 @@ function showDeleteConfirmation(title, message) {
                     font-size: 14px;
                     transition: background-color 0.2s;
                     min-width: 80px;
-                ">Delete</button>
+                ">${actionButtonText}</button>
             </div>
         `;
 
@@ -1075,3 +1292,134 @@ function showDeleteConfirmation(title, message) {
         document.addEventListener('keydown', handleEscape);
     });
 }
+
+// Archive confirmation modal (similar to delete but with "Archive" button)
+function showArchiveConfirmation(title, message) {
+    return new Promise((resolve) => {
+        // Create modal HTML
+        const modalHTML = `
+            <div class="archive-modal-overlay" id="archiveModal" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            ">
+                <div class="archive-modal-content" style="
+                    background: white;
+                    border-radius: 8px;
+                    padding: 24px;
+                    max-width: 400px;
+                    width: 90%;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                ">
+                    <div class="archive-modal-header" style="
+                        margin-bottom: 16px;
+                        text-align: center;
+                    ">
+                        <div style="
+                            width: 60px;
+                            height: 60px;
+                            background: #fff3cd;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            margin: 0 auto 16px auto;
+                        ">
+                            <span style="
+                                font-size: 24px;
+                                color: #856404;
+                            ">📁</span>
+                        </div>
+                        <h3 style="
+                            margin: 0;
+                            color: #856404;
+                            font-size: 18px;
+                            font-weight: 600;
+                        ">${title}</h3>
+                    </div>
+                    <div class="archive-modal-body" style="
+                        margin-bottom: 24px;
+                        color: #333;
+                        line-height: 1.5;
+                        text-align: center;
+                    ">
+                        ${message}
+                    </div>
+                    <div class="archive-modal-footer" style="
+                        display: flex;
+                        justify-content: center;
+                        gap: 12px;
+                    ">
+                        <button class="cancel-archive-btn" style="
+                            padding: 10px 20px;
+                            border: 1px solid #ddd;
+                            background: white;
+                            color: #666;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">Cancel</button>
+                        <button class="confirm-archive-btn" style="
+                            padding: 10px 20px;
+                            border: none;
+                            background: #ffc107;
+                            color: #212529;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-weight: 500;
+                            font-size: 14px;
+                        ">Archive</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add modal to DOM
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        const modal = document.getElementById('archiveModal');
+        const cancelBtn = modal.querySelector('.cancel-archive-btn');
+        const confirmBtn = modal.querySelector('.confirm-archive-btn');
+
+        // Event handlers
+        const cleanup = () => {
+            modal.remove();
+        };
+
+        cancelBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(false);
+        });
+
+        confirmBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(true);
+        });
+
+        // Close on overlay click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                cleanup();
+                resolve(false);
+            }
+        });
+
+        // Close on escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                document.removeEventListener('keydown', handleEscape);
+                resolve(false);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    });
+}
+

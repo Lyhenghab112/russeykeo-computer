@@ -3,6 +3,367 @@
 {% block title %}Order Details - {{ order.id }}{% endblock %}
 
 {% block content %}
+<style>
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.success-indicator {
+    animation: pulse 1s ease-in-out;
+}
+
+/* Modern Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.4s ease-out;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+    position: relative;
+}
+
+.modal-header.success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.modal-header.warning {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+}
+
+.modal-header.error {
+    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+}
+
+.modal-icon {
+    font-size: 4rem;
+    margin-bottom: 15px;
+    animation: bounce 0.6s ease-out;
+}
+
+.modal-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+}
+
+.modal-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.modal-body {
+    padding: 30px;
+    text-align: center;
+}
+
+.modal-message {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.modal-details {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    border-left: 4px solid #28a745;
+}
+
+.modal-details h4 {
+    margin: 0 0 10px 0;
+    color: #28a745;
+    font-size: 1.1rem;
+}
+
+.modal-details p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.modal-btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+}
+
+.modal-btn-primary {
+    background: #28a745;
+    color: white;
+}
+
+.modal-btn-primary:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+.modal-btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.modal-btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.modal-close:hover {
+    opacity: 1;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+/* Progress bar for auto-refresh */
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 2px;
+    animation: progress 3s linear;
+}
+
+@keyframes progress {
+    from { width: 100%; }
+    to { width: 0%; }
+}
+
+/* Screenshot Styles */
+.screenshot-container {
+    margin-top: 20px;
+}
+
+.screenshot-container h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.screenshot-wrapper {
+    position: relative;
+    display: inline-block;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.screenshot-wrapper:hover {
+    transform: scale(1.02);
+}
+
+.payment-screenshot {
+    max-width: 100%;
+    max-height: 400px;
+    width: auto;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+}
+
+.screenshot-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 10px;
+}
+
+.screenshot-wrapper:hover .screenshot-overlay {
+    opacity: 1;
+}
+
+.screenshot-overlay i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.screenshot-overlay span {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.screenshot-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.screenshot-actions .btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.screenshot-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+/* Screenshot Modal */
+.screenshot-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10001;
+    padding: 20px;
+}
+
+.screenshot-modal-content {
+    max-width: 90%;
+    max-height: 90%;
+    position: relative;
+}
+
+.screenshot-modal img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.screenshot-modal-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.screenshot-modal-close:hover {
+    background: #f8f9fa;
+    transform: scale(1.1);
+}
+
+</style>
+
 <div class="modern-order-container">
     <!-- Header Section -->
     <div class="order-header">
@@ -13,6 +374,17 @@
             </div>
         </div>
         <div class="header-actions">
+            {% if order.status == 'PENDING' and order.payment_method == 'KHQR_BAKONG' %}
+            <button class="btn btn-verify-instantly" onclick="verifyPaymentInstantly({{ order.id }})">
+                <i class="fas fa-check-circle"></i> Mark as Paid
+            </button>
+            <button class="btn btn-check-payment" onclick="checkPaymentStatus({{ order.id }})">
+                <i class="fas fa-credit-card"></i> Check Status
+            </button>
+            {% endif %}
+            <button class="btn btn-export" onclick="exportOrderToPDF()">
+                <i class="fas fa-file-pdf"></i> Export to PDF
+            </button>
             <a href="/auth/staff/orders" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back to Orders
             </a>
@@ -46,6 +418,12 @@
                     <label>Payment Method:</label>
                     <span>{{ order.payment_method or 'QR Payment' }}</span>
                 </div>
+                {% if order.transaction_id %}
+                <div class="info-item">
+                    <label>Transaction ID:</label>
+                    <span class="transaction-id">{{ order.transaction_id }}</span>
+                </div>
+                {% endif %}
                 <div class="info-item">
                     <label>Total Amount:</label>
                     <span class="amount">${{ "%.2f"|format(order.total_amount) }}</span>
@@ -53,6 +431,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Order Items Card -->
     <div class="info-card">
@@ -109,7 +488,45 @@
             </div>
         </div>
     </div>
+
+    <!-- Payment Screenshot Card -->
+    {% if order.payment_screenshot_path %}
+    <div class="info-card">
+        <div class="card-header">
+            <h2><i class="fas fa-camera"></i> Payment Screenshot</h2>
+        </div>
+        <div class="card-content">
+            <div class="screenshot-container">
+                <div class="screenshot-wrapper">
+                    <img src="/static/{{ order.payment_screenshot_path }}" 
+                         alt="Payment Screenshot" 
+                         class="payment-screenshot"
+                         onclick="openScreenshotModal(this.src)">
+                    <div class="screenshot-overlay">
+                        <i class="fas fa-search-plus"></i>
+                        <span>Click to view full size</span>
+                    </div>
+                </div>
+                <div class="screenshot-actions">
+                    <a href="/static/{{ order.payment_screenshot_path }}" 
+                       target="_blank" 
+                       class="btn btn-secondary">
+                        <i class="fas fa-external-link-alt"></i> Open in New Tab
+                    </a>
+                    <button onclick="downloadScreenshot('{{ order.payment_screenshot_path }}')" 
+                            class="btn btn-primary">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+<!-- jsPDF library for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <!-- Cancel Item Modal -->
 <div id="cancelItemModal" class="modal" style="display: none;">
@@ -171,6 +588,12 @@
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
+.header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
 .header-content h1 {
     margin: 0;
     font-size: 1.8rem;
@@ -187,7 +610,6 @@
 }
 
 .status-pending { background: #fbbf24; color: #92400e; }
-.status-processing { background: #60a5fa; color: #1e40af; }
 .status-completed { background: #34d399; color: #065f46; }
 .status-cancelled { background: #f87171; color: #991b1b; }
 
@@ -213,6 +635,60 @@
 .btn-secondary:hover {
     background: rgba(255,255,255,0.3);
     transform: translateY(-2px);
+}
+
+.btn-export {
+    background: #10b981;
+    color: white;
+    margin-right: 10px;
+}
+
+.btn-export:hover {
+    background: #059669;
+    transform: translateY(-2px);
+}
+
+.btn-verify-instantly {
+    background: #f59e0b;
+    color: white;
+    margin-right: 10px;
+    animation: pulse 2s infinite;
+}
+
+.btn-verify-instantly:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+    animation: none;
+}
+
+.btn-verify-instantly:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    animation: none;
+}
+
+.btn-check-payment {
+    background: #3b82f6;
+    color: white;
+    margin-right: 10px;
+}
+
+.btn-check-payment:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+}
+
+.btn-check-payment:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
 }
 
 .btn-danger {
@@ -284,6 +760,16 @@
     font-weight: 700;
     color: #059669;
     font-size: 1.1rem;
+}
+
+.transaction-id {
+    font-family: 'Courier New', monospace;
+    background: #f1f5f9;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #475569;
+    word-break: break-all;
 }
 
 .items-table-container {
@@ -410,6 +896,46 @@
     text-align: center;
 }
 
+/* Animation for success/error messages */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive design for mobile devices */
+@media (max-width: 768px) {
+    .order-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .header-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-export, .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .items-table-container {
+        overflow-x: auto;
+        font-size: 0.875rem;
+    }
+}
+
 .modal-footer .btn-secondary {
     background-color: #6c757d !important;
     color: white !important;
@@ -423,6 +949,325 @@
 
 <script>
 let currentCancelData = {};
+
+// PDF Export Function
+function exportOrderToPDF() {
+    try {
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Set document properties
+        doc.setProperties({
+            title: `Order #{{ order.id }} - {{ order.first_name }} {{ order.last_name }}`,
+            subject: 'Order Details',
+            author: 'Russeykeo Computer',
+            creator: 'Computer Shop Management System'
+        });
+
+        // Add company logo with high quality
+        const logoUrl = '/static/icons/logo.jpg';
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        img.onload = function() {
+            // Create high-resolution canvas for better quality
+            const scale = 4; // Increase resolution even more for crisp logo
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size with higher resolution
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            
+            // Disable image smoothing for sharper edges (better for logos)
+            ctx.imageSmoothingEnabled = false;
+            
+            // Scale the context and draw the image
+            ctx.scale(scale, scale);
+            ctx.drawImage(img, 0, 0);
+            
+            // Convert to base64 with maximum quality
+            const logoData = canvas.toDataURL('image/png', 1.0);
+            
+            // Calculate proper dimensions to maintain aspect ratio
+            const logoWidth = 35; // Fixed width for consistency
+            const logoHeight = 35; // Fixed height to make it square
+            
+            // Add logo to PDF with better positioning and size
+            doc.addImage(logoData, 'PNG', 20, 15, logoWidth, logoHeight);
+            
+            // Add company header text (positioned to the right of logo)
+            doc.setFontSize(20);
+            doc.setTextColor(102, 126, 234); // Purple color matching your theme
+            doc.text('Russeykeo Computer', 60, 25, { align: 'left' });
+            
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Computer Shop Management System', 60, 35, { align: 'left' });
+            
+            // Continue with the rest of the PDF generation
+            generatePDFContent(doc);
+        };
+        
+        img.onerror = function() {
+            // Fallback if logo fails to load - use text only
+            doc.setFontSize(20);
+            doc.setTextColor(102, 126, 234);
+            doc.text('Russeykeo Computer', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Computer Shop Management System', 105, 30, { align: 'center' });
+            
+            // Continue with the rest of the PDF generation
+            generatePDFContent(doc);
+        };
+        
+        // Load the logo
+        img.src = logoUrl;
+        
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        showMessage('Error generating PDF. Please try again.', 'error');
+    }
+}
+
+// Separate function to generate PDF content
+function generatePDFContent(doc) {
+        
+        // Add order header
+        doc.setFontSize(16);
+        doc.setTextColor(50, 50, 50);
+        doc.text(`Order Details - #{{ order.id }}`, 105, 60, { align: 'center' });
+        
+        // Add status badge
+        doc.setFontSize(10);
+        const status = '{{ order.status.title() }}';
+        const statusColor = status === 'COMPLETED' ? [52, 211, 153] : 
+                           status === 'PENDING' ? [251, 191, 36] : [248, 113, 113];
+        doc.setTextColor(...statusColor);
+        doc.text(status, 105, 70, { align: 'center' });
+        
+        // Add customer information
+        doc.setFontSize(12);
+        doc.setTextColor(50, 50, 50);
+        doc.text('Customer Information:', 20, 90);
+        
+        const customerInfo = [
+            ['Name:', '{{ order.first_name }} {{ order.last_name }}'],
+            ['Email:', '{{ order.email }}'],
+            ['Phone:', '{{ order.phone }}'],
+            ['Order Date:', '{{ order.order_date.strftime("%B %d, %Y at %I:%M %p") }}'],
+            ['Payment Method:', '{{ order.payment_method or "QR Payment" }}']
+            {% if order.transaction_id %},['Transaction ID:', '{{ order.transaction_id }}']{% endif %}
+        ];
+        
+        let yPos = 100;
+        customerInfo.forEach(([label, value]) => {
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(label, 20, yPos);
+            doc.setTextColor(50, 50, 50);
+            doc.text(value, 60, yPos);
+            yPos += 8;
+        });
+        
+        // Add total amount
+        doc.setFontSize(12);
+        doc.setTextColor(5, 150, 105); // Green color
+        doc.text(`Total Amount: ${{ "%.2f"|format(order.total_amount) }}`, 20, yPos + 5);
+        
+        // Add order items table
+        const itemsData = [
+            ['Product', 'Quantity', 'Unit Price', 'Total']
+        ];
+        
+        {% for item in items %}
+        itemsData.push([
+            '{{ item.product_name }}',
+            '{{ item.quantity }}',
+            '${{ "%.2f"|format(item.price) }}',
+            '${{ "%.2f"|format(item.quantity * item.price) }}'
+        ]);
+        {% endfor %}
+        
+        // Create table using autoTable plugin
+        doc.autoTable({
+            head: [itemsData[0]],
+            body: itemsData.slice(1),
+            startY: yPos + 20,
+            margin: { left: 20, right: 20 },
+            styles: {
+                fontSize: 9,
+                cellPadding: 5
+            },
+            headStyles: {
+                fillColor: [102, 126, 234],
+                textColor: 255,
+                fontStyle: 'bold'
+            },
+            alternateRowStyles: {
+                fillColor: [248, 250, 252]
+            }
+        });
+        
+        // Add payment screenshot if available (with timeout for faster export)
+        {% if order.payment_screenshot_path %}
+        let screenshotY = doc.lastAutoTable.finalY + 30;
+        
+        // Add screenshot section header
+        doc.setFontSize(12);
+        doc.setTextColor(50, 50, 50);
+        doc.text('Payment Screenshot:', 20, screenshotY);
+        
+        // Add screenshot placeholder text
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Payment proof uploaded by customer', 20, screenshotY + 15);
+        {% if order.screenshot_uploaded_at %}
+        doc.text('Uploaded: {{ order.screenshot_uploaded_at.strftime("%B %d, %Y at %I:%M %p") }}', 20, screenshotY + 25);
+        {% endif %}
+        doc.text('Screenshot available in order details', 20, screenshotY + 35);
+        
+        // Try to load screenshot with timeout (5 seconds max)
+        const screenshotImg = new Image();
+        screenshotImg.crossOrigin = 'anonymous';
+        
+        let screenshotLoaded = false;
+        const timeout = setTimeout(() => {
+            if (!screenshotLoaded) {
+                // Timeout reached, save PDF without screenshot
+                finishPDFExport(doc, screenshotY + 50);
+            }
+        }, 5000); // 5 second timeout
+        
+        screenshotImg.onload = function() {
+            screenshotLoaded = true;
+            clearTimeout(timeout);
+            
+            try {
+                // Add new page for QR code
+                doc.addPage();
+                
+                // Add QR code page header
+                doc.setFontSize(16);
+                doc.setTextColor(50, 50, 50);
+                doc.text('Payment Screenshot - Order #{{ order.id }}', 105, 30, { align: 'center' });
+                
+                // Add customer info on QR page
+                doc.setFontSize(12);
+                doc.setTextColor(100, 100, 100);
+                doc.text('Customer: {{ order.first_name }} {{ order.last_name }}', 20, 50);
+                doc.text('Order Date: {{ order.order_date.strftime("%B %d, %Y at %I:%M %p") }}', 20, 60);
+                doc.text('Amount: ${{ "%.2f"|format(order.total_amount) }}', 20, 70);
+                {% if order.screenshot_uploaded_at %}
+                doc.text('Uploaded: {{ order.screenshot_uploaded_at.strftime("%B %d, %Y at %I:%M %p") }}', 20, 80);
+                {% endif %}
+                
+                // Calculate QR code dimensions for full page
+                const imgWidth = screenshotImg.width;
+                const imgHeight = screenshotImg.height;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                
+                // Calculate available space (leave margin for header and footer)
+                const availableWidth = pageWidth - 40; // 20px margin on each side
+                const availableHeight = pageHeight - 100; // Leave space for header and footer
+                
+                // Calculate scaling to fit within available space
+                const scale = Math.min(availableWidth / imgWidth, availableHeight / imgHeight);
+                const scaledWidth = imgWidth * scale;
+                const scaledHeight = imgHeight * scale;
+                
+                // Center the QR code on the page
+                const x = (pageWidth - scaledWidth) / 2;
+                const y = 100; // Start below header
+                
+                // Add QR code to PDF
+                doc.addImage(screenshotImg, 'JPEG', x, y, scaledWidth, scaledHeight);
+                
+                // Add footer on QR page
+                const finalY = y + scaledHeight + 20;
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text('Payment proof for Order #{{ order.id }}', 105, finalY, { align: 'center' });
+                doc.text('Generated on: ' + new Date().toLocaleString(), 105, finalY + 10, { align: 'center' });
+                
+                // Finish PDF export
+                finishPDFExport(doc, null);
+            } catch (error) {
+                // If image processing fails, continue without it
+                finishPDFExport(doc, screenshotY + 50);
+            }
+        };
+        
+        screenshotImg.onerror = function() {
+            screenshotLoaded = true;
+            clearTimeout(timeout);
+            // If screenshot fails to load, continue without it
+            finishPDFExport(doc, screenshotY + 50);
+        };
+        
+        // Load the screenshot
+        screenshotImg.src = '/static/{{ order.payment_screenshot_path }}';
+        {% else %}
+        // Add footer (no screenshot)
+        const finalY = doc.lastAutoTable.finalY + 20;
+        finishPDFExport(doc, finalY);
+        {% endif %}
+}
+
+// Helper function to finish PDF export
+function finishPDFExport(doc, finalY) {
+    // Add footer only if finalY is provided (not on QR page)
+    if (finalY !== null) {
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Thank you for your business!', 105, finalY, { align: 'center' });
+        doc.text('Generated on: ' + new Date().toLocaleString(), 105, finalY + 10, { align: 'center' });
+    }
+    
+    // Save the PDF
+    const fileName = `order_{{ order.id }}_{{ order.first_name }}_{{ order.last_name }}.pdf`;
+    doc.save(fileName);
+    
+    // Show success message
+    showMessage('Order exported to PDF successfully!', 'success');
+}
+
+// Helper function to show messages
+function showMessage(message, type) {
+    // Create a simple message display
+    const messageDiv = document.createElement('div');
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    if (type === 'success') {
+        messageDiv.style.backgroundColor = '#10b981';
+    } else {
+        messageDiv.style.backgroundColor = '#ef4444';
+    }
+    
+    messageDiv.textContent = message;
+    document.body.appendChild(messageDiv);
+    
+    // Remove message after 3 seconds
+    setTimeout(() => {
+        if (messageDiv.parentNode) {
+            messageDiv.parentNode.removeChild(messageDiv);
+        }
+    }, 3000);
+}
 
 // Check stock status for pending orders
 {% if order.status.lower() == 'pending' %}
@@ -520,6 +1365,291 @@ function confirmCancelItem() {
     });
 
     closeCancelModal();
+}
+
+// Function to instantly verify payment for a specific order
+function verifyPaymentInstantly(orderId) {
+    // Show loading state
+    const btn = document.querySelector('.btn-verify-instantly');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+    btn.disabled = true;
+    
+    fetch('/api/payment/verify-instantly', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            order_id: orderId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.status === 'completed') {
+                // Show modern success modal
+                showSuccessModal(orderId);
+                
+                // Update the UI immediately before refresh
+                updateOrderStatusUI('COMPLETED');
+                
+                // Refresh the page to show updated status
+                setTimeout(() => location.reload(), 3000);
+            } else {
+                showPendingModal(orderId);
+            }
+        } else {
+            showErrorModal(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error verifying payment');
+    })
+    .finally(() => {
+        // Restore button state
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+// Modern Modal Functions
+function showSuccessModal(orderId) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header success">
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <div class="modal-icon">✅</div>
+                <h2 class="modal-title">ORDER COMPLETED!</h2>
+                <p class="modal-subtitle">Payment verification successful</p>
+            </div>
+            <div class="modal-body">
+                <div class="modal-message">
+                    Order #${orderId} has been marked as paid and completed!
+                </div>
+                <div class="modal-details">
+                    <h4>Status Update</h4>
+                    <p><strong>PENDING</strong> → <strong>COMPLETED</strong></p>
+                    <p>Payment verified and stock updated</p>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <p style="margin-top: 15px; color: #666; font-size: 0.9rem;">
+                    Page will refresh automatically in 3 seconds...
+                </p>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+        closeModal();
+    }, 3000);
+}
+
+function showPendingModal(orderId) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header warning">
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <div class="modal-icon">⏳</div>
+                <h2 class="modal-title">Payment Still Pending</h2>
+                <p class="modal-subtitle">Waiting for customer payment</p>
+            </div>
+            <div class="modal-body">
+                <div class="modal-message">
+                    Order #${orderId} is still waiting for payment.
+                </div>
+                <div class="modal-details">
+                    <h4>Next Steps</h4>
+                    <p>Please ask customer to complete payment using their banking app</p>
+                    <p>You can try again in a few seconds</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="modal-btn modal-btn-primary" onclick="closeModal()">Try Again</button>
+                    <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function showErrorModal(error) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header error">
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <div class="modal-icon">❌</div>
+                <h2 class="modal-title">Verification Failed</h2>
+                <p class="modal-subtitle">Unable to verify payment</p>
+            </div>
+            <div class="modal-body">
+                <div class="modal-message">
+                    Error: ${error}
+                </div>
+                <div class="modal-actions">
+                    <button class="modal-btn modal-btn-primary" onclick="closeModal()">OK</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function closeModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-overlay')) {
+        closeModal();
+    }
+});
+
+// Screenshot Modal Functions
+function openScreenshotModal(imageSrc) {
+    const modal = document.createElement('div');
+    modal.className = 'screenshot-modal';
+    modal.innerHTML = `
+        <div class="screenshot-modal-content">
+            <button class="screenshot-modal-close" onclick="closeScreenshotModal()">&times;</button>
+            <img src="${imageSrc}" alt="Payment Screenshot">
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+    
+    // Close on background click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeScreenshotModal();
+        }
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeScreenshotModal();
+        }
+    });
+}
+
+function closeScreenshotModal() {
+    const modal = document.querySelector('.screenshot-modal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function downloadScreenshot(screenshotPath) {
+    const link = document.createElement('a');
+    link.href = `/static/${screenshotPath}`;
+    link.download = `payment_screenshot_${new Date().getTime()}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
+// Function to update UI immediately when order is completed
+function updateOrderStatusUI(newStatus) {
+    // Update status badge
+    const statusBadge = document.querySelector('.status-badge');
+    if (statusBadge) {
+        statusBadge.textContent = newStatus;
+        statusBadge.className = `status-badge status-${newStatus.toLowerCase()}`;
+    }
+    
+    // Hide the verify buttons since order is now completed
+    const verifyBtn = document.querySelector('.btn-verify-instantly');
+    const checkBtn = document.querySelector('.btn-check-payment');
+    
+    if (verifyBtn) {
+        verifyBtn.style.display = 'none';
+    }
+    if (checkBtn) {
+        checkBtn.style.display = 'none';
+    }
+    
+    // Add a success indicator
+    const headerActions = document.querySelector('.header-actions');
+    if (headerActions && !document.querySelector('.success-indicator')) {
+        const successIndicator = document.createElement('div');
+        successIndicator.className = 'success-indicator';
+        successIndicator.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
+        successIndicator.style.cssText = `
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            animation: pulse 1s ease-in-out;
+        `;
+        headerActions.insertBefore(successIndicator, headerActions.firstChild);
+    }
+}
+
+// Function to check payment status for pending QR orders
+function checkPaymentStatus(orderId) {
+    // Show loading state
+    const btn = document.querySelector('.btn-check-payment');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    btn.disabled = true;
+    
+    fetch('/api/payment/check-pending', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Check if this specific order is in the pending list
+            const pendingOrder = data.pending_orders.find(order => order.id == orderId);
+            
+            if (pendingOrder) {
+                // Order is still pending - payment not completed yet
+                alert(`Payment Status: PENDING\n\nOrder #${orderId} is still waiting for payment.\n\nTransaction ID: ${pendingOrder.transaction_id}\nAmount: $${pendingOrder.total_amount}\n\nPlease ask customer to complete payment using their banking app.`);
+            } else {
+                // Order not in pending list - might be completed
+                alert(`Payment Status: CHECKING\n\nOrder #${orderId} is not in the pending payments list.\n\nThis could mean:\n- Payment was completed\n- Order was cancelled\n- System error\n\nPlease refresh the page to see updated status.`);
+                // Refresh the page to show updated status
+                setTimeout(() => location.reload(), 2000);
+            }
+        } else {
+            alert('Error checking payment status: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error checking payment status');
+    })
+    .finally(() => {
+        // Restore button state
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
 }
 
 // Add event listeners for cancel buttons

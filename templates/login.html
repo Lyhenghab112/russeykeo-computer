@@ -3,156 +3,467 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
+    <title>Login - Russeykeo Computer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&display=block" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
     
 <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
     body, html {
         height: 100%;
-        margin: 0;
-        font-family: 'Courier New', Courier, monospace;
-    }
-
-    .container {
-        display: flex;
-        height: 100vh;
-    }
-
-    .login-section {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background-color: aliceblue;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        overflow: hidden;
     }
 
     .login-container {
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        padding: 20px 40px;
-        border-radius: 15px;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 40px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        animation: slideUp 0.6s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .logo-section {
         text-align: center;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        margin-bottom: 20px;
-        width: 70%;
+        margin-bottom: 32px;
+    }
+
+    .logo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: block;
+        margin: 0 auto 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        object-fit: cover;
+    }
+
+    .company-name {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+    }
+
+    .company-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        font-weight: 400;
     }
 
     .form-group {
-        margin-bottom: 25px;
-        text-align: left;
+        margin-bottom: 24px;
+        position: relative;
     }
 
     .form-group label {
         display: block;
-        margin-bottom: 15px;
-        color: black;
-        font-weight: bold;
-        
+        margin-bottom: 8px;
+        color: #374151;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .input-wrapper {
+        position: relative;
     }
 
     .form-group input {
         width: 100%;
-        padding: 10px;
-        border: none;
-        border-radius: 15px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
+        padding: 16px 16px 16px 48px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        font-size: 16px;
+        background: #ffffff;
+        transition: all 0.2s ease;
+        outline: none;
+        font-family: inherit;
     }
 
-    button {
+    .form-group input:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 16px;
+        z-index: 1;
+    }
+
+    .form-group input:focus + .input-icon {
+        color: #4f46e5;
+    }
+
+    .login-btn {
         width: 100%;
-        padding: 10px;
+        padding: 16px;
         border: none;
-        border-radius: 15px;
-        background-color: orange;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
         color: white;
-        font-size: 1em;
+        font-size: 16px;
+        font-weight: 600;
         cursor: pointer;
-        transition: background-color 0.3s;
-        margin-bottom: 15px;
+        transition: all 0.2s ease;
+        margin-bottom: 16px;
+        font-family: inherit;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
     }
 
-    button:hover {
-        background-color: rgb(126, 82, 1);
+    .login-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+    }
+
+    .login-btn:active {
+        transform: translateY(0);
     }
 
     .back-btn {
-        background-color: #6c757d;
+        width: 100%;
+        padding: 16px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #374151;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 24px;
+        font-family: inherit;
     }
 
     .back-btn:hover {
-        background-color: #5a6268;
+        background: #f9fafb;
+        border-color: #9ca3af;
     }
 
-    p {
-        color: black;
+    .signup-link {
+        text-align: center;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
     }
 
-    a {
-        color: orange;
+    .signup-link p {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .signup-link a {
+        color: #4f46e5;
         text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s ease;
     }
 
-    a:hover {
-        text-decoration: underline;
+    .signup-link a:hover {
+        color: #3730a3;
+    }
+
+    /* Forgot Password Link */
+    .forgot-password {
+        text-align: right;
+        margin-bottom: 16px;
+    }
+
+    .forgot-link {
+        color: #6b7280;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: color 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .forgot-link:hover {
+        color: #4f46e5;
     }
 
     .flash-messages {
-        margin-bottom: 15px;
-        color: #d8000c;
-        background-color: rgba(255, 182, 193, 0.2);
-        padding: 10px;
-        border-radius: 10px;
-        border: 1px solid #d8000c;
+        margin-bottom: 24px;
+        padding: 16px;
+        border-radius: 12px;
+        animation: slideIn 0.5s ease-out;
     }
 
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Success messages */
+    .flash-success {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+
+    .flash-success p {
+        color: #166534;
+    }
+
+    .flash-success p::before {
+        content: "✅";
+    }
+
+    /* Error messages */
+    .flash-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    .flash-error p {
+        color: #dc2626;
+    }
+
+    .flash-error p::before {
+        content: "⚠️";
+    }
+
+    /* Warning messages */
+    .flash-warning {
+        background: #fffbeb;
+        border: 1px solid #fed7aa;
+    }
+
+    .flash-warning p {
+        color: #92400e;
+    }
+
+    .flash-warning p::before {
+        content: "⚠️";
+    }
+
+    /* Info messages */
+    .flash-info {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+    }
+
+    .flash-info p {
+        color: #1e40af;
+    }
+
+    .flash-info p::before {
+        content: "ℹ️";
+    }
+
+
+
+    /* Default message styling */
     .flash-messages p {
-        margin: 5px 0;
+        font-size: 14px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
     }
 
-    @media (min-width: 768px) {
-        .login-container {
-            width: 17%;
+    /* Loading state */
+    .login-btn.loading {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .login-btn.loading::after {
+        content: "";
+        width: 16px;
+        height: 16px;
+        border: 2px solid transparent;
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-left: 8px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive design */
+    @media (max-width: 480px) {
+        .login-card {
+            padding: 32px 24px;
+            margin: 16px;
+        }
+        
+        .company-name {
+            font-size: 20px;
         }
     }
 </style>
 </head>
 <body>
-    <div class="container">
-        <div class="login-section">
-            <div class="login-container">
-                <h1>Computer Shop Login</h1>
-                {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                        <div class="flash-messages">
-                            {% for message in messages %}
-                                <p>{{ message }}</p>
-                            {% endfor %}
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Logo and Branding -->
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='icons/logo.jpg') }}" alt="Russeykeo Computer Logo" class="logo">
+                <h1 class="company-name">Russeykeo Computer</h1>
+                <p class="company-subtitle">Welcome back! Please sign in to your account</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-messages flash-{{ category }}">
+                            <p>{{ message }}</p>
                         </div>
-                    {% endif %}
-                {% endwith %}
-                <form method="POST" action="{{ url_for('auth.login') }}">
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" name="username" required>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Registration Success Message -->
+            <script>
+                // Wait for DOM to be fully loaded
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Check if redirected from successful registration
+                    const urlParams = new URLSearchParams(window.location.search);
+                    console.log('URL params:', urlParams.get('registered'));
+                    
+                    if (urlParams.get('registered') === 'success') {
+                        console.log('Showing success message...');
+                        // Create success message
+                        const successDiv = document.createElement('div');
+                        successDiv.className = 'flash-messages flash-success';
+                        successDiv.innerHTML = '<p>✅ Account created successfully! You can verify your email later for enhanced security.</p>';
+                        
+                        // Insert before the form
+                        const form = document.getElementById('loginForm');
+                        if (form) {
+                            form.parentNode.insertBefore(successDiv, form);
+                            console.log('Success message added to page');
+                        } else {
+                            console.error('Login form not found');
+                        }
+                        
+                        // Remove the parameter from URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                });
+            </script>
+
+            <!-- Login Form -->
+            <form method="POST" action="{{ url_for('auth.login') }}" id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" name="username" required autocomplete="username">
+                        <i class="fas fa-user input-icon"></i>
                     </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" required autocomplete="current-password">
+                        <i class="fas fa-lock input-icon"></i>
                     </div>
-                    <button type="submit">Login</button>
-                </form>
-                <button class="back-btn" onclick="window.location.href='/'">Back</button>
-                <p>Don't have an account? <a href="{{ url_for('register') }}">Sign up</a></p>
+                </div>
+                
+                <!-- Forgot Password Link -->
+                <div class="forgot-password">
+                    <a href="{{ url_for('auth.customer_forgot_password') }}" class="forgot-link">
+                        <i class="fas fa-key" style="margin-right: 4px;"></i>
+                        Forgot Password?
+                    </a>
+                </div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>
+                    Sign In
+                </button>
+            </form>
+
+
+
+            <button class="back-btn" onclick="window.location.href='/'">
+                <i class="fas fa-arrow-left" style="margin-right: 8px;"></i>
+                Back to Home
+            </button>
+
+            <div class="signup-link">
+                <p>Don't have an account?</p>
+                <a href="{{ url_for('register') }}">Create new account</a>
             </div>
         </div>
     </div>
+
+    <script>
+        // Add loading state to login button
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            const btn = document.getElementById('loginBtn');
+            btn.classList.add('loading');
+            btn.innerHTML = '<i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>Signing in...';
+        });
+
+        // Add subtle animations to inputs
+        document.querySelectorAll('.form-group input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    </script>
 </body>
 </html>

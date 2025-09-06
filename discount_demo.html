@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discount Functionality Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .demo-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .product-example {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .price-info {
+            display: flex;
+            gap: 20px;
+            margin: 15px 0;
+            align-items: center;
+        }
+        .price {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .original-price {
+            color: #999;
+            text-decoration: line-through;
+        }
+        .selling-price {
+            color: #e74c3c;
+        }
+        .savings {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .discount-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .calculation {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .option-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .option-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+        }
+        .option-card.active {
+            border-color: #007bff;
+            background: #e8f4fd;
+        }
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .checkbox-option input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            accent-color: #007bff;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        .result {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🎯 Discount Functionality Demo</h1>
+        <p>This demo shows how the new discount system works, allowing you to choose whether to apply discounts from the original price or the current selling price.</p>
+        
+        <div class="product-example">
+            <h3>📱 Product Example: MSI Katana 17 B13VGK-1408KH</h3>
+            <div class="price-info">
+                <div>
+                    <span class="price original-price">Original Price: $1,218.00</span>
+                </div>
+                <div>
+                    <span class="price selling-price">Current Selling Price: $974.40</span>
+                </div>
+                <div>
+                    <span class="discount-badge">20% OFF</span>
+                </div>
+            </div>
+            <div class="savings">You Save: $243.60</div>
+            
+            <div class="calculation">
+                <strong>Current Discount Calculation:</strong><br>
+                Original Price: $1,218.00<br>
+                Discount: 20% off<br>
+                New Price: $1,218.00 × (1 - 0.20) = $974.40<br>
+                Savings: $1,218.00 - $974.40 = $243.60
+            </div>
+        </div>
+
+        <h2>🔄 New Discount Behavior</h2>
+        <p>All discounts are now automatically applied from the current selling price for better incremental discounting:</p>
+
+        <div class="option-comparison">
+            <div class="option-card active">
+                <h4>💰 Current Selling Price Base (Default)</h4>
+                <p><strong>All discounts now use this method</strong></p>
+                <p>Additional discounts are calculated from the current selling price ($974.40)</p>
+                <div class="calculation">
+                    <strong>Example: Apply 10% more discount</strong><br>
+                    Base Price: $974.40 (current selling price)<br>
+                    New Price: $974.40 × (1 - 0.10) = $876.96<br>
+                    Total Savings: $1,218.00 - $876.96 = $341.04
+                </div>
+            </div>
+            
+            <div class="option-card">
+                <h4>📊 Previous Behavior (No Longer Available)</h4>
+                <p><strong>This option has been removed</strong></p>
+                <p>Previously calculated from original price ($1,218.00)</p>
+                <div class="calculation">
+                    <strong>Example: Apply 10% more discount</strong><br>
+                    Base Price: $1,218.00 (original)<br>
+                    New Price: $1,218.00 × (1 - 0.10) = $1,096.20<br>
+                    Total Savings: $1,218.00 - $1,096.20 = $121.80
+                </div>
+            </div>
+        </div>
+
+        <h2>🧪 Interactive Demo</h2>
+        <p>Try applying different discount percentages (all now use current selling price as base):</p>
+
+        <div class="demo-form">
+            <div style="margin: 20px 0;">
+                <label for="discount-percentage">Discount Percentage: </label>
+                <input type="number" id="discount-percentage" value="10" min="1" max="90" style="width: 80px; padding: 5px;">
+                <span>%</span>
+                <button class="btn btn-success" onclick="calculateDiscount()">Calculate Discount</button>
+            </div>
+
+            <div class="result" id="result">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+
+        <h2>💡 Use Cases</h2>
+        <ul>
+            <li><strong>Option 1 (Unchecked):</strong> Use when you want to apply a discount from the original MSRP, regardless of current promotions</li>
+            <li><strong>Option 2 (Checked):</strong> Use when you want to apply an additional discount on top of an already-discounted product</li>
+            <li><strong>Bulk Operations:</strong> Always use original price for consistency across multiple products</li>
+        </ul>
+
+        <h2>🔧 Technical Implementation</h2>
+        <div class="calculation">
+            <strong>Backend API Changes:</strong><br>
+            • New parameter: <code>apply_from_current_price</code><br>
+            • Default behavior: <code>false</code> (backward compatible)<br>
+            • Enhanced response with base price used and total savings<br><br>
+            
+            <strong>Frontend Changes:</strong><br>
+            • New checkbox option in discount modal<br>
+            • Clear explanation of both options<br>
+            • Visual feedback showing which option is selected
+        </div>
+    </div>
+
+    <script>
+        function calculateDiscount() {
+            const discountPercent = parseFloat(document.getElementById('discount-percentage').value);
+            const resultDiv = document.getElementById('result');
+            
+            const originalPrice = 1218.00;
+            const currentPrice = 974.40;
+            
+            // Always use current selling price as base
+            const basePrice = currentPrice;
+            const newPrice = currentPrice * (1 - discountPercent / 100);
+            const savings = currentPrice - newPrice;
+            const totalSavings = originalPrice - newPrice;
+            
+            resultDiv.innerHTML = `
+                <h4>📊 Discount Calculation Results</h4>
+                <p><strong>Base Price Used:</strong> $${basePrice.toFixed(2)} (current selling price)</p>
+                <p><strong>Discount Applied:</strong> ${discountPercent}%</p>
+                <p><strong>New Price:</strong> $${newPrice.toFixed(2)}</p>
+                <p><strong>Immediate Savings:</strong> $${savings.toFixed(2)}</p>
+                <p><strong>Total Savings from Original:</strong> $${totalSavings.toFixed(2)}</p>
+                <p><strong>Final Discount Badge:</strong> <span class="discount-badge">${Math.round((totalSavings / originalPrice) * 100)}% OFF</span></p>
+            `;
+            
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -9,11 +9,17 @@ class Config:
     MYSQL_HOST = os.getenv('MYSQL_HOST') or 'localhost'
     MYSQL_USER = os.getenv('MYSQL_USER') or 'root'
     MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD') or '12345'
-    MYSQL_DB = os.getenv('MYSQL_DB') or 'computer_shop3'
+    MYSQL_DB = os.getenv('MYSQL_DB') or 'computershop5'
     SQLALCHEMY_DATABASE_URI = f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
 
     # File upload configuration
     UPLOAD_FOLDER = 'static/uploads/products'
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    
+    # Email configuration for OTP
+    SMTP_SERVER = 'smtp.gmail.com'
+    SMTP_PORT = 587
+    SMTP_USERNAME = 'lyhenghab3@gmail.com'  # Replace with your Gmail
+    SMTP_PASSWORD = 'dxhn mirg iaco vkta'     # Replace with your app password
 

@@ -124,7 +124,7 @@ function showProductDetails(orderId) {
     productModalContent.innerHTML = '<p>Loading product details...</p>';
     productModal.style.display = 'block';
 
-    fetch(`/api/orders/today_details_by_order/${orderId}`)
+    fetch(`/api/orders/today_details/${orderId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success && data.products && data.products.length > 0) {

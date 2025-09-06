@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My First HTML Page</title>
+    <style>
+        /* Basic CSS to make the page look nice */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+        .code-example {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #dee2e6;
+            margin: 10px 0;
+        }
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header>
+            <h1>Welcome to My Website!</h1>
+            <nav>
+                <a href="#about" class="button">About</a>
+                <a href="#contact" class="button">Contact</a>
+                <a href="#gallery" class="button">Gallery</a>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <!-- About Section -->
+            <section id="about">
+                <h2>About Me</h2>
+                <p>Hello! I'm learning HTML and this is my first webpage. I'm excited to share what I've learned so far.</p>
+                
+                <div class="highlight">
+                    <strong>What I've learned:</strong>
+                    <ul>
+                        <li>HTML document structure</li>
+                        <li>Headings and paragraphs</li>
+                        <li>Links and navigation</li>
+                        <li>Images and media</li>
+                        <li>Lists and tables</li>
+                        <li>Forms and input elements</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Skills Section -->
+            <section id="skills">
+                <h2>My Skills</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Skill</th>
+                            <th>Level</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>HTML</td>
+                            <td>Beginner</td>
+                            <td>Learning the basics of markup language</td>
+                        </tr>
+                        <tr>
+                            <td>CSS</td>
+                            <td>Planned</td>
+                            <td>Next step to learn styling</td>
+                        </tr>
+                        <tr>
+                            <td>JavaScript</td>
+                            <td>Future</td>
+                            <td>Will learn for interactivity</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Gallery Section -->
+            <section id="gallery">
+                <h2>My Gallery</h2>
+                <p>Here are some placeholder images to demonstrate the img tag:</p>
+                
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                    <figure>
+                        <img src="https://via.placeholder.com/200x150/007bff/ffffff?text=Image+1" 
+                             alt="Blue placeholder image 1" 
+                             style="border-radius: 5px;">
+                        <figcaption style="text-align: center; margin-top: 10px;">Image 1</figcaption>
+                    </figure>
+                    
+                    <figure>
+                        <img src="https://via.placeholder.com/200x150/28a745/ffffff?text=Image+2" 
+                             alt="Green placeholder image 2" 
+                             style="border-radius: 5px;">
+                        <figcaption style="text-align: center; margin-top: 10px;">Image 2</figcaption>
+                    </figure>
+                    
+                    <figure>
+                        <img src="https://via.placeholder.com/200x150/dc3545/ffffff?text=Image+3" 
+                             alt="Red placeholder image 3" 
+                             style="border-radius: 5px;">
+                        <figcaption style="text-align: center; margin-top: 10px;">Image 3</figcaption>
+                    </figure>
+                </div>
+            </section>
+
+            <!-- Contact Section -->
+            <section id="contact">
+                <h2>Contact Me</h2>
+                <p>Feel free to send me a message using the form below:</p>
+                
+                <form action="#" method="POST">
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input type="text" id="name" name="name" required placeholder="Enter your name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required placeholder="Enter your email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subject">Subject:</label>
+                        <input type="text" id="subject" name="subject" placeholder="What is this about?">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Message:</label>
+                        <textarea id="message" name="message" rows="5" placeholder="Type your message here..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="button">Send Message</button>
+                    <button type="reset" class="button" style="background-color: #6c757d;">Reset Form</button>
+                </form>
+            </section>
+
+            <!-- Code Examples Section -->
+            <section id="examples">
+                <h2>HTML Code Examples</h2>
+                <p>Here are some examples of HTML code I've learned:</p>
+                
+                <h3>Basic HTML Structure</h3>
+                <div class="code-example">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Page Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Main Heading&lt;/h1&gt;
+    &lt;p&gt;This is a paragraph.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+                </div>
+                
+                <h3>Creating Links</h3>
+                <div class="code-example">
+&lt;a href="https://www.example.com"&gt;Visit Example.com&lt;/a&gt;
+&lt;a href="#section1"&gt;Go to Section 1&lt;/a&gt;
+&lt;a href="mailto:contact@example.com"&gt;Send Email&lt;/a&gt;
+                </div>
+                
+                <h3>Adding Images</h3>
+                <div class="code-example">
+&lt;img src="image.jpg" alt="Description of image"&gt;
+&lt;figure&gt;
+    &lt;img src="image.jpg" alt="Figure image"&gt;
+    &lt;figcaption&gt;Image caption&lt;/figcaption&gt;
+&lt;/figure&gt;
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 My Learning Journey. Created with HTML!</p>
+            <p>This page demonstrates various HTML elements and basic CSS styling.</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript for basic interactivity -->
+    <script>
+        // Simple JavaScript to show form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Thank you for your message! This is just a demo form.');
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add some interactivity to the page
+        console.log('Welcome to my HTML learning page!');
+    </script>
+</body>
+</html>

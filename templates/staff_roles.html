@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Role Management{% endblock %}
+
+{% block content %}
+<div class="staff-container">
+    <h1>Role Management</h1>
+    
+    <!-- Add Role Form -->
+    <div class="inventory-actions">
+        <div class="inventory-search">
+            <form method="post" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: end; width: 100%;">
+                <div style="flex: 1; min-width: 150px;">
+                    <label for="name" style="display: block; margin-bottom: 5px; font-weight: bold;">Role Name:</label>
+                    <input type="text" id="name" name="name" required style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; width: 100%;" placeholder="e.g., clerk">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label for="display_name" style="display: block; margin-bottom: 5px; font-weight: bold;">Display Name:</label>
+                    <input type="text" id="display_name" name="display_name" required style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; width: 100%;" placeholder="e.g., Clerk">
+                </div>
+                <div style="flex: 2; min-width: 200px;">
+                    <label for="description" style="display: block; margin-bottom: 5px; font-weight: bold;">Description:</label>
+                    <input type="text" id="description" name="description" style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; width: 100%;" placeholder="Role description">
+                </div>
+                <div style="flex: 0 0 120px;">
+                    <label for="access_level" style="display: block; margin-bottom: 5px; font-weight: bold;">Access Level:</label>
+                    <select id="access_level" name="access_level" style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 5px; width: 100%;">
+                        <option value="1">Level 1 (Basic)</option>
+                        <option value="2">Level 2 (Advanced)</option>
+                        <option value="3">Level 3 (Admin)</option>
+                    </select>
+                </div>
+                <div style="flex: 0 0 auto;">
+                    <button type="submit" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; min-width: 120px;">Add Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Roles Table -->
+    <div class="inventory-list">
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #aaa; font-weight: 400;">
+            <thead>
+                <tr>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">ID</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Role Name</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Display Name</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Description</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Access Level</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Type</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for role in roles %}
+                <tr>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ role.id }}</td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ role.name }}</td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+                        <span class="displayname-display">{{ role.display_name }}</span>
+                        <input type="text" class="displayname-edit" value="{{ role.display_name }}" style="display: none; padding: 4px; border: 1px solid #ccc; border-radius: 3px; width: 100%; box-sizing: border-box;">
+                    </td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+                        <span class="description-display">{{ role.description or '-' }}</span>
+                        <input type="text" class="description-edit" value="{{ role.description or '' }}" style="display: none; padding: 4px; border: 1px solid #ccc; border-radius: 3px; width: 100%; box-sizing: border-box;">
+                    </td>
+                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">
+                        <span class="accesslevel-display">
+                            <span style="background-color: {% if role.access_level == 3 %}#dc3545{% elif role.access_level == 2 %}#fd7e14{% else %}#28a745{% endif %}; color: white; padding: 2px 6px; border-radius: 8px; font-size: 11px;">
+                                Level {{ role.access_level }}
+                            </span>
+                        </span>
+                        <select class="accesslevel-edit" style="display: none; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                            <option value="1" {% if role.access_level == 1 %}selected{% endif %}>Level 1</option>
+                            <option value="2" {% if role.access_level == 2 %}selected{% endif %}>Level 2</option>
+                            <option value="3" {% if role.access_level == 3 %}selected{% endif %}>Level 3</option>
+                        </select>
+                    </td>
+                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">
+                        {% if role.is_system_role %}
+                            <span style="background-color: #6c757d; color: white; padding: 2px 6px; border-radius: 8px; font-size: 11px;">System</span>
+                        {% else %}
+                            <span style="background-color: #17a2b8; color: white; padding: 2px 6px; border-radius: 8px; font-size: 11px;">Custom</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">
+                        <div class="action-buttons">
+                            {% if not role.is_system_role %}
+                            <button class="edit-btn" onclick="editRole({{ role.id }})" style="background-color: #ffc107; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; margin-right: 5px;">Edit</button>
+                            <button class="save-btn" onclick="saveRole({{ role.id }})" style="display: none; background-color: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; margin-right: 5px;">Save</button>
+                            <button class="cancel-btn" onclick="cancelEdit({{ role.id }})" style="display: none; background-color: #6c757d; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; margin-right: 5px;">Cancel</button>
+                            <button onclick="deleteRole({{ role.id }}, '{{ role.display_name }}')" style="background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Delete</button>
+                            {% else %}
+                            <span style="color: #6c757d; font-size: 12px;">System Role</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Message Container for Notifications -->
+<div id="message-container"></div>
+
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_notifications.css') }}">
+<style>
+    .staff-container {
+        width: 100%;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .inventory-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 20px 0;
+        gap: 15px;
+    }
+
+    .inventory-search {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        max-width: 1200px;
+    }
+
+    .inventory-list table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #aaa;
+        font-weight: 400;
+    }
+
+    .inventory-list th,
+    .inventory-list td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #888;
+    }
+
+    .inventory-list th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+    }
+
+    .inventory-list tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .action-buttons button {
+        transition: background-color 0.2s;
+    }
+
+    .action-buttons button:hover {
+        opacity: 0.8;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/staff_messages.js') }}"></script>
+<script>
+function editRole(roleId) {
+    const row = document.querySelector(`tr:has(button[onclick*="editRole(${roleId})"])`);
+    
+    // Hide display elements and show edit elements
+    row.querySelector('.displayname-display').style.display = 'none';
+    row.querySelector('.displayname-edit').style.display = 'inline';
+    row.querySelector('.description-display').style.display = 'none';
+    row.querySelector('.description-edit').style.display = 'inline';
+    row.querySelector('.accesslevel-display').style.display = 'none';
+    row.querySelector('.accesslevel-edit').style.display = 'inline';
+    
+    // Hide edit button, show save/cancel buttons
+    row.querySelector('.edit-btn').style.display = 'none';
+    row.querySelector('.save-btn').style.display = 'inline';
+    row.querySelector('.cancel-btn').style.display = 'inline';
+}
+
+function cancelEdit(roleId) {
+    const row = document.querySelector(`tr:has(button[onclick*="editRole(${roleId})"])`);
+    
+    // Show display elements and hide edit elements
+    row.querySelector('.displayname-display').style.display = 'inline';
+    row.querySelector('.displayname-edit').style.display = 'none';
+    row.querySelector('.description-display').style.display = 'inline';
+    row.querySelector('.description-edit').style.display = 'none';
+    row.querySelector('.accesslevel-display').style.display = 'inline';
+    row.querySelector('.accesslevel-edit').style.display = 'none';
+    
+    // Show edit button, hide save/cancel buttons
+    row.querySelector('.edit-btn').style.display = 'inline';
+    row.querySelector('.save-btn').style.display = 'none';
+    row.querySelector('.cancel-btn').style.display = 'none';
+    
+    // Reset values
+    const originalDisplayName = row.querySelector('.displayname-display').textContent;
+    const originalDescription = row.querySelector('.description-display').textContent;
+    row.querySelector('.displayname-edit').value = originalDisplayName;
+    row.querySelector('.description-edit').value = originalDescription === '-' ? '' : originalDescription;
+}
+
+function saveRole(roleId) {
+    const row = document.querySelector(`tr:has(button[onclick*="editRole(${roleId})"])`);
+    const displayName = row.querySelector('.displayname-edit').value.trim();
+    const description = row.querySelector('.description-edit').value.trim();
+    const accessLevel = parseInt(row.querySelector('.accesslevel-edit').value);
+    
+    if (!displayName) {
+        showMessage('Display name cannot be empty', 'error');
+        return;
+    }
+    
+    fetch(`/auth/api/staff/roles/${roleId}/update`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            display_name: displayName,
+            description: description || null,
+            access_level: accessLevel
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            // Update display values
+            row.querySelector('.displayname-display').textContent = displayName;
+            row.querySelector('.description-display').textContent = description || '-';
+            
+            // Update access level badge
+            const accessDisplay = row.querySelector('.accesslevel-display span');
+            accessDisplay.textContent = `Level ${accessLevel}`;
+            if (accessLevel === 3) {
+                accessDisplay.style.backgroundColor = '#dc3545';
+            } else if (accessLevel === 2) {
+                accessDisplay.style.backgroundColor = '#fd7e14';
+            } else {
+                accessDisplay.style.backgroundColor = '#28a745';
+            }
+            
+            cancelEdit(roleId);
+        } else {
+            showMessage(data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error updating role', 'error');
+    });
+}
+
+function deleteRole(roleId, roleName) {
+    if (confirm(`Are you sure you want to delete role "${roleName}"? This action cannot be undone.`)) {
+        fetch(`/auth/api/staff/roles/${roleId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                // Remove the row from table
+                const row = document.querySelector(`tr:has(button[onclick*="editRole(${roleId})"])`);
+                row.remove();
+            } else {
+                showMessage(data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error deleting role', 'error');
+        });
+    }
+}
+</script>
+{% endblock %}

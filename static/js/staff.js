@@ -1,8 +1,16 @@
 // JavaScript functions for staff page
 
 function showCompletedOrdersCount(customerId) {
-    const modal = new bootstrap.Modal(document.getElementById('completedOrdersModal'));
+    const modalElement = document.getElementById('completedOrdersModal');
     const modalBody = document.getElementById('completedOrdersCountBody');
+    
+    // Only proceed if both elements exist
+    if (!modalElement || !modalBody) {
+        console.warn('Completed orders modal elements not found on this page');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(modalElement);
     modalBody.textContent = 'Loading...';
 
     fetch(`/staff/customers/${customerId}/orders/completed_count`)
@@ -22,8 +30,16 @@ function showCompletedOrdersCount(customerId) {
 }
 
 function showCustomerOrders(customerId) {
-    const modal = new bootstrap.Modal(document.getElementById('customerOrdersModal'));
+    const modalElement = document.getElementById('customerOrdersModal');
     const modalBody = document.getElementById('customerOrdersModalBody');
+    
+    // Only proceed if both elements exist
+    if (!modalElement || !modalBody) {
+        console.warn('Customer orders modal elements not found on this page');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(modalElement);
     modalBody.innerHTML = 'Loading...';
 
     fetch(`/staff/customers/${customerId}/orders`)
@@ -65,11 +81,14 @@ function showCustomerOrders(customerId) {
     modal.show();
 }
 
-// Client-side search for customers table
+// Client-side search for customers table (only when not on the customers page)
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('customerSearchInput');
     const table = document.getElementById('customersTable');
-    if (table) {
+    
+    // Only proceed if both elements exist AND we're not on the customers page
+    // (customers page has its own server-side search implementation)
+    if (searchInput && table && !window.location.pathname.includes('/customers')) {
         const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
 
         searchInput.addEventListener('input', function() {
@@ -98,15 +117,19 @@ document.addEventListener('DOMContentLoaded', function() {
         customerModal = new bootstrap.Modal(customerModalElement);
     }
 
-    if (addCustomerBtn) {
+    if (addCustomerBtn && customerModal) {
         addCustomerBtn.addEventListener('click', function() {
             // Clear form fields
-            document.getElementById('customerForm').reset();
-            document.getElementById('customerId').value = '';
-            // Set modal title
-            document.getElementById('modalTitle').textContent = 'Add Customer';
-            // Show modal
-            if (customerModal) {
+            const customerForm = document.getElementById('customerForm');
+            const customerId = document.getElementById('customerId');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            if (customerForm && customerId && modalTitle) {
+                customerForm.reset();
+                customerId.value = '';
+                // Set modal title
+                modalTitle.textContent = 'Add Customer';
+                // Show modal
                 customerModal.show();
             }
         });
@@ -114,35 +137,47 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle customer form submission
     const saveCustomerBtn = document.getElementById('saveCustomerBtn');
-    if (saveCustomerBtn) {
+    if (saveCustomerBtn && customerModal) {
         saveCustomerBtn.addEventListener('click', function() {
-            const customerId = document.getElementById('customerId').value;
-            const firstName = document.getElementById('firstName').value.trim();
-            const lastName = document.getElementById('lastName').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const address = document.getElementById('address').value.trim();
-            const password = document.getElementById('password').value;
+            const customerId = document.getElementById('customerId');
+            const firstName = document.getElementById('firstName');
+            const lastName = document.getElementById('lastName');
+            const email = document.getElementById('email');
+            const phone = document.getElementById('phone');
+            const address = document.getElementById('address');
+            const password = document.getElementById('password');
+            
+            if (!customerId || !firstName || !lastName || !email || !password) {
+                console.warn('Required customer form elements not found');
+                return;
+            }
 
-            if (!firstName || !lastName || !email || !password) {
+            const firstNameValue = firstName.value.trim();
+            const lastNameValue = lastName.value.trim();
+            const emailValue = email.value.trim();
+            const phoneValue = phone ? phone.value.trim() : '';
+            const addressValue = address ? address.value.trim() : '';
+            const passwordValue = password.value;
+
+            if (!firstNameValue || !lastNameValue || !emailValue || !passwordValue) {
                 alert('First Name, Last Name, Email, and Password are required.');
                 return;
             }
 
             const payload = {
-                first_name: firstName,
-                last_name: lastName,
-                email: email,
-                phone: phone,
-                address: address,
-                password: password
+                first_name: firstNameValue,
+                last_name: lastNameValue,
+                email: emailValue,
+                phone: phoneValue,
+                address: addressValue,
+                password: passwordValue
             };
 
             let url = '/staff/customers';
             let method = 'POST';
 
-            if (customerId) {
-                url = `/staff/customers/${customerId}`;
+            if (customerId.value) {
+                url = `/staff/customers/${customerId.value}`;
                 method = 'PUT';
             }
 
@@ -225,8 +260,16 @@ document.querySelectorAll('.delete-customer-btn').forEach(button => {
 });
 
 function showCategoryProducts(categoryId) {
-    const modal = new bootstrap.Modal(document.getElementById('categoryProductsModal'));
+    const modalElement = document.getElementById('categoryProductsModal');
     const modalBody = document.getElementById('categoryProductsModalBody');
+    
+    // Only proceed if both elements exist
+    if (!modalElement || !modalBody) {
+        console.warn('Category products modal elements not found on this page');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(modalElement);
     modalBody.innerHTML = 'Loading...';
 
     fetch(`/staff/categories/${categoryId}/products`)

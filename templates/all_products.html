@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Shop - Laptops, Desktops, and Accessories</title>
+    <link rel="stylesheet" href="/static/css/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+    .container {
+    width: 60% !important;
+    max-width: none !important; /* Removes Bootstrap's max-width constraints */
+    margin: auto;
+}
+
+/* Hide Categories Sidebar on screens smaller than 1024px */
+@media (max-width: 1400px) {
+  /* Hide sidebar by default */
+  .col-lg-2.col-md-3.col-12,
+  .category-sidebar {
+    display: none;
+  }
+
+  /* Show sidebar when toggled */
+  .category-sidebar.show {
+    display: block;
+    position: absolute; /* optional, for overlay effect */
+    top: 0;
+    left: 0;
+    width: 250px; /* adjust width */
+    height: 100%;
+    background-color: #f8f8f8;
+    z-index: 1000;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+  }
+
+  /* Sidebar toggle button */
+  .sidebar-toggle {
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    background-color: #e67e22;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s, transform 0.3s;
+  }
+
+  .sidebar-toggle:hover {
+    background-color: #d35400;
+    transform: scale(1.05);
+  }
+
+  /* Ensure product sections take full width */
+  .col-lg-10.col-md-9.col-12 {
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+    <header>
+        <div class="top-bar">
+            <span>COMPUTER SHOP</span>
+            <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/cart">My Cart</a></li>
+                    <li><a href="#">Check Out</a></li>
+                    <li>
+                        <a href="/auth/login" style="display: flex; align-items: center;">
+                            <img src="/static/icons/user.png" alt="User Icon" style="height: 20px; margin-right: 10px;">
+                            Login Account
+                        </a>
+                    </li>
+                    <li>
+                    <form class="search-container" action="/search" method="GET" onsubmit="return validateSearch()">
+                        <button type="submit" class="search-icon" tabindex="0" aria-label="Search products" style="background:none; border:none; padding:0; cursor:pointer;">
+                            <img src="/static/icons/search.png" alt="Search Icon" style="height: 20px;">
+                        </button>
+                        <input type="text" name="q" class="search-input" placeholder="Search..." aria-label="Search products" required>
+                    </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="content"> 
+        <div class="hero-container">
+            <div class="hero-section active">
+                <img src="/static/icons/product/macbook.png" alt="MacBook Pro with Retina display" class="hero-image">
+                <div class="hero-details">
+                    <h1>MacBook Pro</h1>
+                    <p class="subheading">with Retina display</p>
+                    <h2>$1999</h2>
+                </div>
+            </div>
+            <div class="hero-section">
+                <img src="/static/icons/product/asus zenbook.png" alt="Asus Zenbook with OLED display" class="hero-image">
+                <div class="hero-details">
+                    <h1>Asus Zenbook</h1>
+                    <p class="subheading">with OLED display</p>
+                    <h2>$2200</h2>
+                </div>
+            </div>
+            <div class="hero-section">
+                <img src="/static/icons/product/razer blackwidow.png" alt="Razer Blackwidow Chroma Red Switch Keyboard" class="hero-image">
+                <div class="hero-details">
+                    <h1>Razer Blackwidow Chroma</h1>
+                    <p class="subheading">Red Switch Keyboard</p>
+                    <h2>$199</h2>
+                </div>
+            </div>
+            <div class="hero-section">
+                <img src="/static/icons/product/asus rog swift.png" alt="Asus Rog Swift Nvidia G-Sync Monitor" class="hero-image">
+                <div class="hero-details">
+                    <h1>Asus Rog Swift</h1>
+                    <p class="subheading">Nvidia G-Sync 21:9 aspect ratio Computer Monitor</p>
+                    <h2>$399</h2>
+                </div>
+            </div>
+        </div>
+        <div class="navigation-dots">
+            <span class="dot active" data-index="0"></span>
+            <span class="dot" data-index="1"></span>
+            <span class="dot" data-index="2"></span>
+            <span class="dot" data-index="3"></span>
+        </div>
+        
+        <div class="categories" >
+            <div class="category">
+                <img src="/static/icons/keyboard.png" alt="Accessories Icon" class="category-icon">
+                <h3>Accessories</h3>
+            </div>
+            <div class="category">
+                <img src="/static/icons/laptop.png" alt="Laptops Icon" class="category-icon">
+                <h3>Laptops</h3>
+            </div>
+            <div class="category">
+                <img src="/static/icons/desktop.png" alt="Desktops Icon" class="category-icon">
+                <h3>Desktops</h3>
+            </div>
+            <div class="category">
+                <img src="/static/icons/desktop.png" alt="PC Components Icon" class="category-icon">
+                <h3>PC Components</h3>
+            </div>
+        </div>
+
+        
+  <div class="custom-container">
+    <div class="row g-4">
+        <!-- Categories Sidebar -->
+        <div class="col-lg-2 col-md-3 col-12">
+            <div class="categories">
+                <div class="category">
+                    <img src="/static/icons/1.png" alt="Accessories Icon" class="category-icon">
+                </div>
+                <div class="category">
+                    <img src="/static/icons/2.png" alt="Laptops Icon" class="category-icon">
+                </div>
+                <div class="category">
+                    <img src="/static/icons/3.png" alt="Desktops Icon" class="category-icon">
+                </div>
+                <div class="category">
+                    <img src="/static/icons/5.png" alt="PC Components Icon" class="category-icon">
+                </div>
+            </div>
+        </div>
+        <!-- Featured Products -->
+        <div class="col-lg-10 col-md-9 col-12">
+            <section id="products">
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <h2>Featured Products</h2>
+                    <a href="/products/all" class="btn btn-outline-primary">View All</a>
+                </div>
+                <div class="row g-4">
+                    {% for product in products %}
+                    <div class="col-lg-3 col-md-6">
+                        <div class="product-card card h-100">
+                            <a href="{{ url_for('view_product', product_id=product.id) }}">
+                                <img src="{% if product.photo %}/static/uploads/products/{{ product.photo }}{% else %}/static/images/placeholder-product.jpg{% endif %}" 
+                                     class="card-img-top p-3" 
+                                     alt="{{ product.name }}">
+                            </a>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="card-title">{{ product.name }}</h5>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="price h5 text-primary">${{ "%.2f"|format(product.price) }}</span>
+                                </div>
+                                <div>
+                                    <p class="card-text text-muted">{{ product.description|truncate(100) }}</p>
+                                </div>
+                                <div style="padding: 0px 0px 10px 0px; font-size: 15px;">
+                                    <!-- <ul style="list-style-type: none; margin: 0px 10px 0px 0px; padding: 0px 0px 10px 0px; font-size: 15px;">
+                                        <li><strong>Display:</strong> {{ product.display }}</li>
+                                        <li><strong>CPU:</strong> {{ product.cpu }}</li>
+                                        <li><strong>RAM:</strong> {{ product.ram }}</li>
+                                        <li><strong>Storage:</strong> {{ product.storage }}</li>
+                                        <li><strong>Battery Life:</strong> {{ product.battery }}</li>
+                                        <li><strong>Operating System:</strong> {{ product.os }}</li>
+                                        <li><strong>Color:</strong> {{ product.color }}</li>
+                                    </ul> -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+    <footer class="footer1">
+        <div class="container1">
+            <div class="row1">
+                <div class="footer1-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="/about">About Us</a></li>
+                        <li><a href="/services">Our Services</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/affiliate">Affiliate Program</a></li>
+                    </ul>
+                </div>
+                <div class="footer1-col">
+                    <h4>Get Help</h4>
+                    <ul>
+                        <li><a href="/faq">FAQ</a></li>
+                        <li><a href="/shipping">Shipping</a></li>
+                        <li><a href="/returns">Returns</a></li>
+                        <li><a href="/order-status">Order Status</a></li>
+                        <li><a href="/payment-options">Payment Options</a></li>
+                    </ul>
+                </div>
+                <div class="footer1-col">
+                    <h4>Online Shop</h4>
+                    <ul>
+                        <li><a href="/products/all">Laptops</a></li>
+                        <li><a href="/products/all">Desktops</a></li>
+                        <li><a href="/products/all">Accessories</a></li>
+                        <li><a href="/products/all">PC Components</a></li>
+                    </ul>
+                </div>
+                <div class="footer1-col">
+                    <h4>Follow Us</h4>
+                    <div class="social-links">
+                        <a href="https://facebook.com" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://twitter.com" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="https://instagram.com" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://linkedin.com" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="/static/js/homepage.js"></script>
+    <script src="/static/js/category_navigation.js"></script>
+    <script src="/static/js/brand_navigation.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script>
+        function validateSearch() {
+            const input = document.querySelector('.search-input');
+            if (!input.value.trim()) {
+                alert('Please enter a search term.');
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>

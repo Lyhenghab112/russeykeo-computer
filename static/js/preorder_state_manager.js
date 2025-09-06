@@ -385,7 +385,8 @@ class PreOrderStateManager {
         if (state.has_preorder) {
             // Cancel existing pre-order
             console.log(`🔄 Attempting to cancel pre-order ${state.preorder_id} for product ${productId}`);
-            if (confirm('Are you sure you want to cancel this pre-order?')) {
+            const confirmed = await this.showCancelConfirmation('Cancel Pre-Order', 'Are you sure you want to cancel this pre-order?');
+            if (confirmed) {
                 try {
                     await this.cancelPreorder(state.preorder_id, productId);
                     this.updateButtonState(button, productId);
@@ -421,6 +422,139 @@ class PreOrderStateManager {
             // Fallback to alert
             alert(message);
         }
+    }
+
+    /**
+     * Show custom confirmation modal for canceling pre-orders
+     */
+    showCancelConfirmation(title, message) {
+        return new Promise((resolve) => {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'cancel-confirmation-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                backdrop-filter: blur(2px);
+            `;
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                max-width: 400px;
+                width: 90%;
+                transform: scale(0.9);
+                transition: transform 0.2s ease-out;
+            `;
+
+            modal.innerHTML = `
+                <div style="padding: 24px 24px 16px 24px; text-align: center;">
+                    <div style="color: #dc2626; font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                    <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #111827;">${title}</h3>
+                    <p style="margin: 0; color: #6b7280; font-size: 14px;">${message}</p>
+                </div>
+                <div style="padding: 16px 24px 24px 24px; display: flex; gap: 12px; justify-content: center;">
+                    <button class="cancel-btn" style="
+                        background: #f3f4f6;
+                        color: #374151;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 8px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        font-size: 14px;
+                        transition: background-color 0.2s;
+                        min-width: 80px;
+                    ">Cancel</button>
+                    <button class="confirm-btn" style="
+                        background: #dc2626;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 8px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        font-size: 14px;
+                        transition: background-color 0.2s;
+                        min-width: 80px;
+                    ">Confirm</button>
+                </div>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                modal.style.transform = 'scale(1)';
+            });
+
+            // Add hover effects
+            const cancelBtn = modal.querySelector('.cancel-btn');
+            const confirmBtn = modal.querySelector('.confirm-btn');
+
+            cancelBtn.addEventListener('mouseenter', () => {
+                cancelBtn.style.backgroundColor = '#e5e7eb';
+            });
+            cancelBtn.addEventListener('mouseleave', () => {
+                cancelBtn.style.backgroundColor = '#f3f4f6';
+            });
+
+            confirmBtn.addEventListener('mouseenter', () => {
+                confirmBtn.style.backgroundColor = '#b91c1c';
+            });
+            confirmBtn.addEventListener('mouseleave', () => {
+                confirmBtn.style.backgroundColor = '#dc2626';
+            });
+
+            // Handle button clicks
+            const cleanup = () => {
+                modal.style.transform = 'scale(0.9)';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(overlay);
+                }, 200);
+            };
+
+            cancelBtn.addEventListener('click', () => {
+                cleanup();
+                resolve(false);
+            });
+
+            confirmBtn.addEventListener('click', () => {
+                cleanup();
+                resolve(true);
+            });
+
+            // Close on overlay click
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    cleanup();
+                    resolve(false);
+                }
+            });
+
+            // Close on escape key
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    cleanup();
+                    resolve(false);
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
+        });
     }
 
     /**

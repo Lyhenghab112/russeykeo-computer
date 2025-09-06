@@ -2,10 +2,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const preordersTableBody = document.querySelector('tbody');
     const mobilePreordersList = document.getElementById('mobile-preorders-list');
     const paginationContainer = document.querySelector('.pagination');
-    const statusFilter = document.querySelector('select[name="status"]');
+    const statusFilter = document.getElementById('status-filter');
 
     let currentPage = 1;
     const pageSize = 10;
+
+    // Initialize item counter
+    let preordersItemCounter = null;
+    if (window.ItemCounter) {
+        preordersItemCounter = new ItemCounter('preorders-container', {
+            itemName: 'pre-orders',
+            itemNameSingular: 'pre-order',
+            position: 'bottom',
+            className: 'item-counter theme-success'
+        });
+    }
 
     // Fetch pre-orders with AJAX
     async function fetchPreorders(page = 1) {
@@ -26,16 +37,39 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success) {
                 renderPreorders(data.preorders, data.pagination);
                 renderPagination(data.pagination.total_count, currentPage);
+                updatePreordersItemCounter(data.pagination);
             } else {
                 console.error('Error fetching pre-orders:', data.error);
                 preordersTableBody.innerHTML = '<tr><td colspan="9" class="text-center">Error loading pre-orders.</td></tr>';
                 if (mobilePreordersList) mobilePreordersList.innerHTML = '<p class="text-center">Error loading pre-orders.</p>';
+                updatePreordersItemCounter({ total_count: 0, page: 1, total_pages: 0 });
             }
         } catch (error) {
             console.error('Error:', error);
             preordersTableBody.innerHTML = '<tr><td colspan="9" class="text-center">Error loading pre-orders.</td></tr>';
             if (mobilePreordersList) mobilePreordersList.innerHTML = '<p class="text-center">Error loading pre-orders.</p>';
+            updatePreordersItemCounter({ total_count: 0, page: 1, total_pages: 0 });
         }
+    }
+
+    // Update pre-orders item counter
+    function updatePreordersItemCounter(pagination) {
+        if (!preordersItemCounter) return;
+
+        const totalItems = pagination.total_count || 0;
+        const currentPageNum = pagination.page || currentPage;
+        const totalPages = pagination.total_pages || Math.ceil(totalItems / pageSize);
+        const startItem = totalItems === 0 ? 0 : ((currentPageNum - 1) * pageSize) + 1;
+        const endItem = Math.min(currentPageNum * pageSize, totalItems);
+
+        preordersItemCounter.update({
+            totalItems: totalItems,
+            currentPage: currentPageNum,
+            pageSize: pageSize,
+            totalPages: totalPages,
+            startItem: startItem,
+            endItem: endItem
+        });
     }
 
     // Render pre-orders table and mobile cards
@@ -159,20 +193,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper function to get action buttons HTML
     function getActionButtons(preorder) {
-        let buttons = `<button type="button" class="btn btn-outline-info btn-sm" onclick="showPreOrderDetails('${preorder.id}')" title="View pre-order details">
+        const isMobile = window.innerWidth < 768;
+        let buttons = `<button type="button" class="btn btn-info btn-sm" onclick="showPreOrderDetails('${preorder.id}')" title="View pre-order details" style="padding: ${isMobile ? '4px 8px' : '6px 12px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">
                         <i class="bi bi-eye"></i> View Details
                        </button>`;
 
-        if (preorder.status === 'pending') {
-            buttons += `<button type="button" class="btn btn-outline-success btn-sm" onclick="updateStatus('${preorder.id}', 'confirmed')" title="Confirm pre-order">
-                         <i class="bi bi-check-circle"></i> Confirm
-                        </button>`;
-        } else if (preorder.status === 'confirmed') {
-            buttons += `<button type="button" class="btn btn-outline-primary btn-sm" onclick="markReady('${preorder.id}')" title="Mark as ready for pickup">
+        if (preorder.status === 'confirmed') {
+            buttons += `<button type="button" class="btn btn-primary btn-sm" onclick="markReady('${preorder.id}')" title="Mark as ready for pickup" style="padding: ${isMobile ? '4px 8px' : '6px 12px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">
                          <i class="bi bi-box-seam"></i> Mark Ready
                         </button>`;
         } else if (preorder.status === 'ready_for_pickup') {
-            buttons += `<button type="button" class="btn btn-outline-success btn-sm" onclick="completePreOrder('${preorder.id}')" title="Complete pre-order">
+            buttons += `<button type="button" class="btn btn-success btn-sm" onclick="completePreOrder('${preorder.id}')" title="Complete pre-order" style="padding: ${isMobile ? '4px 8px' : '6px 12px'}; font-size: ${isMobile ? '0.8rem' : '0.9rem'};">
                          <i class="bi bi-check-all"></i> Complete
                         </button>`;
         }

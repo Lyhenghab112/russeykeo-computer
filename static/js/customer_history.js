@@ -9,7 +9,7 @@ function initializeCustomerHistory() {
     const searchBtn = document.getElementById('search-customer-btn');
     const searchInput = document.getElementById('customer-search-input');
     const recentBtn = document.getElementById('show-recent-customers-btn');
-    const exportBtn = document.getElementById('exportCustomerHistoryCSV');
+    const exportBtn = document.getElementById('exportCustomerHistoryPDF');
 
     if (searchBtn) {
         searchBtn.addEventListener('click', searchCustomer);
@@ -324,6 +324,128 @@ function showMessage(message, type = 'info') {
 }
 
 async function exportCustomerHistory() {
-    // TODO: Implement CSV export functionality
-    showMessage('Export functionality coming soon', 'info');
+    // Check if customer results are visible
+    const resultsDiv = document.getElementById('customer-history-results');
+    if (!resultsDiv || resultsDiv.style.display === 'none') {
+        showMessage('Please search for a customer first to export their discount history', 'warning');
+        return;
+    }
+
+    // Get customer info
+    const customerInfoCard = document.getElementById('customer-info-card');
+    let customerName = 'Unknown Customer';
+    let customerEmail = '';
+    let customerPhone = '';
+
+    if (customerInfoCard) {
+        const nameElement = customerInfoCard.querySelector('.customer-name');
+        const emailElement = customerInfoCard.querySelector('.customer-details div:nth-child(1)');
+        const phoneElement = customerInfoCard.querySelector('.customer-details div:nth-child(2)');
+
+        if (nameElement) {
+            customerName = nameElement.textContent.trim();
+        }
+        if (emailElement) {
+            customerEmail = emailElement.textContent.replace('Email:', '').trim();
+        }
+        if (phoneElement) {
+            customerPhone = phoneElement.textContent.replace('Phone:', '').trim();
+        }
+    }
+
+    // Get discount history data from the table
+    const tableBody = document.getElementById('discount-history-table-body');
+    if (!tableBody || tableBody.children.length === 0) {
+        showMessage('No discount history data to export for this customer', 'warning');
+        return;
+    }
+
+    // Extract data from table rows
+    const discountData = [];
+    Array.from(tableBody.children).forEach(row => {
+        const cells = row.children;
+        if (cells.length >= 6) {
+            discountData.push({
+                date: cells[0].textContent.trim(),
+                product: cells[1].textContent.trim(),
+                originalPrice: cells[2].textContent.trim(),
+                discountPercent: cells[3].textContent.trim(),
+                finalPrice: cells[4].textContent.trim(),
+                savings: cells[5].textContent.trim()
+            });
+        }
+    });
+
+    if (discountData.length === 0) {
+        showMessage('No discount history data to export', 'warning');
+        return;
+    }
+
+    // Initialize jsPDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Add title
+    doc.setFontSize(18);
+    doc.text('Customer Discount History Report', 14, 22);
+
+    // Add customer info
+    doc.setFontSize(12);
+    doc.text(`Customer: ${customerName}`, 14, 35);
+    if (customerEmail) doc.text(`Email: ${customerEmail}`, 14, 45);
+    if (customerPhone) doc.text(`Phone: ${customerPhone}`, 14, 55);
+
+    // Add generation date
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 65);
+
+    // Prepare table data
+    const tableData = discountData.map(item => [
+        item.date,
+        item.product,
+        item.originalPrice,
+        item.discountPercent,
+        item.finalPrice,
+        item.savings
+    ]);
+
+    // Add table
+    doc.autoTable({
+        head: [['Date', 'Product', 'Original Price', 'Discount %', 'Final Price', 'Savings']],
+        body: tableData,
+        startY: 75,
+        styles: {
+            fontSize: 10,
+            cellPadding: 3
+        },
+        headStyles: {
+            fillColor: [66, 139, 202],
+            textColor: 255,
+            fontSize: 10
+        },
+        columnStyles: {
+            0: { cellWidth: 25 }, // Date
+            1: { cellWidth: 45 }, // Product
+            2: { cellWidth: 25 }, // Original Price
+            3: { cellWidth: 22 }, // Discount %
+            4: { cellWidth: 25 }, // Final Price
+            5: { cellWidth: 22 }  // Savings
+        }
+    });
+
+    // Calculate totals
+    const totalSavings = discountData.reduce((sum, item) => {
+        const savings = parseFloat(item.savings.replace('$', '')) || 0;
+        return sum + savings;
+    }, 0);
+
+    // Add summary
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(12);
+    doc.text(`Total Transactions: ${discountData.length}`, 14, finalY);
+    doc.text(`Total Savings: $${totalSavings.toFixed(2)}`, 14, finalY + 10);
+
+    // Save the PDF
+    doc.save(`customer_discount_history_${customerName.replace(/\s+/g, '_')}.pdf`);
+    showMessage('Customer discount history exported to PDF successfully', 'success');
 }

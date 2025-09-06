@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart Icon with Bootstrap Icons Test</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333;
+            color: white;
+            padding: 20px;
+        }
+        
+        .cart-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: white;
+            padding: 10px;
+            background-color: #555;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .cart-icon-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            margin-right: 8px;
+        }
+        
+        .cart-icon-container i {
+            color: white;
+            font-size: 24px;
+        }
+        
+        .cart-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 4px;
+            font-size: 0.6rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 16px;
+            height: 16px;
+            font-weight: bold;
+            animation: cartBadgePulse 0.6s ease-in-out;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .cart-badge.show {
+            display: inline-flex;
+        }
+        
+        @keyframes cartBadgePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #444;
+            border-radius: 8px;
+        }
+        
+        .demo-section h3 {
+            margin-top: 0;
+            color: #e67e22;
+        }
+        
+        .test-buttons {
+            margin: 20px 0;
+        }
+        
+        .test-btn {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .test-btn:hover {
+            background-color: #d35400;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛒 Cart Icon with Bootstrap Icons Test</h1>
+    
+    <div class="demo-section">
+        <h3>Cart Icon Examples:</h3>
+        
+        <!-- Cart with 0 items (no badge) -->
+        <a href="#" class="cart-link">
+            <div class="cart-icon-container">
+                <i class="bi bi-cart3"></i>
+                <span class="cart-badge" style="display: none;">0</span>
+            </div>
+            My Cart
+        </a>
+        
+        <!-- Cart with 3 items -->
+        <a href="#" class="cart-link">
+            <div class="cart-icon-container">
+                <i class="bi bi-cart3"></i>
+                <span class="cart-badge show">3</span>
+            </div>
+            My Cart
+        </a>
+        
+        <!-- Cart with 12 items -->
+        <a href="#" class="cart-link">
+            <div class="cart-icon-container">
+                <i class="bi bi-cart3"></i>
+                <span class="cart-badge show">12</span>
+            </div>
+            My Cart
+        </a>
+        
+        <!-- Cart with 99+ items -->
+        <a href="#" class="cart-link">
+            <div class="cart-icon-container">
+                <i class="bi bi-cart3"></i>
+                <span class="cart-badge show">99+</span>
+            </div>
+            My Cart
+        </a>
+    </div>
+    
+    <div class="demo-section">
+        <h3>Alternative Cart Icons:</h3>
+        
+        <!-- Different Bootstrap cart icons -->
+        <a href="#" class="cart-link">
+            <div class="cart-icon-container">
+                <i class="bi bi-cart"></i>
+                <span class="cart-badge show">5</span>
+            </div>
+            My Cart (bi-cart)
+        </a>
+        
+        <a href="#" class="cart-link">
+            <div class="cart-icon-container">
+                <i class="bi bi-cart2"></i>
+                <span class="cart-badge show">8</span>
+            </div>
+            My Cart (bi-cart2)
+        </a>
+        
+        <a href="#" class="cart-link">
+            <div class="cart-icon-container">
+                <i class="bi bi-cart4"></i>
+                <span class="cart-badge show">15</span>
+            </div>
+            My Cart (bi-cart4)
+        </a>
+    </div>
+    
+    <div class="demo-section">
+        <h3>Interactive Test:</h3>
+        <div class="test-buttons">
+            <button class="test-btn" onclick="testAddToCart()">Add Item to Cart</button>
+            <button class="test-btn" onclick="testClearCart()">Clear Cart</button>
+            <button class="test-btn" onclick="testShowBadge()">Show Badge</button>
+            <button class="test-btn" onclick="testHideBadge()">Hide Badge</button>
+        </div>
+        
+        <div id="test-cart" class="cart-link">
+            <div class="cart-icon-container">
+                <i class="bi bi-cart3"></i>
+                <span id="test-cart-badge" class="cart-badge" style="display: none;">0</span>
+            </div>
+            Test Cart
+        </div>
+    </div>
+    
+    <script>
+        let testCartCount = 0;
+        
+        function testAddToCart() {
+            testCartCount++;
+            updateTestCartBadge();
+        }
+        
+        function testClearCart() {
+            testCartCount = 0;
+            updateTestCartBadge();
+        }
+        
+        function testShowBadge() {
+            const badge = document.getElementById('test-cart-badge');
+            badge.style.display = 'inline-flex';
+        }
+        
+        function testHideBadge() {
+            const badge = document.getElementById('test-cart-badge');
+            badge.style.display = 'none';
+        }
+        
+        function updateTestCartBadge() {
+            const badge = document.getElementById('test-cart-badge');
+            if (testCartCount > 0) {
+                badge.textContent = testCartCount > 99 ? '99+' : testCartCount;
+                badge.style.display = 'inline-flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

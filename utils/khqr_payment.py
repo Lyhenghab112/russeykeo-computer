@@ -116,10 +116,14 @@ class KHQRPaymentHandler:
             # Store payment for tracking
             self.active_payments[payment_id] = payment_data
             
+            # Generate QR code image from QR data
+            qr_code_image = self.generate_qr_code_image(qr_data)
+            
             return {
                 'success': True,
                 'payment_id': payment_id,
                 'qr_data': qr_data,
+                'qr_code': qr_code_image,  # Base64 encoded QR code image
                 'md5_hash': md5_hash,
                 'amount': amount,
                 'currency': currency,
@@ -156,10 +160,15 @@ class KHQRPaymentHandler:
                 self.active_payments[payment_id] = payment_data
 
                 print(f"✅ Fallback QR created for testing")
+                
+                # Generate QR code image for fallback
+                qr_code_image = self.generate_qr_code_image(qr_data)
+                
                 return {
                     'success': True,
                     'payment_id': payment_id,
                     'qr_data': qr_data,
+                    'qr_code': qr_code_image,  # Base64 encoded QR code image
                     'md5_hash': md5_hash,
                     'amount': amount,
                     'currency': currency,
@@ -173,6 +182,49 @@ class KHQRPaymentHandler:
                 'success': False,
                 'error': f"Failed to create QR payment: {str(e)}"
             }
+    
+    def generate_qr_code_image(self, qr_data: str) -> str:
+        """
+        Generate a QR code image from QR data string
+        
+        Args:
+            qr_data: QR data string to encode
+            
+        Returns:
+            Base64 encoded PNG image string
+        """
+        try:
+            import qrcode
+            import io
+            import base64
+            
+            # Create QR code
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=8,
+                border=2,
+            )
+            qr.add_data(qr_data)
+            qr.make(fit=True)
+            
+            # Create QR code image
+            qr_img = qr.make_image(fill_color="black", back_color="white")
+            
+            # Convert to base64
+            img_buffer = io.BytesIO()
+            qr_img.save(img_buffer, format='PNG', optimize=True)
+            img_buffer.seek(0)
+            qr_base64 = base64.b64encode(img_buffer.getvalue()).decode()
+            
+            return qr_base64
+            
+        except ImportError:
+            print("⚠️ qrcode library not available, cannot generate QR image")
+            return None
+        except Exception as e:
+            print(f"❌ Error generating QR code image: {e}")
+            return None
     
     def check_payment_status(self, payment_id: str) -> Dict[str, Any]:
         """
@@ -245,10 +297,31 @@ class KHQRPaymentHandler:
                 payment_data['completed_at'] = datetime.now()
                 print(f"✅ Payment {payment_id} marked as completed!")
 
-                # Create order when payment is completed
-                print(f"🔄 Creating order from payment data...")
-                order_id = self.create_order_from_payment(payment_data)
-                print(f"📦 Order creation result: {order_id}")
+                # Handle order completion - check if this is for an existing order or needs new order creation
+                order_id = None
+                reference_id = payment_data.get('reference_id', '')
+                
+                # Check if reference_id indicates an existing order (format: ORDER_123)
+                if reference_id.startswith('ORDER_'):
+                    try:
+                        existing_order_id = int(reference_id.replace('ORDER_', ''))
+                        print(f"🔄 Found existing order ID {existing_order_id} in reference, updating to completed...")
+                        
+                        # Update existing order status and reduce stock
+                        order_id = self.update_existing_order_to_completed(existing_order_id, payment_data)
+                        print(f"✅ Updated existing order {existing_order_id} to completed")
+                        
+                    except (ValueError, Exception) as e:
+                        print(f"❌ Error updating existing order: {e}")
+                        # Fallback to creating new order
+                        print(f"🔄 Falling back to creating new order...")
+                        order_id = self.create_order_from_payment(payment_data)
+                else:
+                    # No existing order reference, create new order (for standalone KHQR payments)
+                    print(f"🔄 No existing order reference, creating new order...")
+                    order_id = self.create_order_from_payment(payment_data)
+                
+                print(f"📦 Final order ID: {order_id}")
 
                 result = {
                     'success': True,
@@ -265,7 +338,7 @@ class KHQRPaymentHandler:
                     result['invoice_url'] = f'/invoice/{order_id}'
                     print(f"🧾 Invoice URL: /invoice/{order_id}")
                 else:
-                    print(f"❌ No order created - invoice URL not available")
+                    print(f"❌ No order available - invoice URL not available")
 
                 print(f"📤 Returning payment result: {result}")
                 return result
@@ -288,6 +361,73 @@ class KHQRPaymentHandler:
     def get_payment_info(self, payment_id: str) -> Optional[Dict[str, Any]]:
         """Get payment information by ID"""
         return self.active_payments.get(payment_id)
+
+    def update_existing_order_to_completed(self, order_id: int, payment_data: Dict[str, Any] = None) -> Optional[int]:
+        """Update an existing pending order payment confirmation - order remains Pending until staff approval"""
+        try:
+            from models import get_db
+            
+            print(f"🔄 Updating order {order_id} to completed and reducing stock...")
+            
+            conn = get_db()
+            cur = conn.cursor(dictionary=True)
+            
+            try:
+                # Verify order exists and is pending
+                cur.execute("SELECT id, status FROM orders WHERE id = %s", (order_id,))
+                order = cur.fetchone()
+                
+                if not order:
+                    print(f"❌ Order {order_id} not found")
+                    return None
+                
+                if order['status'] != 'PENDING':
+                    print(f"⚠️ Order {order_id} is already {order['status']}, not updating")
+                    return order_id  # Return the order ID anyway since it exists
+                
+                # Update order status to 'COMPLETED' since payment is confirmed
+                # But keep approval_status as 'Pending Approval' for staff to manually approve
+                # Also update transaction_id with the payment's MD5 hash if available
+                md5_hash = None
+                if payment_data:
+                    md5_hash = payment_data.get('md5_hash')
+                
+                if md5_hash:
+                    cur.execute("UPDATE orders SET status = 'COMPLETED', transaction_id = %s WHERE id = %s", (md5_hash, order_id))
+                    print(f"✅ Order {order_id} payment confirmed, status set to COMPLETED, transaction_id updated to {md5_hash}")
+                else:
+                    cur.execute("UPDATE orders SET status = 'COMPLETED' WHERE id = %s", (order_id,))
+                    print(f"✅ Order {order_id} payment confirmed, status set to COMPLETED")
+                
+                # Get order items to reduce stock
+                cur.execute("""
+                    SELECT product_id, quantity 
+                    FROM order_items 
+                    WHERE order_id = %s
+                """, (order_id,))
+                
+                order_items = cur.fetchall()
+                print(f"📦 Found {len(order_items)} items to reduce stock for")
+                
+                # Stock is already reduced when order was placed at checkout
+                # No need to reduce stock again here
+                print(f"✅ Order {order_id} payment confirmed, status set to COMPLETED, approval_status remains Pending Approval")
+                print(f"📦 Stock already reduced at checkout for {len(order_items)} items")
+                
+                conn.commit()
+                return order_id
+                
+            except Exception as e:
+                conn.rollback()
+                print(f"❌ Error updating order {order_id}: {e}")
+                raise e
+            finally:
+                cur.close()
+                conn.close()
+                
+        except Exception as e:
+            print(f"❌ Error in update_existing_order_to_completed: {str(e)}")
+            return None
 
     def create_order_from_payment(self, payment_data: Dict[str, Any]) -> Optional[int]:
         """Create an order from completed payment data"""
@@ -381,15 +521,16 @@ class KHQRPaymentHandler:
             order_id = Order.create(
                 customer_id=customer_id,
                 order_date=payment_data.get('completed_at', datetime.now()),
-                status='Completed',
+                status='PENDING',
                 items=order_items,
-                payment_method='KHQR Payment'
+                payment_method='KHQR Payment',
+                transaction_id=payment_data.get('md5_hash')
             )
 
             print(f"✅ Order {order_id} created successfully for KHQR payment {payment_data['payment_id']}")
 
-            # Clear the customer's cart after successful order creation
-            self.clear_customer_cart(customer_id)
+            # Don't clear cart immediately - only clear after payment confirmation
+            # self.clear_customer_cart(customer_id)
 
             return order_id
 
@@ -399,50 +540,48 @@ class KHQRPaymentHandler:
             print(f"❌ Full traceback: {traceback.format_exc()}")
             return None
 
-    def clear_customer_cart(self, customer_id: int):
-        """Clear customer's cart after successful payment"""
+    def confirm_payment_and_clear_cart(self, order_id: int, customer_id: int):
+        """Confirm payment and clear customer's cart after successful payment"""
         try:
-            print(f"🧹 Clearing cart for customer {customer_id}")
-
+            print(f"🎉 Confirming payment for order {order_id} and clearing cart for customer {customer_id}")
+            
+            # Update order status to confirmed if needed
             from models import get_db
-
-            # Clear pending orders for this customer
             conn = get_db()
             cur = conn.cursor()
-
+            
             try:
-                # Delete order items from pending orders
+                # Update order status to confirmed
+                cur.execute("""
+                    UPDATE orders
+                    SET status = 'Confirmed', updated_at = NOW()
+                    WHERE id = %s AND customer_id = %s
+                """, (order_id, customer_id))
+                
+                conn.commit()
+                print(f"✅ Order {order_id} confirmed")
+                
+                # Clear pending orders for this customer (clean up any failed attempts)
                 cur.execute("""
                     DELETE oi FROM order_items oi
                     JOIN orders o ON oi.order_id = o.id
-                    WHERE o.customer_id = %s AND o.status = 'Pending'
+                    WHERE o.customer_id = %s AND o.status = 'PENDING'
                 """, (customer_id,))
 
-                # Delete pending orders
                 cur.execute("""
                     DELETE FROM orders
-                    WHERE customer_id = %s AND status = 'Pending'
+                    WHERE customer_id = %s AND status = 'PENDING'
                 """, (customer_id,))
-
+                
                 conn.commit()
-                print(f"✅ Cart cleared for customer {customer_id}")
-
+                print(f"✅ Pending orders cleaned up for customer {customer_id}")
+                
             finally:
                 cur.close()
                 conn.close()
-
-            # Also clear Flask session cart if available
-            try:
-                from flask import session
-                if 'cart' in session:
-                    session['cart'] = []
-                    session.modified = True
-                    print(f"✅ Session cart cleared")
-            except:
-                print(f"⚠️ Could not clear session cart (not in Flask context)")
-
+                
         except Exception as e:
-            print(f"❌ Error clearing cart: {str(e)}")
+            print(f"❌ Error confirming payment and clearing cart: {str(e)}")
             import traceback
             print(f"❌ Traceback: {traceback.format_exc()}")
     

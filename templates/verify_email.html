@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - Russeykeo Computer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow-x: hidden;
+        }
+
+        .verify-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .verify-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .company-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .company-subtitle {
+            color: #718096;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .verify-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .verify-subtitle {
+            color: #718096;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .otp-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 8px;
+            transition: all 0.3s ease;
+            background: #ffffff;
+        }
+
+        .otp-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-verify {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .btn-verify:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-verify:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-send {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-send:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .message.success {
+            background: #f0fff4;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .message.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: #5a67d8;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <div class="verify-card">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='icons/logo.jpg') }}" alt="Russeykeo Computer Logo" class="logo">
+                <h1 class="company-name">Russeykeo Computer</h1>
+                <p class="company-subtitle">Verify your email for enhanced security</p>
+            </div>
+
+            <h2 class="verify-title">Verify Email</h2>
+            <p class="verify-subtitle">Enter the 6-digit code sent to your email address</p>
+
+            <div id="message-container"></div>
+
+            <form id="verifyForm">
+                <div class="form-group">
+                    <label for="otp_code">Verification Code</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="otp_code" name="otp_code" class="otp-input" 
+                               placeholder="000000" maxlength="6" required autocomplete="off">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-verify" id="verifyBtn">
+                    <i class="fas fa-check" style="margin-right: 8px;"></i>
+                    Verify Email
+                </button>
+
+                <button type="button" class="btn-send" id="sendBtn" onclick="sendOTP()">
+                    <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>
+                    Send New Code
+                </button>
+            </form>
+
+            <div class="back-link">
+                <a href="{{ url_for('show_dashboard') }}">
+                    <i class="fas fa-arrow-left" style="margin-right: 8px;"></i>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cooldownTimer = null;
+        let cooldownSeconds = 60;
+
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('message-container');
+            container.innerHTML = `<div class="message ${type}">${message}</div>`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    container.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        function startCooldown() {
+            const btn = document.getElementById('sendBtn');
+            btn.disabled = true;
+            cooldownSeconds = 60;
+            
+            const updateButton = () => {
+                if (cooldownSeconds > 0) {
+                    btn.innerHTML = `<i class="fas fa-clock" style="margin-right: 8px;"></i>Resend in ${cooldownSeconds}s`;
+                    cooldownSeconds--;
+                    cooldownTimer = setTimeout(updateButton, 1000);
+                } else {
+                    btn.innerHTML = `<i class="fas fa-paper-plane" style="margin-right: 8px;"></i>Send New Code`;
+                    btn.disabled = false;
+                }
+            };
+            
+            updateButton();
+        }
+
+        async function sendOTP() {
+            try {
+                const response = await fetch('/api/send-verification-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    startCooldown();
+                } else {
+                    showMessage(result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to send verification code. Please try again.', 'error');
+            }
+        }
+
+        document.getElementById('verifyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('verifyBtn');
+            const otpCode = document.getElementById('otp_code').value.trim();
+            
+            if (otpCode.length !== 6) {
+                showMessage('Please enter a valid 6-digit code', 'error');
+                return;
+            }
+            
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/verify-email-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ otp_code: otpCode })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('show_dashboard') }}";
+                    }, 2000);
+                } else {
+                    showMessage(result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to verify code. Please try again.', 'error');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        });
+
+        // Auto-format OTP input
+        document.getElementById('otp_code').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+            if (value.length > 6) value = value.substring(0, 6);
+            e.target.value = value;
+        });
+
+        // Send OTP on page load
+        window.addEventListener('load', function() {
+            sendOTP();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Payment Recovery</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .recovery-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .upload-area {
+            border: 3px dashed #28a745;
+            border-radius: 15px;
+            padding: 50px;
+            text-align: center;
+            background: #f8fff9;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area:hover {
+            border-color: #20c997;
+            background: #e8f5e8;
+            transform: translateY(-2px);
+        }
+        
+        .upload-area.dragover {
+            border-color: #20c997;
+            background: #d4edda;
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        
+        .btn-upload {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40,167,69,0.3);
+        }
+        
+        .btn-upload:disabled {
+            background: #6c757d;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .order-info {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .transaction-id {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="recovery-container">
+            <div class="text-center mb-4">
+                <h2><i class="fas fa-qrcode text-success"></i> QR Payment Recovery</h2>
+                <p class="text-muted">Just upload your QR screenshot - we'll do the rest!</p>
+            </div>
+            
+            <!-- Upload Area -->
+            <div class="upload-area" id="upload-area">
+                <div id="upload-content">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <h4>Upload Your QR Screenshot</h4>
+                    <p class="text-muted mb-4">Drag & drop your QR code image here, or click to select</p>
+                    <p class="small text-muted">We'll automatically read the QR code for you!</p>
+                </div>
+                
+                <div id="preview-content" style="display: none;">
+                    <img id="preview-image" class="preview-image" alt="QR Screenshot">
+                    <div>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeImage()">
+                            <i class="fas fa-times"></i> Remove & Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hidden File Input -->
+            <input type="file" id="file-input" accept="image/*" style="display: none;">
+            
+            <!-- Upload Button -->
+            <div class="text-center">
+                <button type="button" class="btn btn-upload" id="upload-btn" disabled>
+                    <i class="fas fa-magic"></i> Process QR Code
+                </button>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress mt-3" id="progress-container" style="display: none;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                     role="progressbar" style="width: 0%"></div>
+            </div>
+            
+            <!-- Success Message -->
+            <div class="success-message" id="success-message">
+                <i class="fas fa-check-circle"></i>
+                <span id="success-text"></span>
+            </div>
+            
+            <!-- Error Message -->
+            <div class="error-message" id="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="error-text"></span>
+            </div>
+            
+            <!-- Order Information (shown after successful QR reading) -->
+            <div class="order-info" id="order-info">
+                <h5><i class="fas fa-info-circle"></i> Order Details</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Order ID:</strong> <span id="order-id">-</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Amount:</strong> $<span id="order-amount">-</span>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <strong>Customer:</strong> <span id="customer-name">-</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Transaction ID:</strong>
+                        <div class="transaction-id" id="transaction-id">-</div>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <button type="button" class="btn btn-success" id="complete-payment-btn">
+                        <i class="fas fa-check-circle"></i> Complete Payment
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="mt-4">
+                <h6><i class="fas fa-lightbulb text-warning"></i> How it works:</h6>
+                <ol class="small">
+                    <li><strong>Take a screenshot</strong> of your QR code from your previous order</li>
+                    <li><strong>Upload it here</strong> - we'll automatically read the QR code</li>
+                    <li><strong>We'll find your order</strong> and show you the details</li>
+                    <li><strong>Click "Complete Payment"</strong> to finish the process</li>
+                </ol>
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>No need to copy/paste QR data!</strong> Just upload your screenshot and we'll handle everything automatically.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedFile = null;
+        let orderData = null;
+        
+        // DOM elements
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const previewContent = document.getElementById('preview-content');
+        const uploadContent = document.getElementById('upload-content');
+        const previewImage = document.getElementById('preview-image');
+        const progressContainer = document.getElementById('progress-container');
+        const successMessage = document.getElementById('success-message');
+        const errorMessage = document.getElementById('error-message');
+        const orderInfo = document.getElementById('order-info');
+        const completePaymentBtn = document.getElementById('complete-payment-btn');
+        
+        // Event listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadBtn.addEventListener('click', processQRCode);
+        completePaymentBtn.addEventListener('click', completePayment);
+        
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+        
+        function handleFile(file) {
+            // Validate file type
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                showError('Please select a valid image file (PNG, JPG, JPEG, GIF)');
+                return;
+            }
+            
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showError('File size must be less than 5MB');
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                uploadContent.style.display = 'none';
+                previewContent.style.display = 'block';
+                uploadBtn.disabled = false;
+                hideMessages();
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function removeImage() {
+            selectedFile = null;
+            fileInput.value = '';
+            uploadContent.style.display = 'block';
+            previewContent.style.display = 'none';
+            uploadBtn.disabled = true;
+            orderInfo.style.display = 'none';
+            hideMessages();
+        }
+        
+        async function processQRCode() {
+            if (!selectedFile) return;
+            
+            const formData = new FormData();
+            formData.append('screenshot', selectedFile);
+            
+            // Show progress
+            progressContainer.style.display = 'block';
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reading QR Code...';
+            hideMessages();
+            
+            try {
+                const response = await fetch('/api/payment/auto-read-qr', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show order information
+                    orderData = result.order_data;
+                    document.getElementById('order-id').textContent = orderData.id;
+                    document.getElementById('order-amount').textContent = orderData.total_amount;
+                    document.getElementById('customer-name').textContent = 
+                        `${orderData.first_name} ${orderData.last_name}`;
+                    document.getElementById('transaction-id').textContent = orderData.transaction_id;
+                    
+                    orderInfo.style.display = 'block';
+                    showSuccess('QR code read successfully! Order found. Click "Complete Payment" to finish.');
+                } else {
+                    showError(result.error || 'Failed to read QR code. Please try a clearer image.');
+                }
+                
+            } catch (error) {
+                showError('Network error. Please check your connection and try again.');
+            } finally {
+                progressContainer.style.display = 'none';
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="fas fa-magic"></i> Process QR Code';
+            }
+        }
+        
+        async function completePayment() {
+            if (!selectedFile || !orderData) return;
+            
+            const formData = new FormData();
+            formData.append('screenshot', selectedFile);
+            formData.append('order_id', orderData.id);
+            
+            completePaymentBtn.disabled = true;
+            completePaymentBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing Payment...';
+            
+            try {
+                const response = await fetch('/api/payment/complete-from-qr', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess('Payment completed successfully! Your order has been processed.');
+                    
+                    // Redirect to order status
+                    setTimeout(() => {
+                        window.location.href = '/customer/orders';
+                    }, 3000);
+                } else {
+                    showError(result.error || 'Payment failed. Please try again.');
+                }
+                
+            } catch (error) {
+                showError('Network error. Please check your connection and try again.');
+            } finally {
+                completePaymentBtn.disabled = false;
+                completePaymentBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Payment';
+            }
+        }
+        
+        function showSuccess(message) {
+            document.getElementById('success-text').textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+        
+        function showError(message) {
+            document.getElementById('error-text').textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+        
+        function hideMessages() {
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,2772 @@
+{% extends "base.html" %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class="staff-container">
+    <!-- Professional Header Section -->
+    <div class="page-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="page-title">
+                    <i class="fas fa-users-cog"></i>
+                    User Management
+                </h1>
+                <p class="page-subtitle">Manage system users, roles, and permissions</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number">{{ users|length }}</span>
+                        <span class="stat-label">Total Users</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon active">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number">{{ users|selectattr('is_active')|list|length }}</span>
+                        <span class="stat-label">Active Users</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages - Using Standardized Notification System -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-messages-container">
+                {% for category, message in messages %}
+                    <div class="message {{ 'error' if category == 'error' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}">
+                        <i class="fas fa-{{ 'exclamation-circle' if category == 'error' else 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'warning' else 'info-circle' }}"></i>
+                        <span class="message-text">{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Enhanced Search and Filter Section -->
+    <div class="search-filter-section">
+        <div class="section-header">
+            <h3><i class="fas fa-search"></i> Search & Filter</h3>
+        </div>
+        <div class="filters-wrapper">
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" class="form-input search-input" placeholder="Search users by username, name, or email..." onkeyup="filterUsers()">
+            </div>
+            </div>
+            <div class="filter-group">
+            <div class="filter-item">
+                    <label for="roleFilter" class="filter-label">Role</label>
+                <select id="roleFilter" class="filter-select" onchange="filterUsers()" aria-label="Filter by Role">
+                    <option value="">All Roles</option>
+                    {% for role in roles %}
+                    <option value="{{ role.name }}">{{ role.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-item">
+                    <label for="statusFilter" class="filter-label">Status</label>
+                <select id="statusFilter" class="filter-select" onchange="filterUsers()" aria-label="Filter by Status">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                    <button type="button" onclick="clearFilters()" class="btn btn-outline">
+                        <i class="fas fa-times"></i>
+                        Clear
+                    </button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Professional Add User Section -->
+    <div class="add-user-section">
+        <div class="section-header">
+            <h3><i class="fas fa-user-plus"></i> User Management</h3>
+        </div>
+        <div class="section-actions">
+            <button type="button" class="btn btn-primary" onclick="openAddUserModal()">
+                <i class="fas fa-plus"></i>
+                Add New User
+            </button>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-plus"></i> Add New User</h3>
+                <button type="button" class="modal-close" onclick="closeAddUserModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+            <form method="post" class="add-user-form" autocomplete="off">
+                    <div class="form-row">
+                <div class="form-group">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user"></i>
+                                Username
+                            </label>
+                    <input type="text" id="username" name="username" required class="form-input" autocomplete="new-username" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                            <label for="full_name" class="form-label">
+                                <i class="fas fa-id-card"></i>
+                                Full Name
+                            </label>
+                    <input type="text" id="full_name" name="full_name" class="form-input" autocomplete="off" placeholder="Enter full name (optional)">
+                </div>
+                    </div>
+                    <div class="form-row">
+                <div class="form-group">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i>
+                                Email
+                            </label>
+                    <input type="email" id="email" name="email" class="form-input" autocomplete="off" placeholder="Enter email (optional)">
+                </div>
+                        <div class="form-group">
+                            <label for="role" class="form-label">
+                                <i class="fas fa-user-tag"></i>
+                                Role
+                            </label>
+                            <select id="role" name="role" required class="form-select">
+                                {% for role in roles %}
+                                <option value="{{ role.name }}">{{ role.display_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group password-group">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock"></i>
+                                Password
+                            </label>
+                            <div class="password-input-wrapper">
+                        <input type="password" id="password" name="password" required class="form-input" autocomplete="new-password" placeholder="Enter password (min 8 characters)">
+                    </div>
+                </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" onclick="closeAddUserModal()">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary submit-btn">
+                            <i class="fas fa-plus"></i>
+                            Add User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal-overlay" style="display: none;" 
+         data-current-user-id="{{ session.get('user_id', 0) }}" 
+         data-current-user-role="{{ session.get('role', '') }}">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit User</h3>
+                <button type="button" class="modal-close" onclick="closeEditUserModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm" class="edit-user-form" autocomplete="off">
+                    <input type="hidden" id="editUserId" name="user_id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editUsername" class="form-label">
+                                <i class="fas fa-user"></i>
+                                Username
+                            </label>
+                            <input type="text" id="editUsername" name="username" required class="form-input" autocomplete="off" placeholder="Enter username">
+                        </div>
+                        <div class="form-group">
+                            <label for="editFullName" class="form-label">
+                                <i class="fas fa-id-card"></i>
+                                Full Name
+                            </label>
+                            <input type="text" id="editFullName" name="full_name" class="form-input" autocomplete="off" placeholder="Enter full name (optional)">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editEmail" class="form-label">
+                                <i class="fas fa-envelope"></i>
+                                Email
+                            </label>
+                            <input type="email" id="editEmail" name="email" class="form-input" autocomplete="off" placeholder="Enter email (optional)">
+                        </div>
+                        <div class="form-group">
+                            <label for="editRole" class="form-label">
+                                <i class="fas fa-user-tag"></i>
+                                Role
+                            </label>
+                            <select id="editRole" name="role" required class="form-select">
+                        {% for role in roles %}
+                        <option value="{{ role.name }}">{{ role.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" onclick="closeEditUserModal()">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary submit-btn">
+                            <i class="fas fa-save"></i>
+                            Save Changes
+                        </button>
+                </div>
+            </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table Section -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3><i class="fas fa-table"></i> User Directory</h3>
+            <div class="table-actions">
+                <span class="table-info">Showing {{ users|length }} users</span>
+            </div>
+        </div>
+        <div class="table-container">
+            <!-- Users Table - Keeping exactly the same as requested -->
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #aaa; font-weight: 400;">
+            <thead>
+                <tr>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">ID</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Username</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Full Name</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Email</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Role</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Last Login</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Status</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ user.id }}</td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+                        <span class="username-display">{{ user.username }}</span>
+                        <input type="text" class="username-edit" value="{{ user.username }}" style="display: none; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                    </td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+                        <span class="fullname-display">{{ user.full_name or '-' }}</span>
+                        <input type="text" class="fullname-edit" value="{{ user.full_name or '' }}" style="display: none; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                    </td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+                        <span class="email-display">{{ user.email or '-' }}</span>
+                        <input type="email" class="email-edit" value="{{ user.email or '' }}" style="display: none; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                    </td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+                        <span class="role-display">
+                            {% set role_colors = {
+                                'super_admin': '#dc3545',
+                                'admin': '#fd7e14',
+                                'manager': '#6f42c1',
+                                'staff': '#28a745',
+                                'sales': '#17a2b8',
+                                'clerk': '#6c757d',
+                                'cashier': '#ffc107'
+                            } %}
+                            {% set role_obj = roles|selectattr('name', 'equalto', user.role)|first %}
+                            <span class="role-badge role-{{ user.role.replace('_', '-') }}" data-role="{{ user.role }}">
+                                {% if role_obj %}
+                                    {{ role_obj.display_name }}
+                                {% else %}
+                                    {{ user.role|title }}
+                                {% endif %}
+                            </span>
+                        </span>
+                        <select class="role-edit" style="display: none; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                            {% for role in roles %}
+                            <option value="{{ role.name }}" {% if user.role == role.name %}selected{% endif %}>{{ role.display_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+                        {% if user.last_login %}
+                            {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '-' }}
+                        {% else %}
+                            <span style="color: #6c757d;">Never</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">
+                        {% if user.is_active %}
+                            <span style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 8px; font-size: 11px;">Active</span>
+                        {% else %}
+                            <span style="background-color: #dc3545; color: white; padding: 2px 6px; border-radius: 8px; font-size: 11px;">Inactive</span>
+                        {% endif %}
+                        {% if user.force_password_change %}
+                            <br><span style="background-color: #ffc107; color: black; padding: 2px 6px; border-radius: 8px; font-size: 10px; margin-top: 2px; display: inline-block;">Pwd Reset Required</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">
+                            <div class="action-buttons" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-is-active="{{ 'true' if user.is_active else 'false' }}">
+                                <button class="action-btn btn-warning edit-btn" data-action="edit" title="Edit User">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn btn-info" data-action="reset-password" title="Reset Password">
+                                    <i class="fas fa-key"></i>
+                                </button>
+                                <!-- Force Password Change button temporarily hidden
+                                <button class="action-btn btn-purple" data-action="force-password" title="Force Password Change">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </button>
+                                -->
+                                <div class="toggle-switch-wrapper" title="{% if user.role == 'super_admin' %}Super admin users cannot be deactivated{% else %}Deactivate User{% endif %}">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" class="toggle-input" data-action="toggle-status" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-is-active="{{ 'true' if user.is_active else 'false' }}" {% if user.is_active %}checked{% endif %} {% if user.role == 'super_admin' %}disabled{% endif %}>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                {% if user.role != 'super_admin' %}
+                                <button class="action-btn btn-danger" data-action="delete" title="Delete User">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+<!-- Message Container for Notifications -->
+<div id="message-container"></div>
+
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_notifications.css') }}">
+<style>
+    /* Professional User Management Styles */
+    .staff-container {
+        width: 100%;
+        margin: 0 auto;
+        padding: 0;
+        background-color: #f8f9fa;
+        min-height: 100vh;
+    }
+
+    /* Page Header */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 2rem 2.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .header-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .header-left {
+        flex: 1;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .page-title i {
+        font-size: 2rem;
+        opacity: 0.9;
+    }
+
+    .page-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+        font-weight: 300;
+    }
+
+    .header-stats {
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    .stat-card {
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 1.5rem;
+        min-width: 140px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.5rem;
+    }
+
+    .stat-icon.active {
+        background: rgba(40, 167, 69, 0.3);
+    }
+
+    .stat-number {
+        display: block;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        font-weight: 300;
+    }
+
+    /* Section Headers */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding: 0 2rem;
+    }
+
+    .section-header h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-header h3 i {
+        color: #667eea;
+    }
+
+    .table-info {
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* Search and Filter Section */
+    .search-filter-section {
+        background: white;
+        margin: 0 2rem 2rem;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .filters-wrapper {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        font-size: 1rem;
+    }
+
+    .search-input {
+        padding-left: 3rem;
+        height: 48px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+
+    .filter-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+    }
+
+    .filter-select {
+        height: 48px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 0 1rem;
+        font-size: 1rem;
+        background: white;
+        min-width: 140px;
+        transition: all 0.3s ease;
+    }
+
+    .filter-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+
+    /* Add User Section */
+    .add-user-section {
+        background: white;
+        margin: 0 2rem 2rem;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .section-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .modal-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease-out;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e9ecef;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 16px 16px 0 0;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .modal-header h3 i {
+        color: #667eea;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+    }
+
+    .modal-close:hover {
+        background: #f8f9fa;
+        color: #dc3545;
+        transform: scale(1.1);
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .add-user-form,
+    .edit-user-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .form-group {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .form-group.password-group {
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-label i {
+        color: #667eea;
+        font-size: 0.9rem;
+    }
+
+    .form-input,
+    .form-select {
+        width: 100%;
+        height: 48px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 0 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+
+    .password-input-wrapper {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .password-input-wrapper .form-input {
+        flex: 1;
+    }
+
+    .submit-btn {
+        height: 48px;
+        padding: 0 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 140px;
+    }
+
+    /* Modal Animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Responsive Modal */
+    @media (max-width: 768px) {
+        .modal-container {
+            margin: 1rem;
+            max-width: calc(100% - 2rem);
+        }
+
+        .modal-header,
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .form-group {
+            min-width: auto;
+        }
+
+        .password-input-wrapper {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+
+
+        .form-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* Table Section */
+    .table-section {
+        background: white;
+        margin: 0 2rem 2rem;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    /* Button Styles */
+    .btn {
+        padding: 0.875rem 1.75rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+        min-height: 48px;
+        letter-spacing: 0.025em;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+        left: 100%;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+
+    .btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: 2px solid #667eea;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        border-color: #5a6fd8;
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+        border: 2px solid #6c757d;
+    }
+
+    .btn-secondary:hover {
+        background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
+        border-color: #5a6268;
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: #6c757d;
+        border: 2px solid #6c757d;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-outline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 100%;
+        background: #6c757d;
+        transition: width 0.3s ease;
+        z-index: -1;
+    }
+
+    .btn-outline:hover::before {
+        width: 100%;
+    }
+
+    .btn-outline:hover {
+        color: white;
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+        color: #212529;
+        border: 2px solid #ffc107;
+        font-weight: 700;
+    }
+
+    .btn-warning:hover {
+        background: linear-gradient(135deg, #e0a800 0%, #e67e00 100%);
+        border-color: #e0a800;
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: 2px solid #28a745;
+    }
+
+    .btn-success:hover {
+        background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+        border-color: #218838;
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+        color: white;
+        border: 2px solid #dc3545;
+    }
+
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #c82333 0%, #c0392b 100%);
+        border-color: #c82333;
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    .btn-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%);
+        color: white;
+        border: 2px solid #17a2b8;
+    }
+
+    .btn-info:hover {
+        background: linear-gradient(135deg, #138496 0%, #2980b9 100%);
+        border-color: #138496;
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    .btn-purple {
+        background: linear-gradient(135deg, #6f42c1 0%, #9b59b6 100%);
+        color: white;
+        border: 2px solid #6f42c1;
+    }
+
+    .btn-purple:hover {
+        background: linear-gradient(135deg, #5a32a3 0%, #8e44ad 100%);
+        border-color: #5a32a3;
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    /* Special Button Variants */
+    .generate-password-btn {
+        height: 48px;
+        padding: 0 1.5rem;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+
+    .submit-btn {
+        height: 48px;
+        padding: 0 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 140px;
+    }
+
+    /* Action Buttons in Table - Compact Icon Design */
+    .action-buttons {
+        display: flex !important;
+        gap: 0.4rem !important;
+        justify-content: center !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        padding: 0.5rem !important;
+    }
+
+    .action-btn {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        color: white !important;
+        font-weight: 600 !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        white-space: nowrap !important;
+        position: relative !important;
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 0.875rem !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+        background: #6c757d !important;
+        border: 1px solid #6c757d !important;
+    }
+
+    .action-btn i {
+        font-size: 0.875rem !important;
+        line-height: 1 !important;
+    }
+
+    .action-btn::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
+        transition: left 0.4s !important;
+        z-index: 1 !important;
+    }
+
+    .action-btn:hover::before {
+        left: 100% !important;
+    }
+
+    .action-btn:hover {
+        opacity: 1 !important;
+        transform: translateY(-2px) scale(1.1) !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25) !important;
+    }
+
+    .action-btn:active {
+        transform: translateY(0) scale(1) !important;
+    }
+
+    /* Action Button Specific Styles */
+    .action-btn.btn-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%) !important;
+        color: #212529 !important;
+        border: 1px solid #ffc107 !important;
+    }
+
+    .action-btn.btn-warning:hover {
+        background: linear-gradient(135deg, #e0a800 0%, #e67e00 100%) !important;
+        border-color: #e0a800 !important;
+    }
+
+    .action-btn.btn-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+        color: white !important;
+        border: 1px solid #28a745 !important;
+    }
+
+    .action-btn.btn-success:hover {
+        background: linear-gradient(135deg, #218838 0%, #1ea085 100%) !important;
+        border-color: #218838 !important;
+    }
+
+    .action-btn.btn-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%) !important;
+        color: white !important;
+        border: 1px solid #dc3545 !important;
+    }
+
+    .action-btn.btn-danger:hover {
+        background: linear-gradient(135deg, #c82333 0%, #c0392b 100%) !important;
+        border-color: #c82333 !important;
+    }
+
+    .action-btn.btn-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%) !important;
+        color: white !important;
+        border: 1px solid #17a2b8 !important;
+    }
+
+    .action-btn.btn-info:hover {
+        background: linear-gradient(135deg, #138496 0%, #2980b9 100%) !important;
+        border-color: #138496 !important;
+    }
+
+    .action-btn.btn-purple {
+        background: linear-gradient(135deg, #6f42c1 0%, #9b59b6 100%) !important;
+        color: white !important;
+        border: 1px solid #6f42c1 !important;
+    }
+
+    .action-btn.btn-purple:hover {
+        background: linear-gradient(135deg, #5a32a3 0%, #8e44ad 100%) !important;
+        border-color: #5a32a3 !important;
+    }
+
+    .action-btn.btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+        color: white !important;
+        border: 1px solid #6c757d !important;
+    }
+
+    .action-btn.btn-secondary:hover {
+        background: linear-gradient(135deg, #5a6268 0%, #343a40 100%) !important;
+        border-color: #5a6268 !important;
+    }
+
+    /* Toggle Switch Styles */
+    .toggle-switch-wrapper {
+        display: inline-block !important;
+        vertical-align: middle !important;
+    }
+
+    .toggle-switch {
+        position: relative !important;
+        display: inline-block !important;
+        width: 44px !important;
+        height: 24px !important;
+        cursor: pointer !important;
+    }
+
+    .toggle-input {
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+    }
+
+    .toggle-slider {
+        position: absolute !important;
+        cursor: pointer !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background-color: #ccc !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border-radius: 24px !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
+    }
+
+    .toggle-slider:before {
+        position: absolute !important;
+        content: "" !important;
+        height: 18px !important;
+        width: 18px !important;
+        left: 3px !important;
+        bottom: 3px !important;
+        background-color: white !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        border-radius: 50% !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    }
+
+    .toggle-input:checked + .toggle-slider {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
+    }
+
+    .toggle-input:checked + .toggle-slider:before {
+        transform: translateX(20px) !important;
+    }
+
+    .toggle-input:focus + .toggle-slider {
+        box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.3) !important;
+    }
+
+    /* Hover effects for toggle */
+    .toggle-switch:hover .toggle-slider {
+        transform: scale(1.05) !important;
+    }
+
+    .toggle-input:checked + .toggle-slider:hover {
+        background: linear-gradient(135deg, #218838 0%, #1ea085 100%) !important;
+    }
+
+    /* Disabled state for toggle switches */
+    .toggle-input:disabled + .toggle-slider {
+        background-color: #e9ecef !important;
+        cursor: not-allowed !important;
+        opacity: 0.6 !important;
+    }
+
+    .toggle-input:disabled + .toggle-slider:before {
+        background-color: #adb5bd !important;
+    }
+
+    .toggle-input:disabled:checked + .toggle-slider {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+    }
+
+    .toggle-switch:hover .toggle-input:disabled + .toggle-slider {
+        transform: none !important;
+    }
+
+    /* Ensure buttons are properly styled even with conflicting CSS */
+    table .action-btn,
+    .table-container .action-btn,
+    .inventory-list .action-btn {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        color: white !important;
+        font-weight: 600 !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        white-space: nowrap !important;
+        position: relative !important;
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 0.875rem !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+    }
+
+    /* Role Badge Styles */
+    .role-badge {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        color: white;
+        font-weight: 500;
+        text-align: center;
+        min-width: 80px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .header-content {
+            flex-direction: column;
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .header-stats {
+            justify-content: center;
+        }
+
+        .filters-wrapper {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-box {
+            min-width: auto;
+        }
+
+        .filter-group {
+            justify-content: center;
+        }
+
+        .form-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .form-group {
+            min-width: auto;
+        }
+
+        .password-input-wrapper {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .generate-password-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1.5rem 1rem 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .section-header {
+            padding: 0 1rem;
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .search-filter-section,
+        .add-user-section,
+        .table-section {
+            margin: 0 1rem 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .form-container {
+            padding: 1.5rem;
+        }
+
+        .header-stats {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .stat-card {
+            min-width: auto;
+        }
+    }
+
+    /* Flash messages - Using standardized notification styling */
+    #flash-messages-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        max-width: 400px;
+    }
+
+    #flash-messages-container .message {
+        margin-bottom: 10px;
+    }
+
+    /* Utility Classes */
+    .visually-hidden {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0,0,0,0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+    }
+
+    /* Table Styles - Keeping exactly the same as requested */
+    .inventory-list table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #aaa;
+        font-weight: 400;
+    }
+
+    .inventory-list th,
+    .inventory-list td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #888;
+    }
+
+    .inventory-list th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+    }
+
+    .inventory-list tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    /* Role badge colors */
+    .role-badge.role-super-admin {
+        background-color: #dc3545;
+    }
+
+    .role-badge.role-admin {
+        background-color: #fd7e14;
+    }
+
+    .role-badge.role-manager {
+        background-color: #6f42c1;
+    }
+
+    .role-badge.role-staff {
+        background-color: #28a745;
+    }
+
+    .role-badge.role-sales {
+        background-color: #17a2b8;
+    }
+
+    .role-badge.role-clerk {
+        background-color: #6c757d;
+    }
+
+    .role-badge.role-cashier {
+        background-color: #ffc107;
+    }
+
+    .edit-field {
+        padding: 4px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        display: none;
+    }
+
+    .never-login {
+        color: #6c757d;
+    }
+
+    /* Disabled role field styling for super admin security */
+    .form-select:disabled {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        cursor: not-allowed;
+        opacity: 0.6;
+        border-color: #dee2e6;
+    }
+
+    .form-select:disabled + label {
+        color: #6c757d;
+    }
+
+    /* Locked role indicator */
+    .role-locked {
+        color: #dc3545;
+        font-size: 12px;
+        font-weight: 500;
+        margin-left: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/staff_messages.js') }}"></script>
+<script>
+// Event delegation for action buttons and modal buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-hide flash messages after 5 seconds
+    const flashMessages = document.querySelectorAll('#flash-messages-container .message');
+    flashMessages.forEach(message => {
+        setTimeout(() => {
+            message.classList.add('fade-out');
+            setTimeout(() => {
+                if (message.parentNode) {
+                    message.remove();
+                }
+            }, 300); // Match CSS animation duration
+        }, 5000); // 5 seconds delay
+    });
+    // Clear form fields on page load to prevent browser auto-fill
+    const addUserForm = document.querySelector('.add-user-form');
+    if (addUserForm) {
+        // Function to clear form fields
+        function clearFormFields() {
+            addUserForm.reset();
+
+            // Force clear specific fields that might be auto-filled
+            const usernameField = document.getElementById('username');
+            const passwordField = document.getElementById('password');
+            const emailField = document.getElementById('email');
+            const fullNameField = document.getElementById('full_name');
+
+            if (usernameField) usernameField.value = '';
+            if (passwordField) passwordField.value = '';
+            if (emailField) emailField.value = '';
+            if (fullNameField) fullNameField.value = '';
+        }
+
+        // Clear immediately
+        clearFormFields();
+
+        // Clear again after a short delay to override any browser auto-fill
+        setTimeout(clearFormFields, 100);
+        setTimeout(clearFormFields, 500);
+    }
+
+    // Handle form submission for adding new users
+    if (addUserForm) {
+        addUserForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+
+            const formData = new FormData(this);
+            const username = formData.get('username').trim();
+            const password = formData.get('password').trim();
+            const role = formData.get('role');
+            const email = formData.get('email').trim() || null;
+            const full_name = formData.get('full_name').trim() || null;
+
+            if (!username || !password) {
+                showMessage('Username and password are required', 'error');
+                return;
+            }
+
+            if (password.length < 8) {
+                showMessage('Password must be at least 8 characters', 'error');
+                return;
+            }
+
+            console.log('Submitting user creation request...');
+            console.log('Data:', { username, password: '***', role, email, full_name });
+
+            // Submit form data via fetch
+            fetch('/auth/staff/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: new URLSearchParams({
+                    username: username,
+                    password: password,
+                    role: role,
+                    email: email || '',
+                    full_name: full_name || '',
+                    ajax: 'true'
+                })
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers.get('content-type'));
+                console.log('Response URL:', response.url);
+
+                if (!response.ok) {
+                    console.error('Response not OK:', response.status, response.statusText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    console.error('Expected JSON but got:', contentType);
+                    // If not JSON, it might be a redirect response (HTML)
+                    throw new Error('Expected JSON response but got HTML - user may have been created but page needs refresh');
+                }
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    // Reset form
+                    addUserForm.reset();
+                    // Close modal
+                    closeAddUserModal();
+                    // Add new user to table dynamically
+                    addUserToTable(data.user);
+                } else {
+                    showMessage(data.error || 'Error creating user. Please try again.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (error.message.includes('user may have been created')) {
+                    showMessage('User created successfully! Please refresh the page to see the new user.', 'success');
+                    // Reset form since user was likely created
+                    addUserForm.reset();
+                    // Close modal
+                    closeAddUserModal();
+                } else {
+                    showMessage('Error creating user. Please try again.', 'error');
+                }
+            });
+        });
+    }
+
+    // Handle form submission for editing users
+    const editUserForm = document.getElementById('editUserForm');
+    if (editUserForm) {
+        editUserForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Edit form submitted');
+
+            const formData = new FormData(this);
+            const userId = formData.get('user_id');
+            const username = formData.get('username').trim();
+            const fullName = formData.get('full_name').trim();
+            const email = formData.get('email').trim();
+            const role = formData.get('role');
+            
+            console.log('Form data:', { userId, username, fullName, email, role });
+            console.log('API endpoint will be:', `/auth/api/staff/users/${userId}/update`);
+
+            if (!username) {
+                showMessage('Username cannot be empty', 'error');
+                return;
+            }
+
+            // Submit the update
+            fetch(`/auth/api/staff/users/${userId}/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    full_name: fullName || null,
+                    email: email || null,
+                    role: role
+                })
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    // Close the edit user modal
+                    closeEditUserModal();
+                    // Update the user in the table
+                    updateUserInTable(userId, username, fullName, email, role);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('Error updating user', 'error');
+            });
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('.action-btn')) {
+            const actionButtons = e.target.closest('.action-buttons');
+            const userId = actionButtons.dataset.userId;
+            const username = actionButtons.dataset.username;
+            const isActive = actionButtons.dataset.isActive === 'true' || actionButtons.dataset.isActive === 'True' || actionButtons.dataset.isActive === '1';
+            const action = e.target.dataset.action;
+
+            console.log('Action button clicked:', { action, userId, username, isActive });
+
+            // Get user data from the table row
+            const row = actionButtons.closest('tr');
+            const fullName = row.querySelector('.fullname-display').textContent;
+            const email = row.querySelector('.email-display').textContent;
+            const roleElement = row.querySelector('.role-display span');
+            const role = roleElement ? roleElement.getAttribute('data-role') : '';
+            
+            console.log('User data from row:', { fullName, email, role });
+
+            switch(action) {
+                case 'edit':
+                    console.log('Opening edit modal for user:', userId);
+                    openEditUserModal(userId, username, fullName, email, role);
+                    break;
+                case 'reset-password':
+                    resetPassword(userId, username);
+                    break;
+                case 'force-password':
+                    forcePasswordChange(userId, username);
+                    break;
+                case 'delete':
+                    deleteUser(userId, username);
+                    break;
+            }
+        }
+
+        // Handle toggle switch clicks
+        if (e.target.matches('.toggle-input')) {
+            const userId = e.target.dataset.userId;
+            const username = e.target.dataset.username;
+            const isActive = e.target.dataset.isActive === 'true' || e.target.dataset.isActive === 'True' || e.target.dataset.isActive === '1';
+            const newStatus = e.target.checked;
+            
+            if (newStatus !== isActive) {
+                toggleUserStatus(userId, username, isActive);
+            }
+        }
+
+        // Handle modal button clicks
+        if (e.target.matches('.modal-btn')) {
+            const action = e.target.dataset.action;
+            const userId = e.target.dataset.userId;
+            const username = e.target.dataset.username;
+
+            switch(action) {
+                case 'close-password-reset':
+                    closePasswordResetModal();
+                    break;
+                case 'confirm-password-reset':
+                    confirmPasswordReset(userId, username);
+                    break;
+                case 'close-password-result':
+                    closePasswordResultModal();
+                    break;
+                case 'copy-password':
+                    copyPassword();
+                    break;
+                case 'close-force-password':
+                    closeForcePasswordModal();
+                    break;
+                case 'confirm-force-password':
+                    confirmForcePasswordChange(userId, username);
+                    break;
+            }
+        }
+
+
+    });
+});
+
+function findRowByUserId(userId) {
+    // Find the row by looking for action-buttons div with the userId in data-user-id attribute
+    const actionButtons = document.querySelector('.action-buttons[data-user-id="' + userId + '"]');
+    if (actionButtons) {
+        return actionButtons.closest('tr');
+    }
+    return null;
+}
+
+
+
+async function deleteUser(userId, username) {
+    // Check if user is super admin by looking at the role badge in the table row
+    const row = findRowByUserId(userId);
+    if (row) {
+        const roleBadge = row.querySelector('.role-badge');
+        if (roleBadge && roleBadge.getAttribute('data-role') === 'super_admin') {
+            showMessage('Cannot delete super admin users for security reasons.', 'error');
+            return;
+        }
+    }
+
+    const confirmed = await showDeleteConfirmation(
+        'Delete User',
+        `Are you sure you want to delete user "${username}"? This action cannot be undone.`
+    );
+
+    if (confirmed) {
+        fetch(`/auth/api/staff/users/${userId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                // Remove the row from table
+                const row = findRowByUserId(userId);
+                if (row) {
+                    row.remove();
+                }
+            } else {
+                showMessage(data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error deleting user', 'error');
+        });
+    }
+}
+
+function resetPassword(userId, username) {
+    // Prevent search input from being affected
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        // Store original value and temporarily disable
+        searchInput.dataset.originalValue = searchInput.value;
+        searchInput.value = '';
+        searchInput.disabled = true;
+        
+        // Re-enable after a short delay to prevent interference
+        setTimeout(() => {
+            searchInput.disabled = false;
+            searchInput.value = '';
+        }, 100);
+    }
+    
+    // IMPORTANT: Don't call filterUsers() here - it's causing the table to filter
+    // Just show the modal without affecting the user table
+    showPasswordResetModal(userId, username);
+}
+
+function showPasswordResetModal(userId, username) {
+    // Debug: Check if search input is being affected
+    console.log('Opening password reset modal for user:', username);
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        console.log('Search input value before modal:', searchInput.value);
+    }
+    
+    // Create modal HTML
+    const modalHTML = `
+        <div id="passwordResetModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); max-width: 500px; width: 90%;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <i class="fas fa-key" style="font-size: 2.5rem; color: #17a2b8; margin-bottom: 1rem;"></i>
+                    <h3 style="color: #333; margin: 0 0 0.5rem 0;">Reset Password</h3>
+                    <p style="color: #666; margin: 0;">Reset password for user: <strong>${username}</strong></p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="oldPasswordInput" style="display: block; margin-bottom: 0.5rem; color: #333; font-weight: 500;">Current Password:</label>
+                    <div style="display: flex; gap: 10px; position: relative;">
+                        <input type="password" id="oldPasswordInput" name="current-pass-nonce" autocomplete="new-password" placeholder="Enter current password" style="flex: 1; min-width: 300px; width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 5px; font-size: 1rem;" inputmode="text" autocapitalize="off" spellcheck="false">
+                    </div>
+                    <small style="color: #666; font-size: 0.85rem; margin-top: 0.5rem; display: block;">Enter your current password to verify identity</small>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="newPasswordInput" style="display: block; margin-bottom: 0.5rem; color: #333; font-weight: 500;">New Password:</label>
+                    <div style="display: flex; gap: 10px; position: relative;">
+                        <input type="password" id="newPasswordInput" name="new-pass-nonce" autocomplete="new-password" placeholder="Enter new password" style="flex: 1; min-width: 300px; width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 5px; font-size: 1rem;" inputmode="text" autocapitalize="off" spellcheck="false">
+                    </div>
+                    <small style="color: #666; font-size: 0.85rem; margin-top: 0.5rem; display: block;">Enter a new password for the user (min 8 characters)</small>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="modal-btn" data-action="close-password-reset" style="padding: 0.75rem 1.5rem; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+                    <button type="button" class="modal-btn" data-action="confirm-password-reset" data-user-id="${userId}" data-username="${username}" style="padding: 0.75rem 1.5rem; background-color: #17a2b8; color: white; border: none; border-radius: 5px; cursor: pointer;">Reset Password</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Debug: Check search input after modal creation
+    if (searchInput) {
+        console.log('Search input value after modal creation:', searchInput.value);
+    }
+    
+    // Debug: Check if filterUsers is being called unexpectedly
+    console.log('Modal opened - checking if filterUsers was called');
+    console.log('Current table rows visible:', document.querySelectorAll('tbody tr:not([style*="display: none"])').length);
+    console.log('Total table rows:', document.querySelectorAll('tbody tr').length);
+
+    // Focus on old password input first and prevent autofill suggestions
+    const oldInput = document.getElementById('oldPasswordInput');
+    oldInput.setAttribute('readonly', 'readonly');
+    setTimeout(() => { oldInput.removeAttribute('readonly'); oldInput.focus(); }, 50);
+
+
+
+    // Close modal when clicking outside
+    document.getElementById('passwordResetModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePasswordResetModal();
+        }
+    });
+    
+    // Prevent search input from being filled while modal is open
+    const searchInputElement = document.getElementById('searchInput');
+    if (searchInputElement) {
+        const originalValue = searchInputElement.value;
+        const preventFill = function() {
+            if (searchInputElement.value !== originalValue) {
+                searchInputElement.value = '';
+            }
+        };
+        
+        // Check periodically while modal is open
+        const checkInterval = setInterval(preventFill, 100);
+        
+        // Clean up when modal closes
+        const modal = document.getElementById('passwordResetModal');
+        modal.addEventListener('remove', () => {
+            clearInterval(checkInterval);
+        });
+    }
+    
+    // Debug: Check table state after modal is fully loaded
+    setTimeout(() => {
+        console.log('Table state after modal load:');
+        const allRows = document.querySelectorAll('tbody tr');
+        const visibleRows = document.querySelectorAll('tbody tr:not([style*="display: none"])');
+        console.log('All rows:', allRows.length);
+        console.log('Visible rows:', visibleRows.length);
+        
+        // Check if any rows are hidden
+        allRows.forEach((row, index) => {
+            if (row.style.display === 'none') {
+                console.log(`Row ${index} is hidden:`, row);
+            }
+        });
+        
+        // FIX: Ensure all table rows are visible when modal opens
+        allRows.forEach(row => {
+            if (row.style.display === 'none') {
+                row.style.display = '';
+                console.log('Fixed hidden row:', row);
+            }
+        });
+    }, 200);
+}
+
+
+
+function closePasswordResetModal() {
+    const modal = document.getElementById('passwordResetModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function confirmPasswordReset(userId, username) {
+    const oldPassword = document.getElementById('oldPasswordInput').value.trim();
+    const newPassword = document.getElementById('newPasswordInput').value.trim();
+
+    // Validate inputs
+    if (!oldPassword) {
+        showMessage('Please enter your current password', 'error');
+        return;
+    }
+
+    if (!newPassword) {
+        showMessage('Please enter a new password', 'error');
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        showMessage('New password must be at least 8 characters long', 'error');
+        return;
+    }
+
+    fetch(`/auth/api/staff/users/${userId}/reset-password`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            old_password: oldPassword,
+            new_password: newPassword
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closePasswordResetModal();
+            showMessage(data.message, 'success');
+            if (data.temporary_password) {
+                showPasswordResultModal(data.temporary_password, username);
+            }
+        } else {
+            showMessage(data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error resetting password', 'error');
+    });
+}
+
+function showPasswordResultModal(password, username) {
+    const modalHTML = `
+        <div id="passwordResultModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); max-width: 500px; width: 90%;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <i class="fas fa-check-circle" style="font-size: 2.5rem; color: #28a745; margin-bottom: 1rem;"></i>
+                    <h3 style="color: #333; margin: 0 0 0.5rem 0;">Password Reset Successful</h3>
+                    <p style="color: #666; margin: 0;">Temporary password for user: <strong>${username}</strong></p>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 5px; margin-bottom: 1.5rem; border-left: 4px solid #28a745;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #333; font-weight: 500;">Temporary Password:</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="tempPasswordDisplay" value="${password}" readonly style="flex: 1; padding: 0.75rem; border: 2px solid #ddd; border-radius: 5px; font-size: 1rem; font-family: monospace; background: white;">
+                        <button type="button" class="modal-btn" data-action="copy-password" style="padding: 0.75rem 1rem; background-color: #17a2b8; color: white; border: none; border-radius: 5px; cursor: pointer;">Copy</button>
+                    </div>
+                    <small style="color: #666; font-size: 0.85rem; margin-top: 0.5rem; display: block;">⚠️ Please save this password securely and share it with the user through a secure channel.</small>
+                </div>
+
+                <div style="text-align: center;">
+                    <button type="button" class="modal-btn" data-action="close-password-result" style="padding: 0.75rem 1.5rem; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Got It</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function copyPassword() {
+    const passwordInput = document.getElementById('tempPasswordDisplay');
+    passwordInput.select();
+    navigator.clipboard.writeText(passwordInput.value).then(() => {
+        showMessage('Password copied to clipboard!', 'success');
+    }).catch(() => {
+        // Fallback for older browsers
+        document.execCommand('copy');
+        showMessage('Password copied to clipboard!', 'success');
+    });
+}
+
+function closePasswordResultModal() {
+    const modal = document.getElementById('passwordResultModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+
+
+function filterUsers() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const roleFilter = document.getElementById('roleFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('tbody tr');
+
+    rows.forEach(row => {
+        const username = row.cells[1].textContent.toLowerCase();
+        const fullName = row.cells[2].textContent.toLowerCase();
+        const email = row.cells[3].textContent.toLowerCase();
+        const roleElement = row.cells[4].querySelector('.role-badge');
+        const actualRole = roleElement ? roleElement.getAttribute('data-role') : '';
+        const status = row.cells[6].textContent.toLowerCase();
+
+        // Check search term
+        const matchesSearch = !searchTerm ||
+            username.includes(searchTerm) ||
+            fullName.includes(searchTerm) ||
+            email.includes(searchTerm);
+
+        // Check role filter - compare against actual role name, not display name
+        const matchesRole = !roleFilter || actualRole === roleFilter;
+
+        // Check status filter
+        const matchesStatus = !statusFilter ||
+            (statusFilter === 'active' && status.includes('active')) ||
+            (statusFilter === 'inactive' && status.includes('inactive'));
+
+        // Show/hide row based on all filters
+        if (matchesSearch && matchesRole && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('roleFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    filterUsers();
+}
+
+function addUserToTable(user) {
+    const tbody = document.querySelector('tbody');
+
+    // Get role colors mapping
+    const roleColors = {
+        'super_admin': '#dc3545',
+        'admin': '#fd7e14',
+        'manager': '#6f42c1',
+        'staff': '#28a745',
+        'sales': '#17a2b8',
+        'clerk': '#6c757d',
+        'cashier': '#ffc107'
+    };
+
+    // Create new row
+    const newRow = document.createElement('tr');
+    const roleColor = roleColors[user.role] || '#28a745';
+    const roleCssClass = user.role.replace('_', '-');
+
+    newRow.innerHTML = `
+        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">${user.id}</td>
+        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+            <span class="username-display">${user.username}</span>
+            <input type="text" class="username-edit" value="${user.username}" style="display: none; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+        </td>
+        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+            <span class="fullname-display">${user.full_name || '-'}</span>
+            <input type="text" class="fullname-edit" value="${user.full_name || ''}" style="display: none; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+        </td>
+        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+            <span class="email-display">${user.email || '-'}</span>
+            <input type="email" class="email-edit" value="${user.email || ''}" style="display: none; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+        </td>
+        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+            <span class="role-display">
+                <span class="role-badge role-${roleCssClass}" data-role="${user.role}" style="background-color: ${roleColor}; display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 12px; color: white;">
+                    ${user.role_display_name}
+                </span>
+            </span>
+            <select class="role-edit" style="display: none; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                <!-- Role options will be populated dynamically -->
+            </select>
+        </td>
+        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+            <span style="color: #6c757d;">Never</span>
+        </td>
+        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">
+            <span style="background-color: #28a745; color: white; padding: 2px 6px; border-radius: 8px; font-size: 11px;">Active</span>
+        </td>
+        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">
+            <div class="action-buttons" data-user-id="${user.id}" data-username="${user.username}" data-is-active="true">
+                <button class="action-btn btn-warning edit-btn" data-action="edit" title="Edit User">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn btn-info" data-action="reset-password" title="Reset Password">
+                    <i class="fas fa-key"></i>
+                </button>
+                <!-- Force Password Change button temporarily hidden
+                <button class="action-btn btn-purple" data-action="force-password" title="Force Password Change">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </button>
+                -->
+                <div class="toggle-switch-wrapper" title="${user.role === 'super_admin' ? 'Super admin users cannot be deactivated' : 'Deactivate User'}">
+                    <label class="toggle-switch">
+                        <input type="checkbox" class="toggle-input" data-action="toggle-status" data-user-id="${user.id}" data-username="${user.username}" data-is-active="true" checked ${user.role === 'super_admin' ? 'disabled' : ''}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                ${user.role !== 'super_admin' ? `
+                <button class="action-btn btn-danger" data-action="delete" title="Delete User">
+                    <i class="fas fa-trash"></i>
+                </button>
+                ` : ''}
+            </div>
+        </td>
+    `;
+
+    // Populate role options for the edit dropdown
+    const roleSelect = newRow.querySelector('.role-edit');
+    const existingRoleSelect = document.querySelector('tbody .role-edit');
+    if (existingRoleSelect) {
+        roleSelect.innerHTML = existingRoleSelect.innerHTML;
+        // Set the correct selected option
+        roleSelect.value = user.role;
+    } else {
+        // Fallback: create basic role options based on what's in the table
+        const roleOptions = [];
+        const roleBadges = document.querySelectorAll('.role-badge');
+        roleBadges.forEach(badge => {
+            const roleValue = badge.getAttribute('data-role');
+            const roleText = badge.textContent;
+            if (roleValue && roleText) {
+                roleOptions.push(`<option value="${roleValue}">${roleText}</option>`);
+            }
+        });
+        
+        if (roleOptions.length > 0) {
+            roleSelect.innerHTML = roleOptions.join('');
+        } else {
+            // Final fallback
+        roleSelect.innerHTML = `
+            <option value="staff">Staff</option>
+            <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
+        `;
+        }
+        roleSelect.value = user.role;
+    }
+
+    // Add the new row to the table
+    tbody.appendChild(newRow);
+
+    // Scroll to the new row
+    newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Highlight the new row briefly
+    newRow.style.backgroundColor = '#e8f5e8';
+    setTimeout(() => {
+        newRow.style.backgroundColor = '';
+    }, 2000);
+}
+
+async function toggleUserStatus(userId, username, currentStatus) {
+    const newStatus = !currentStatus;
+    const action = newStatus ? 'activate' : 'deactivate';
+
+    // Check if trying to deactivate a super admin user
+    if (!newStatus) { // If deactivating
+        const row = findRowByUserId(userId);
+        if (row) {
+            const roleBadge = row.querySelector('.role-badge');
+            if (roleBadge && roleBadge.getAttribute('data-role') === 'super_admin') {
+                showMessage('Cannot deactivate super admin users for security reasons.', 'error');
+                return;
+            }
+        }
+    }
+
+    const confirmed = await showStatusConfirmation(
+        `${action.charAt(0).toUpperCase() + action.slice(1)} User`,
+        `Are you sure you want to ${action} user "${username}"?`
+    );
+
+    if (confirmed) {
+
+        fetch(`/auth/api/staff/users/${userId}/toggle-status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                is_active: newStatus
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                // Update the UI dynamically instead of refreshing
+                updateUserStatusInTable(userId, newStatus);
+            } else {
+                showMessage(data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating user status:', error);
+            showMessage('Error updating user status: ' + error.message, 'error');
+        });
+    }
+}
+
+function updateUserStatusInTable(userId, newStatus) {
+    const row = findRowByUserId(userId);
+    if (!row) {
+        console.error('Could not find row for user ID:', userId);
+        return;
+    }
+
+    // Update the status badge in the Status column
+    const statusCell = row.cells[6]; // Status is the 7th column (index 6)
+    const statusBadge = statusCell.querySelector('span');
+
+    if (newStatus) {
+        // User is now active
+        statusBadge.style.backgroundColor = '#28a745';
+        statusBadge.textContent = 'Active';
+    } else {
+        // User is now inactive
+        statusBadge.style.backgroundColor = '#dc3545';
+        statusBadge.textContent = 'Inactive';
+    }
+
+    // Update the toggle switch
+    const actionButtons = row.querySelector('.action-buttons');
+    const toggleSwitch = actionButtons.querySelector('.toggle-input');
+    
+    if (toggleSwitch) {
+        toggleSwitch.checked = newStatus;
+        toggleSwitch.dataset.isActive = newStatus ? 'true' : 'false';
+    }
+
+    // Add a brief highlight effect to show the change
+    row.style.backgroundColor = '#e8f5e8';
+    setTimeout(() => {
+        row.style.backgroundColor = '';
+    }, 2000);
+}
+
+function forcePasswordChange(userId, username) {
+    showForcePasswordChangeModal(userId, username);
+}
+
+function showForcePasswordChangeModal(userId, username) {
+    const modalHTML = `
+        <div id="forcePasswordModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); max-width: 500px; width: 90%;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2.5rem; color: #ffc107; margin-bottom: 1rem;"></i>
+                    <h3 style="color: #333; margin: 0 0 0.5rem 0;">Force Password Change</h3>
+                    <p style="color: #666; margin: 0;">User: <strong>${username}</strong></p>
+                </div>
+
+                <div style="background: #fff3cd; padding: 1rem; border-radius: 5px; margin-bottom: 1.5rem; border-left: 4px solid #ffc107;">
+                    <p style="margin: 0; color: #856404; font-size: 0.95rem;">
+                        <strong>⚠️ This action will:</strong><br>
+                        • Require the user to change their password on next login<br>
+                        • Prevent access until password is changed<br>
+                        • Cannot be undone automatically
+                    </p>
+                </div>
+
+                <p style="color: #666; margin-bottom: 1.5rem; text-align: center;">
+                    Are you sure you want to force a password change for this user?
+                </p>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="modal-btn" data-action="close-force-password" style="padding: 0.75rem 1.5rem; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+                    <button type="button" class="modal-btn" data-action="confirm-force-password" data-user-id="${userId}" data-username="${username}" style="padding: 0.75rem 1.5rem; background-color: #ffc107; color: #212529; border: none; border-radius: 5px; cursor: pointer; font-weight: 500;">Force Change</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Close modal when clicking outside
+    document.getElementById('forcePasswordModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeForcePasswordModal();
+        }
+    });
+}
+
+function closeForcePasswordModal() {
+    const modal = document.getElementById('forcePasswordModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function confirmForcePasswordChange(userId, username) {
+    fetch(`/auth/api/staff/users/${userId}/force-password-change`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeForcePasswordModal();
+            showMessage(data.message, 'success');
+            // Refresh the page to update the UI
+            window.location.reload();
+        } else {
+            showMessage(data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error forcing password change', 'error');
+    });
+}
+
+function showStatusConfirmation(title, message) {
+    return new Promise((resolve) => {
+        // Create modal HTML with modern styling
+        const modalHTML = `
+            <div id="statusConfirmModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); max-width: 400px; width: 90%; text-align: center;">
+                    <div style="margin-bottom: 1.5rem;">
+                        <i class="fas fa-question-circle" style="font-size: 2.5rem; color: #17a2b8; margin-bottom: 1rem;"></i>
+                        <h3 style="color: #333; margin: 0 0 0.5rem 0; font-size: 1.25rem;">${title}</h3>
+                        <p style="color: #666; margin: 0; font-size: 0.95rem;">${message}</p>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button type="button" id="statusConfirmCancel" style="padding: 0.75rem 1.5rem; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9rem; min-width: 80px;">Cancel</button>
+                        <button type="button" id="statusConfirmOK" style="padding: 0.75rem 1.5rem; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9rem; min-width: 80px; font-weight: 500;">OK</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        const modal = document.getElementById('statusConfirmModal');
+        const okButton = document.getElementById('statusConfirmOK');
+        const cancelButton = document.getElementById('statusConfirmCancel');
+
+        // Handle OK button click
+        okButton.addEventListener('click', function() {
+            modal.remove();
+            resolve(true);
+        });
+
+        // Handle Cancel button click
+        cancelButton.addEventListener('click', function() {
+            modal.remove();
+            resolve(false);
+        });
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.remove();
+                resolve(false);
+            }
+        });
+
+        // Focus on OK button for keyboard accessibility
+        okButton.focus();
+
+        // Handle Escape key
+        const handleEscape = function(e) {
+            if (e.key === 'Escape') {
+                modal.remove();
+                resolve(false);
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    });
+}
+
+function openAddUserModal() {
+    const modal = document.getElementById('addUserModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    
+    // Focus on first input
+    setTimeout(() => {
+        const firstInput = modal.querySelector('input[type="text"]');
+        if (firstInput) firstInput.focus();
+    }, 100);
+}
+
+function closeAddUserModal() {
+    const modal = document.getElementById('addUserModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = ''; // Restore scrolling
+    
+    // Reset form when closing
+    const form = modal.querySelector('form');
+    if (form) form.reset();
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('addUserModal');
+    if (e.target === modal) {
+        closeAddUserModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('addUserModal');
+        if (modal.style.display === 'flex') {
+            closeAddUserModal();
+        }
+    }
+});
+
+
+
+
+function closeEditUserModal() {
+    const editUserModal = document.getElementById('editUserModal');
+    if (editUserModal) {
+        editUserModal.style.display = 'none';
+    }
+}
+
+function updateUserInTable(userId, username, fullName, email, role) {
+    const row = findRowByUserId(userId);
+    if (!row) {
+        console.error('Could not find row for user ID:', userId);
+        return;
+    }
+
+    // Update the display values in the table
+    row.querySelector('.username-display').textContent = username;
+    row.querySelector('.fullname-display').textContent = fullName || '-';
+    row.querySelector('.email-display').textContent = email || '-';
+
+    // Update the role display
+    const roleDisplay = row.querySelector('.role-display span');
+    if (roleDisplay) {
+        // Update role text and color based on the new role
+        if (role === 'super_admin') {
+            roleDisplay.textContent = 'Super Admin';
+            roleDisplay.style.backgroundColor = '#dc3545';
+        } else if (role === 'admin') {
+            roleDisplay.textContent = 'Admin';
+            roleDisplay.style.backgroundColor = '#fd7e14';
+        } else if (role === 'manager') {
+            roleDisplay.textContent = 'Manager';
+            roleDisplay.style.backgroundColor = '#6f42c1';
+        } else if (role === 'sales') {
+            roleDisplay.textContent = 'Sales';
+            roleDisplay.style.backgroundColor = '#17a2b8';
+        } else if (role === 'clerk') {
+            roleDisplay.textContent = 'Clerk';
+            roleDisplay.style.backgroundColor = '#6c757d';
+        } else if (role === 'cashier') {
+            roleDisplay.textContent = 'Cashier';
+            roleDisplay.style.backgroundColor = '#ffc107';
+        } else {
+            roleDisplay.textContent = 'Staff';
+            roleDisplay.style.backgroundColor = '#28a745';
+        }
+        
+        // Update the data-role attribute
+        roleDisplay.setAttribute('data-role', role);
+    }
+
+    // Add a brief highlight effect to show the change
+    row.style.backgroundColor = '#e8f5e8';
+    setTimeout(() => {
+        row.style.backgroundColor = '';
+    }, 2000);
+}
+
+function openEditUserModal(userId, username, fullName, email, role) {
+    console.log('openEditUserModal called with:', { userId, username, fullName, email, role });
+    
+    // Get the current user data from the table row
+    const row = findRowByUserId(userId);
+    if (!row) {
+        console.error('Could not find row for user ID:', userId);
+        return;
+    }
+
+    // Get current values from the table
+    const currentUsername = row.querySelector('.username-display').textContent;
+    const currentFullName = row.querySelector('.fullname-display').textContent;
+    const currentEmail = row.querySelector('.email-display').textContent;
+    const currentRole = row.querySelector('.role-display span').getAttribute('data-role');
+    
+    console.log('Current values from table:', { currentUsername, currentFullName, currentEmail, currentRole });
+
+    // Populate the edit form
+    document.getElementById('editUserId').value = userId;
+    document.getElementById('editUsername').value = currentUsername;
+    document.getElementById('editFullName').value = currentFullName === '-' ? '' : currentFullName;
+    document.getElementById('editEmail').value = currentEmail === '-' ? '' : currentEmail;
+    document.getElementById('editRole').value = currentRole;
+    
+    // Check if current user is editing their own account and is a super admin
+    const editModal = document.getElementById('editUserModal');
+    const currentUserId = parseInt(editModal.getAttribute('data-current-user-id'));
+    const currentUserRole = editModal.getAttribute('data-current-user-role');
+    
+    if (userId == currentUserId && currentUserRole === 'super_admin') {
+        // Disable role field for super admin editing their own account
+        document.getElementById('editRole').disabled = true;
+        document.getElementById('editRole').title = 'Super admins cannot change their own role for security reasons';
+        
+        // Add visual indication
+        const roleLabel = document.querySelector('label[for="editRole"]');
+        if (roleLabel) {
+            roleLabel.innerHTML = '<i class="fas fa-user-tag"></i> Role <span style="color: #dc3545; font-size: 12px;">(Locked for your account)</span>';
+        }
+    } else {
+        // Enable role field for other cases
+        document.getElementById('editRole').disabled = false;
+        document.getElementById('editRole').title = '';
+        
+        // Reset label
+        const roleLabel = document.querySelector('label[for="editRole"]');
+        if (roleLabel) {
+            roleLabel.innerHTML = '<i class="fas fa-user-tag"></i> Role';
+        }
+    }
+    
+    console.log('Form populated with userId:', document.getElementById('editUserId').value);
+
+    // Show the modal
+    const modal = document.getElementById('editUserModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    // Focus on first input
+    setTimeout(() => {
+        const firstInput = modal.querySelector('input[type="text"]');
+        if (firstInput) firstInput.focus();
+    }, 100);
+}
+
+function closeEditUserModal() {
+    const modal = document.getElementById('editUserModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = ''; // Restore scrolling
+    
+    // Reset form when closing
+    const form = modal.querySelector('form');
+    if (form) form.reset();
+    
+    // Reset role field to enabled state and restore original label
+    const roleField = document.getElementById('editRole');
+    if (roleField) {
+        roleField.disabled = false;
+        roleField.title = '';
+    }
+    
+    const roleLabel = document.querySelector('label[for="editRole"]');
+    if (roleLabel) {
+        roleLabel.innerHTML = '<i class="fas fa-user-tag"></i> Role';
+    }
+}
+
+// Professional delete confirmation modal
+function showDeleteConfirmation(title, message) {
+    return new Promise((resolve) => {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'delete-confirmation-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(2px);
+        `;
+
+        // Create modal content
+        const modal = document.createElement('div');
+        modal.className = 'delete-confirmation-modal';
+        modal.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.2s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+
+        modal.innerHTML = `
+            <div style="padding: 24px 24px 16px 24px; text-align: center;">
+                <div style="width: 64px; height: 64px; background: #fee2e2; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="32" height="32" fill="#dc2626" viewBox="0 0 24 24">
+                        <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                    </svg>
+                </div>
+                <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #111827;">${title}</h3>
+                <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${message}</p>
+            </div>
+            <div style="padding: 16px 24px 24px 24px; display: flex; gap: 12px; justify-content: center;">
+                <button class="cancel-btn" style="
+                    background: #f3f4f6;
+                    color: #374151;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Cancel</button>
+                <button class="delete-btn" style="
+                    background: #dc2626;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Delete</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            modal.style.transform = 'scale(1)';
+        });
+
+        // Add hover effects
+        const cancelBtn = modal.querySelector('.cancel-btn');
+        const deleteBtn = modal.querySelector('.delete-btn');
+
+        cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.backgroundColor = '#e5e7eb';
+        });
+        cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.backgroundColor = '#f3f4f6';
+        });
+
+        deleteBtn.addEventListener('mouseenter', () => {
+            deleteBtn.style.backgroundColor = '#b91c1c';
+        });
+        deleteBtn.addEventListener('mouseleave', () => {
+            deleteBtn.style.backgroundColor = '#dc2626';
+        });
+
+        // Handle button clicks
+        const cleanup = () => {
+            modal.style.transform = 'scale(0.9)';
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+            }, 200);
+        };
+
+        cancelBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(false);
+        });
+
+        deleteBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(true);
+        });
+
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                cleanup();
+                resolve(false);
+            }
+        });
+
+        // Close on Escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                resolve(false);
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    });
+}
+
+// Export users to PDF function
+
+</script>
+{% endblock %}

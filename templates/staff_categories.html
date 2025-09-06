@@ -1,61 +1,997 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
-</head>
-<body>
-    {% extends "base.html" %}
+{% extends "base.html" %}
+
+{% block title %}Category Management{% endblock %}
 
 {% block content %}
-<div class="staff-container" style="padding-left: 270px;">
-    <h1>{{ title }}</h1>
-    <form method="post" action="{{ url_for('auth.staff_categories') }}">
-        <div class="mb-3">
-            <label for="name" class="form-label">Category Name</label>
-            <input type="text" class="form-control" id="name" name="name" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Add Category</button>
-    </form>
-    <table style="width: 100%; border-collapse: collapse; border: 1px solid #aaa; font-weight: 400;">
-        <thead>
-            <tr>
-                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Category Name</th>
-                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Number of Products</th>
-                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for category in categories %}
-            <tr>
-                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ category.name }}</td>
-                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ category.get_product_count() }}</td>
-                <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;"><button class="btn btn-sm btn-info" data-category-id="{{ category.id }}">View</button></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="staff-container">
+    <div class="page-header">
+        <h1>Category Management</h1>
+    </div>
 
-    <!-- Category Products Modal -->
-    <div class="modal fade" id="categoryProductsModal" tabindex="-1" aria-labelledby="categoryProductsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="categoryProductsModalLabel">Products in Category:</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Add Category Form -->
+    <div class="inventory-actions">
+        <div class="inventory-search">
+            <form method="post" class="form-container">
+                <div class="form-group flex-1">
+                    <label for="name" class="form-label">Category Name:</label>
+                    <input type="text" id="name" name="name" required class="form-input">
                 </div>
-                <div class="modal-body" id="categoryProductsModalBody">
-                    Loading...
+                <div class="form-group flex-1">
+                    <label for="parent_id" class="form-label">Parent Category:</label>
+                    <select id="parent_id" name="parent_id" class="form-input">
+                        <option value="">-- Create as Parent Category --</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">📁 {{ category.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div class="form-group flex-2">
+                    <label for="description" class="form-label">Description (Optional):</label>
+                    <input type="text" id="description" name="description" class="form-input">
                 </div>
-            </div>
+                <div class="form-group">
+                    <div class="form-label-spacer"></div>
+                    <button type="submit" class="form-submit">Add Category</button>
+                </div>
+            </form>
         </div>
     </div>
+
+
+
+    <!-- Categories Table -->
+    <div class="inventory-list">
+        <table class="table-container">
+            <thead>
+                <tr>
+                    <th class="table-header">ID</th>
+                    <th class="table-header">Category Name</th>
+                    <th class="table-header">Description</th>
+                    <th class="table-header center">Products Count</th>
+                    <th class="table-header center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                    <!-- Parent Category Row -->
+                    <tr class="parent-category-row">
+                        <td class="table-cell">{{ category.id }}</td>
+                        <td class="table-cell">
+                            <div class="category-name-container">
+                                <span class="category-icon parent-icon">📁</span>
+                                <span class="name-display">{{ category.name }}</span>
+                                <input type="text" class="name-edit edit-input" value="{{ category.name }}">
+                            </div>
+                        </td>
+                        <td class="table-cell">
+                            <span class="description-display">{{ category.description or 'No description' }}</span>
+                            <input type="text" class="description-edit edit-input" value="{{ category.description or '' }}">
+                        </td>
+                        <td class="table-cell center">
+                            <span id="product-count-{{ category.id }}">Loading...</span>
+                        </td>
+                        <td class="table-cell center">
+                            <div class="action-buttons">
+                                <button class="edit-btn" onclick="editCategory('{{ category.id }}')">Edit</button>
+                                <button class="save-btn" onclick="saveCategory('{{ category.id }}')">Save</button>
+                                <button class="cancel-btn" onclick="cancelEdit('{{ category.id }}')">Cancel</button>
+                                <button class="delete-btn" data-category-name="{{ category.name }}" onclick="deleteCategory('{{ category.id }}', this.getAttribute('data-category-name'))">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Child Categories (Level 1) -->
+                    {% for child in category.children %}
+                    <tr class="child-category-row level-1">
+                        <td class="table-cell">{{ child.id }}</td>
+                        <td class="table-cell">
+                            <div class="category-name-container child-container">
+                                <span class="child-indent">└──</span>
+                                <span class="category-icon child-icon">📄</span>
+                                <span class="name-display">{{ child.name }}</span>
+                                <input type="text" class="name-edit edit-input" value="{{ child.name }}">
+                            </div>
+                        </td>
+                        <td class="table-cell">
+                            <span class="description-display">{{ child.description or 'No description' }}</span>
+                            <input type="text" class="description-edit edit-input" value="{{ child.description or '' }}">
+                        </td>
+                        <td class="table-cell center">
+                            <span id="product-count-{{ child.id }}">Loading...</span>
+                        </td>
+                        <td class="table-cell center">
+                            <div class="action-buttons">
+                                <button class="edit-btn" onclick="editCategory('{{ child.id }}')">Edit</button>
+                                <button class="save-btn" onclick="saveCategory('{{ child.id }}')">Save</button>
+                                <button class="cancel-btn" onclick="cancelEdit('{{ child.id }}')">Cancel</button>
+                                <button class="add-subcategory-btn" onclick="addSubcategory('{{ child.id }}', '{{ child.name }}')" title="Add subcategory under {{ child.name }}">+ Sub</button>
+                                <button class="delete-btn" data-category-name="{{ child.name }}" onclick="deleteCategory('{{ child.id }}', this.getAttribute('data-category-name'))">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Grandchild Categories (Level 2) -->
+                    {% for grandchild in child.children %}
+                    <tr class="child-category-row level-2">
+                        <td class="table-cell">{{ grandchild.id }}</td>
+                        <td class="table-cell">
+                            <div class="category-name-container grandchild-container">
+                                <span class="grandchild-indent">    └──</span>
+                                <span class="category-icon grandchild-icon">📋</span>
+                                <span class="name-display">{{ grandchild.name }}</span>
+                                <input type="text" class="name-edit edit-input" value="{{ grandchild.name }}">
+                            </div>
+                        </td>
+                        <td class="table-cell">
+                            <span class="description-display">{{ grandchild.description or 'No description' }}</span>
+                            <input type="text" class="description-edit edit-input" value="{{ grandchild.description or '' }}">
+                        </td>
+                        <td class="table-cell center">
+                            <span id="product-count-{{ grandchild.id }}">Loading...</span>
+                        </td>
+                        <td class="table-cell center">
+                            <div class="action-buttons">
+                                <button class="edit-btn" onclick="editCategory('{{ grandchild.id }}')">Edit</button>
+                                <button class="save-btn" onclick="saveCategory('{{ grandchild.id }}')">Save</button>
+                                <button class="cancel-btn" onclick="cancelEdit('{{ grandchild.id }}')">Cancel</button>
+                                <button class="delete-btn" data-category-name="{{ grandchild.name }}" onclick="deleteCategory('{{ grandchild.id }}', this.getAttribute('data-category-name'))">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<!-- Message Container for Notifications -->
+<div id="message-container"></div>
+
 {% endblock %}
-</body>
-</html>
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_notifications.css') }}">
+<style>
+    .staff-container {
+        width: 100%;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    
+    .page-header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+        color: #2d3748;
+        text-align: center;
+    }
+
+    .inventory-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 20px 0;
+        gap: 15px;
+    }
+
+    .inventory-search {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        max-width: 1000px;
+    }
+
+    .inventory-list table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #aaa;
+        font-weight: 400;
+    }
+
+    .inventory-list th,
+    .inventory-list td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #888;
+    }
+
+    .inventory-list th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+    }
+
+    .inventory-list tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .action-buttons button {
+        transition: background-color 0.2s;
+    }
+
+    .action-buttons button:hover {
+        opacity: 0.8;
+    }
+
+    .edit-btn {
+        background-color: #ffc107;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+        margin-right: 5px;
+    }
+
+    .save-btn {
+        display: none;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+        margin-right: 5px;
+    }
+
+    .cancel-btn {
+        display: none;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+        margin-right: 5px;
+    }
+
+    .delete-btn {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .form-container {
+        display: flex;
+        gap: 15px;
+        align-items: flex-end;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group.flex-1 {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .form-group.flex-2 {
+        flex: 1.5;
+        min-width: 250px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        height: 20px;
+        line-height: 20px;
+    }
+
+    .form-input {
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        width: 100%;
+        min-width: 200px;
+        height: 40px;
+        box-sizing: border-box;
+    }
+
+    .form-input select {
+        background-color: white;
+        cursor: pointer;
+    }
+
+    .form-input select:focus {
+        border-color: #007bff;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+
+    .form-help {
+        display: block;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    .form-submit {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        min-width: 130px;
+        height: 40px;
+        box-sizing: border-box;
+    }
+
+    .form-label-spacer {
+        height: 20px;
+        margin-bottom: 8px;
+    }
+
+    .edit-input {
+        display: none;
+        padding: 4px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        width: 100%;
+        min-width: 150px;
+        box-sizing: border-box;
+    }
+
+    .table-container {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #aaa;
+        font-weight: 400;
+    }
+
+    .table-cell {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #888;
+    }
+
+    .table-cell.center {
+        text-align: center;
+    }
+
+    .table-header {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #888;
+        background-color: #f5f5f5;
+    }
+
+    .table-header.center {
+        text-align: center;
+    }
+
+    /* Hierarchy Styles */
+    .parent-category-row {
+        background-color: #f8f9fa;
+        border-left: 4px solid #007bff;
+    }
+
+    .child-category-row {
+        background-color: #ffffff;
+        border-left: 4px solid #28a745;
+    }
+
+    .category-name-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .child-container {
+        padding-left: 20px;
+    }
+
+    .category-icon {
+        font-size: 16px;
+        display: inline-block;
+        width: 20px;
+        text-align: center;
+    }
+
+    .parent-icon {
+        color: #007bff;
+    }
+
+    .child-icon {
+        color: #28a745;
+    }
+
+    .child-indent {
+        color: #6c757d;
+        font-family: monospace;
+        font-size: 14px;
+        margin-right: 4px;
+    }
+
+    .parent-category-row:hover {
+        background-color: #e3f2fd;
+    }
+
+    .child-category-row:hover {
+        background-color: #f1f8e9;
+    }
+
+    /* Enhanced visual hierarchy */
+    .parent-category-row .name-display {
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .child-category-row .name-display {
+        font-weight: 400;
+        color: #4a5568;
+    }
+
+    /* Level 2 (Grandchild) styling */
+    .child-category-row.level-2 {
+        background-color: #f8f9fa;
+        border-left: 4px solid #17a2b8;
+    }
+
+    .grandchild-container {
+        padding-left: 40px !important;
+    }
+
+    .grandchild-indent {
+        color: #495057;
+        font-weight: bold;
+        margin-right: 5px;
+    }
+
+    .grandchild-icon {
+        color: #6c757d;
+    }
+
+    .child-category-row.level-2:hover {
+        background-color: #e3f2fd;
+    }
+
+    /* Add Subcategory Button */
+    .add-subcategory-btn {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .add-subcategory-btn:hover {
+        background-color: #218838;
+    }
+
+
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/staff_messages.js') }}"></script>
+<script>
+// Load product counts for each category
+document.addEventListener('DOMContentLoaded', function() {
+    loadProductCounts();
+});
+
+function loadProductCounts() {
+    const categoryRows = document.querySelectorAll('tbody tr');
+    categoryRows.forEach(row => {
+        try {
+            const editButton = row.querySelector('button.edit-btn');
+            if (!editButton) return;
+            
+            const onclickAttr = editButton.getAttribute('onclick');
+            if (!onclickAttr) return;
+            
+            const match = onclickAttr.match(/editCategory\('(\d+)'\)/);
+            if (!match) return;
+            
+            const categoryId = match[1];
+            const countElement = document.getElementById(`product-count-${categoryId}`);
+            if (!countElement) return;
+
+            fetch(`/api/staff/categories/${categoryId}/products/count`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    countElement.textContent = data.count;
+                } else {
+                    countElement.textContent = '0';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading product count:', error);
+                countElement.textContent = 'Error';
+            });
+        } catch (error) {
+            console.error('Error processing category row:', error);
+        }
+    });
+}
+
+function editCategory(categoryId) {
+    // First try to find the row using the product count ID as it's unique
+    const countSpan = document.getElementById(`product-count-${categoryId}`);
+    if (!countSpan) {
+        console.error('Could not find category row');
+        return;
+    }
+    
+    const row = countSpan.closest('tr');
+    if (!row) {
+        console.error('Could not find table row');
+        return;
+    }
+
+    // Hide display elements and show edit elements
+    row.querySelector('.name-display').style.display = 'none';
+    row.querySelector('.name-edit').style.display = 'inline';
+    row.querySelector('.description-display').style.display = 'none';
+    row.querySelector('.description-edit').style.display = 'inline';
+
+    // Hide edit button, show save/cancel buttons
+    row.querySelector('.edit-btn').style.display = 'none';
+    row.querySelector('.save-btn').style.display = 'inline';
+    row.querySelector('.cancel-btn').style.display = 'inline';
+}
+
+function cancelEdit(categoryId) {
+    const countSpan = document.getElementById(`product-count-${categoryId}`);
+    if (!countSpan) {
+        console.error('Could not find category row');
+        return;
+    }
+    
+    const row = countSpan.closest('tr');
+    if (!row) {
+        console.error('Could not find table row');
+        return;
+    }
+
+    // Show display elements and hide edit elements
+    row.querySelector('.name-display').style.display = 'inline';
+    row.querySelector('.name-edit').style.display = 'none';
+    row.querySelector('.description-display').style.display = 'inline';
+    row.querySelector('.description-edit').style.display = 'none';
+
+    // Show edit button, hide save/cancel buttons
+    row.querySelector('.edit-btn').style.display = 'inline';
+    row.querySelector('.save-btn').style.display = 'none';
+    row.querySelector('.cancel-btn').style.display = 'none';
+
+    // Reset values
+    const originalName = row.querySelector('.name-display').textContent;
+    const originalDescription = row.querySelector('.description-display').textContent;
+    row.querySelector('.name-edit').value = originalName;
+    row.querySelector('.description-edit').value = originalDescription === 'No description' ? '' : originalDescription;
+}
+
+function saveCategory(categoryId) {
+    const countSpan = document.getElementById(`product-count-${categoryId}`);
+    if (!countSpan) {
+        console.error('Could not find category row');
+        return;
+    }
+    
+    const row = countSpan.closest('tr');
+    if (!row) {
+        console.error('Could not find table row');
+        return;
+    }
+    
+    const name = row.querySelector('.name-edit').value.trim();
+    const description = row.querySelector('.description-edit').value.trim();
+
+    if (!name) {
+        showMessage('Category name cannot be empty', 'error');
+        return;
+    }
+
+    fetch(`/auth/api/staff/categories/${categoryId}/update`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: name,
+            description: description
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            // Update display values
+            row.querySelector('.name-display').textContent = name;
+            row.querySelector('.description-display').textContent = description || 'No description';
+
+            cancelEdit(categoryId);
+        } else {
+            showMessage(data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error updating category', 'error');
+    });
+}
+
+function showDeleteConfirmation(categoryName, onConfirm) {
+    // Create custom modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'delete-confirmation-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        backdrop-filter: blur(2px);
+    `;
+
+    // Create modal content
+    const modal = document.createElement('div');
+    modal.className = 'delete-confirmation-modal';
+    modal.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        padding: 0;
+        max-width: 480px;
+        width: 90%;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        transform: scale(0.9);
+        transition: transform 0.2s ease;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    `;
+
+    modal.innerHTML = `
+        <div style="padding: 24px 24px 16px 24px; text-align: center;">
+            <div style="width: 64px; height: 64px; background: #fef2f2; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                <svg width="32" height="32" fill="#dc2626" viewBox="0 0 24 24">
+                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+            </div>
+            <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #111827;">Delete Category</h3>
+            <p style="margin: 0 0 16px 0; color: #6b7280; font-size: 14px; line-height: 1.5;">Are you sure you want to delete category <strong>"${categoryName}"</strong>? This action cannot be undone.</p>
+            <div style="background: #fef2f2; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #dc2626;">
+                <p style="margin: 0; color: #dc2626; font-weight: bold;">⚠️ Warning: This will permanently remove the category and all associated data.</p>
+            </div>
+        </div>
+        <div style="padding: 16px 24px 24px 24px; display: flex; gap: 12px; justify-content: center;">
+            <button class="cancel-btn" style="
+                background: #f3f4f6;
+                color: #374151;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: 500;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background-color 0.2s;
+                min-width: 80px;
+            ">Cancel</button>
+            <button class="delete-btn" style="
+                background: #dc2626;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: 500;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background-color 0.2s;
+                min-width: 80px;
+            ">Delete Category</button>
+        </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Animate in
+    requestAnimationFrame(() => {
+        modal.style.transform = 'scale(1)';
+    });
+
+    // Add hover effects
+    const cancelBtn = modal.querySelector('.cancel-btn');
+    const deleteBtn = modal.querySelector('.delete-btn');
+
+    cancelBtn.addEventListener('mouseenter', () => {
+        cancelBtn.style.backgroundColor = '#e5e7eb';
+    });
+    cancelBtn.addEventListener('mouseleave', () => {
+        cancelBtn.style.backgroundColor = '#f3f4f6';
+    });
+
+    deleteBtn.addEventListener('mouseenter', () => {
+        deleteBtn.style.backgroundColor = '#b91c1c';
+    });
+    deleteBtn.addEventListener('mouseleave', () => {
+        deleteBtn.style.backgroundColor = '#dc2626';
+    });
+
+    // Handle button clicks
+    const cleanup = () => {
+        modal.style.transform = 'scale(0.9)';
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(overlay);
+        }, 200);
+    };
+
+    cancelBtn.addEventListener('click', () => {
+        cleanup();
+    });
+
+    deleteBtn.addEventListener('click', () => {
+        cleanup();
+        onConfirm();
+    });
+
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            cleanup();
+        }
+    });
+
+    // Close on escape key
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            cleanup();
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+}
+
+function deleteCategory(categoryId, categoryName) {
+    showDeleteConfirmation(categoryName, () => {
+        fetch(`/auth/api/staff/categories/${categoryId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                try {
+                    // Try to find the row by a more specific selector
+                    const row = document.querySelector(`tr:has(span#product-count-${categoryId})`);
+                    if (row) {
+                        row.remove();
+                    } else {
+                        // Fallback: try to find any element containing the category ID and traverse up to tr
+                        const anyElement = document.getElementById(`product-count-${categoryId}`);
+                        if (anyElement) {
+                            const row = anyElement.closest('tr');
+                            if (row) {
+                                row.remove();
+                            }
+                        }
+                    }
+                } catch (removeError) {
+                    console.error('Error removing row:', removeError);
+                    // The category was deleted from database but UI removal failed
+                    // Refresh the page as fallback
+                    window.location.reload();
+                }
+            } else {
+                showMessage(data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error deleting category', 'error');
+        });
+    });
+}
+    function addSubcategory(parentId, parentName) {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'add-subcategory-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        `;
+
+        // Create modal content
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        `;
+
+        modal.innerHTML = `
+            <div style="text-align: center; margin-bottom: 25px;">
+                <h3 style="margin: 0 0 10px 0; color: #2d3748; font-size: 24px; font-weight: 600;">Add Subcategory</h3>
+                <p style="margin: 0; color: #6b7280; font-size: 16px;">Create a new subcategory under <strong>"${parentName}"</strong></p>
+            </div>
+            
+            <form id="addSubcategoryForm" style="display: flex; flex-direction: column; gap: 20px;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #374151; font-weight: 500; font-size: 14px;">Category Name *</label>
+                    <input type="text" id="subcategoryName" required 
+                           style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; transition: border-color 0.2s; box-sizing: border-box;"
+                           placeholder="Enter subcategory name">
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #374151; font-weight: 500; font-size: 14px;">Description (Optional)</label>
+                    <textarea id="subcategoryDescription" rows="3"
+                              style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; transition: border-color 0.2s; box-sizing: border-box; resize: vertical;"
+                              placeholder="Enter description for this subcategory"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 10px;">
+                    <button type="button" id="cancelBtn" 
+                            style="padding: 12px 24px; border: 2px solid #e5e7eb; background: white; color: #6b7280; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+                        Cancel
+                    </button>
+                    <button type="submit" id="createBtn"
+                            style="padding: 12px 24px; border: none; background: #10b981; color: white; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+                        Create Subcategory
+                    </button>
+                </div>
+            </form>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Focus on name input
+        const nameInput = modal.querySelector('#subcategoryName');
+        nameInput.focus();
+
+        // Add hover effects
+        const inputs = modal.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.style.borderColor = '#10b981';
+            });
+            input.addEventListener('blur', () => {
+                input.style.borderColor = '#e5e7eb';
+            });
+        });
+
+        const cancelBtn = modal.querySelector('#cancelBtn');
+        const createBtn = modal.querySelector('#createBtn');
+
+        cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.borderColor = '#d1d5db';
+            cancelBtn.style.color = '#374151';
+        });
+        cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.borderColor = '#e5e7eb';
+            cancelBtn.style.color = '#6b7280';
+        });
+
+        createBtn.addEventListener('mouseenter', () => {
+            createBtn.style.background = '#059669';
+        });
+        createBtn.addEventListener('mouseleave', () => {
+            createBtn.style.background = '#10b981';
+        });
+
+        // Handle form submission
+        modal.querySelector('#addSubcategoryForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const categoryName = nameInput.value.trim();
+            const description = modal.querySelector('#subcategoryDescription').value.trim();
+            
+            if (!categoryName) {
+                nameInput.style.borderColor = '#ef4444';
+                nameInput.focus();
+                return;
+            }
+
+            // Disable button and show loading
+            createBtn.disabled = true;
+            createBtn.textContent = 'Creating...';
+            createBtn.style.background = '#6b7280';
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('name', categoryName);
+            formData.append('description', description);
+            formData.append('parent_id', parentId);
+
+            // Send request
+            fetch('/auth/staff/categories', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Remove modal
+                    document.body.removeChild(overlay);
+                    // Reload page to show new subcategory
+                    window.location.reload();
+                } else {
+                    throw new Error('Failed to create subcategory');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                createBtn.disabled = false;
+                createBtn.textContent = 'Create Subcategory';
+                createBtn.style.background = '#10b981';
+                alert('Error creating subcategory. Please try again.');
+            });
+        });
+
+        // Handle cancel
+        const cancelHandler = () => {
+            document.body.removeChild(overlay);
+        };
+        
+        cancelBtn.addEventListener('click', cancelHandler);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                cancelHandler();
+            }
+        });
+
+        // Handle escape key
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                cancelHandler();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    }
+</script>
+{% endblock %}

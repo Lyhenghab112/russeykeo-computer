@@ -1,43 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
-    <link rel="stylesheet" href="/static/css/staff_customers.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/staff_notifications.css') }}">
-</head>
-<body>
-    
 {% extends "base.html" %}
+
+{% block title %}Customer Management{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="/static/css/staff_customers.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_notifications.css') }}">
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    
+    .page-header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+        color: #2d3748;
+        text-align: center;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="staff-container">
-    <h1>Customer Management</h1>
-    <button type="button" class="btn btn-success mb-3" id="addCustomerBtn">Add New Customer</button>
+    <div class="page-header">
+        <h1>Customer Management</h1>
+    </div>
+    
+    <!-- Customer Stats and Export Row -->
+    <div class="customer-stats-row mb-3">
+        <div class="stats-info">
+            <span class="customer-count">Total Customers: <strong id="totalCustomerCount">{{ customers|length }}</strong></span>
+        </div>
+        {% if session.get('role') != 'staff' %}
+                <div class="export-orders-actions">
+                    <button type="button" class="btn btn-success btn-sm" id="exportOrdersCSVBtn">
+                        <i class="fas fa-file-csv"></i> Export Orders (CSV)
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" id="exportOrdersPDFBtn">
+                        <i class="fas fa-file-pdf"></i> Export Orders (PDF)
+                    </button>
+                </div>
+        {% endif %}
+    </div>
 
-    <!-- Search Input -->
-    <div class="mb-3">
-        <input type="text" id="customerSearchInput" class="form-control" placeholder="Search customers by name or email" aria-label="Search customers">
+    <!-- Action Buttons Row -->
+    <div class="action-buttons-row mb-4">
+        {% if session.get('role') != 'staff' %}
+        <button type="button" class="btn btn-success" id="addCustomerBtn">
+            <i class="fas fa-plus"></i> Add New Customer
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Search and Actions Row -->
+    <div class="search-actions-row mb-3">
+        <div class="search-container">
+            <input type="text" id="customerSearchInput" class="form-control" placeholder="Search customers by name or email" aria-label="Search customers">
+        </div>
+        {% if session.get('role') != 'staff' %}
+        <div class="search-actions">
+            <button type="button" class="btn btn-warning square-btn" id="viewDeletedCustomersBtn" title="View Deleted Customers">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Customer Table -->
-    <div class="customer-table-container">
-        <table id="customersTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
+    <div class="customer-table-container" id="customers-container">
+                                <table id="customersTable">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAllCustomers" class="customer-checkbox">
+                                    </th>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
             <tbody>
                 {% for customer in customers %}
                 <tr>
+                    <td>
+                        <input type="checkbox" class="customer-checkbox" value="{{ customer.id }}">
+                    </td>
                     <td>{{ customer.id }}</td>
                     <td>{{ customer.first_name }} {{ customer.last_name }}</td>
                     <td>{{ customer.email }}</td>
@@ -45,14 +97,16 @@
                     <td>
                         <div class="action-buttons">
                             <button type="button" class="btn btn-sm btn-info view-orders-btn" data-customer-id="{{ customer.id }}">Orders</button>
-                            <button type="button" class="btn btn-sm btn-warning edit-customer-btn" data-customer-id="{{ customer.id }}">Edit</button>
+                            {% if session.get('role') != 'staff' %}
+                            <button type="button" class="btn btn-sm btn-primary edit-customer-btn" data-customer-id="{{ customer.id }}">Edit</button>
                             <button type="button" class="btn btn-sm btn-danger delete-customer-btn" data-customer-id="{{ customer.id }}">Delete</button>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5" class="text-center">No customers found.</td>
+                    <td colspan="6" class="text-center">No customers found.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -112,33 +166,32 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="customerForm">
-                        <input type="hidden" id="customerId">
-                        <div class="mb-3">
-                            <label for="firstName" class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="firstName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="lastName" class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="lastName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">Phone</label>
-                            <input type="tel" class="form-control" id="phone">
-                        </div>
-                        <div class="mb-3">
-                            <label for="address" class="form-label">Address</label>
-                            <textarea class="form-control" id="address" rows="3"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" required>
-                        </div>
-                    </form>
+                    <input type="hidden" id="customerId">
+                    <div class="mb-3">
+                        <label for="firstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="firstName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="lastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="lastName">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="text" class="form-control" id="email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control" id="address" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3" id="passwordContainer">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password">
+                        <small class="form-text text-muted" id="passwordHelp">Required for new customers</small>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -154,9 +207,10 @@
 <div id="message-container"></div>
 
 {% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="/static/js/item-counter.js"></script>
 <script src="/static/js/staff_messages.js"></script>
 <script src="/static/js/staff_customers.js"></script>
 {% endblock %}
-
-</body>
-</html>

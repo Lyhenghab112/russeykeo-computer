@@ -9,6 +9,7 @@ class KHQRPayment {
         this.statusCheckInterval = null;
         this.successCallback = null;
         this.errorCallback = null;
+        this.suppressOwnModal = false; // Flag to suppress internal modal when used from cart
         
         console.log('🔥 KHQR Payment system initialized');
     }
@@ -25,6 +26,13 @@ class KHQRPayment {
      */
     setErrorCallback(callback) {
         this.errorCallback = callback;
+    }
+
+    /**
+     * Set flag to suppress internal modal (for cart integration)
+     */
+    setSuppressOwnModal(suppress) {
+        this.suppressOwnModal = suppress;
     }
 
     /**
@@ -290,6 +298,11 @@ class KHQRPayment {
             statusElement.innerHTML = '✅ Payment Successful!';
         }
 
+        // Confirm payment and clear cart if we have an order ID
+        if (result.order_id) {
+            this.confirmPaymentAndClearCart(result.order_id);
+        }
+
         // Close modal after 2 seconds
         setTimeout(() => {
             this.closeModal();
@@ -376,6 +389,10 @@ class KHQRPayment {
                 };
 
                 console.log('🧪 Simulating payment success with result:', testResult);
+                
+                // Confirm payment and clear cart for test payment
+                await this.confirmPaymentAndClearCart(result.order_id);
+                
                 this.onPaymentSuccess(testResult);
             } else {
                 console.error('❌ Test order creation failed:', result.error);
@@ -389,16 +406,124 @@ class KHQRPayment {
     }
 
     /**
-     * Cancel payment
+     * Cancel the current payment
      */
-    cancelPayment() {
-        if (this.statusCheckInterval) {
-            clearInterval(this.statusCheckInterval);
-            this.statusCheckInterval = null;
-        }
+    async cancelPayment() {
+        try {
+            console.log('❌ Payment cancelled by user');
+            
+            // Stop status checking
+            if (this.statusCheckInterval) {
+                clearInterval(this.statusCheckInterval);
+                this.statusCheckInterval = null;
+            }
 
-        this.currentPayment = null;
-        this.closeModal();
+            // If we have a payment session, call the cancellation API
+            if (this.currentPayment && this.currentPayment.session_id) {
+                try {
+                    console.log('🔄 Calling payment cancellation API...');
+                    const response = await fetch(`/api/payment/cancel/${this.currentPayment.session_id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('✅ Payment cancelled successfully, cart items restored');
+                        
+                        // Update cart display if the function exists
+                        if (typeof updateCart === 'function') {
+                            updateCart();
+                        }
+                        
+                        // Show success message
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Payment Cancelled',
+                                text: 'Your payment has been cancelled and items have been restored to your cart. You can pay later using the same QR code.',
+                                icon: 'info',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    } else {
+                        console.warn('⚠️ Payment cancellation API returned error:', result.error);
+                    }
+                } catch (apiError) {
+                    console.error('❌ Error calling payment cancellation API:', apiError);
+                }
+            }
+            
+            // Reset payment state
+            this.currentPayment = null;
+            
+            // Close modal
+            this.closeModal();
+            
+            console.log('✅ Payment cancelled, cart items preserved');
+            
+        } catch (error) {
+            console.error('❌ Error cancelling payment:', error);
+            this.closeModal();
+        }
+    }
+
+    /**
+     * Confirm payment and clear cart
+     */
+    async confirmPaymentAndClearCart(orderId) {
+        try {
+            console.log('🎉 Confirming payment and clearing cart for order:', orderId);
+            
+            const response = await fetch('/api/khqr/confirm-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    order_id: orderId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to confirm payment');
+            }
+
+            console.log('✅ Payment confirmed and cart cleared successfully');
+            
+            // Update cart display if the function exists
+            if (typeof updateCart === 'function') {
+                updateCart();
+            }
+
+            // Show success message only if not suppressed
+            if (!this.suppressOwnModal && typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Payment Confirmed',
+                    text: 'Your payment has been confirmed and cart has been cleared.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            }
+
+        } catch (error) {
+            console.error('❌ Error confirming payment and clearing cart:', error);
+            // Show error message to user
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to confirm payment. Please contact support.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        }
     }
 
     /**

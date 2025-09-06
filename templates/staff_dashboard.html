@@ -10,20 +10,51 @@
             <div class="widget-content">
                 
                 <div class="monthly-sales-toggle-container">
-                    <div id="btnAllMonths" class="monthly-sales-toggle-button big-button active" role="button" tabindex="0">
-                        <div class="monthly-sales-toggle-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div id="btnAllMonths" class="monthly-sales-toggle-button active" role="button" tabindex="0">
+                        <div class="status-dot"></div>
+                        <div class="monthly-sales-toggle-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
                         <div class="monthly-sales-toggle-content">
-                        <div class="monthly-sales-toggle-label">Total Earning</div>
+                            <div class="monthly-sales-toggle-label">Total Revenue (All Time)</div>
                             <div class="monthly-sales-toggle-amount" id="allMonthsAmount">$0</div>
-                            <div class="monthly-sales-toggle-profit" id="allMonthsProfit">Profit: $0 (0%)</div>
+                            <div class="monthly-sales-toggle-profit" id="allMonthsProfit">
+                                <span class="trend-indicator"></span>
+                                Total Save: $0 (0%)
+                            </div>
+                            <div class="monthly-sales-toggle-subtitle">Lifetime Performance</div>
                         </div>
                     </div>
-                    <div id="btnCurrentMonth" class="monthly-sales-toggle-button big-button" role="button" tabindex="0">
-                        <div class="monthly-sales-toggle-icon"><i class="fas fa-calendar-day"></i></div>
+                    
+                    <div id="btnCurrentMonth" class="monthly-sales-toggle-button" role="button" tabindex="0">
+                        <div class="status-dot"></div>
+                        <div class="monthly-sales-toggle-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
                         <div class="monthly-sales-toggle-content">
-                        <div class="monthly-sales-toggle-label">Total Income for Month</div>
+                            <div class="monthly-sales-toggle-label">Monthly Revenue</div>
                             <div class="monthly-sales-toggle-amount" id="currentMonthAmount">$0</div>
-                            <div class="monthly-sales-toggle-profit" id="currentMonthProfit">Profit: $0 (0%)</div>
+                            <div class="monthly-sales-toggle-profit" id="currentMonthProfit">
+                                <span class="trend-indicator"></span>
+                                Total Save for Month: $0 (0%)
+                            </div>
+                            <div class="monthly-sales-toggle-subtitle">This Month's Progress</div>
+                        </div>
+                    </div>
+                    
+                    <div id="btnTodayRevenue" class="monthly-sales-toggle-button" role="button" tabindex="0">
+                        <div class="status-dot"></div>
+                        <div class="monthly-sales-toggle-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="monthly-sales-toggle-content">
+                            <div class="monthly-sales-toggle-label">Today's Revenue</div>
+                            <div class="monthly-sales-toggle-amount" id="todayRevenueAmount">$0</div>
+                            <div class="monthly-sales-toggle-profit" id="todayRevenueProfit">
+                                <span class="trend-indicator"></span>
+                                Total Save Today: $0 (0%)
+                            </div>
+                            <div class="monthly-sales-toggle-subtitle">Daily Performance</div>
                         </div>
                     </div>
                 </div>
@@ -33,24 +64,21 @@
 
         <!-- Unified Orders Management Widget -->
         <div class="widget todays-orders-widget">
-            <h2><i class="fas fa-list-alt"></i> Customer Orders</h2>
+            <div class="widget-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2><i class="fas fa-check-circle"></i> Completed Orders</h2>
+            </div>
             <div class="widget-content">
+
                 <div id="unified-orders-container" style="height: 100%; display: flex; flex-direction: column;">
                     <p style="text-align: center; padding: 20px;">Loading orders...</p>
+                </div>
+                <div id="orders-last-updated" style="font-size: 0.75em; color: #666; margin-top: 8px; text-align: right;">
+                    Last updated: <span id="orders-update-time">-</span>
                 </div>
             </div>
         </div>
 
-    <!-- Modal for displaying monthly sales details -->
-    <div id="monthlySalesDetailModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close-button" onclick="document.getElementById('monthlySalesDetailModal').style.display='none'">&times;</span>
-            <h3 id="salesDetailsTitle">Sales Details</h3>
-            <div id="salesDetailsContent">
-                <p>Loading sales details...</p>
-            </div>
-        </div>
-    </div>
+    <!-- Money Insight modal is now created dynamically by JavaScript -->
 
     <!-- Modal for displaying today's orders sale details -->
     <div id="todaysOrdersDetailModal" class="modal" style="display:none;">
@@ -84,7 +112,7 @@
 
     <!-- Inventory Management -->
     <div class="widget">
-    <h2>Product details</h2>
+    <h2>Products by Brand</h2>
     <div class="widget-content brand-panel-container" id="product-name-count-list">
         <!-- Product count by brand buttons will be rendered here -->
     </div>
@@ -100,7 +128,7 @@
 {% endblock %}
 
 {% block styles %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/monthly_sales_toggle.css') }}">
+<!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/monthly_sales_toggle.css') }}"> -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/staff_dashboard.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/inventory_widget.css') }}">
@@ -113,46 +141,122 @@
 
 </style>
 
+<!-- jsPDF library for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script src="{{ url_for('static', filename='js/staff_messages.js') }}"></script>
-<script src="{{ url_for('static', filename='js/monthly_sales_toggle.js') }}"></script>
+<script src="{{ url_for('static', filename='js/money_insight_widget.js') }}"></script>
 <script src="{{ url_for('static', filename='js/staff_reports.js') }}"></script>
 <script src="{{ url_for('static', filename='js/inventory_widget.js') }}"></script>
 <script src="{{ url_for('static', filename='js/staff_notifications.js') }}"></script>
 
 
 <script>
+// Set user role for JavaScript access
+window.userRole = '{{ session.get("role", "") }}';
+
 // Load unified orders table
 document.addEventListener('DOMContentLoaded', function() {
     loadUnifiedOrdersTable();
+    
+    // Auto-refresh orders every 2 minutes (120000 ms)
+    setInterval(function() {
+        console.log('Auto-refreshing orders...');
+        loadUnifiedOrdersTable();
+    }, 120000); // 2 minutes
 });
 
 function loadUnifiedOrdersTable() {
-    fetch('/api/staff/orders/unified')
-        .then(response => response.json())
+    console.log('Loading unified orders table...');
+
+    const endpoint = '/api/staff/orders/unified';
+    
+    fetch(endpoint)
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('🔍 DEBUG: Unified orders data:', data);
             if (data.success) {
+                console.log('🔍 DEBUG: Total orders received:', data.orders.length);
+                data.orders.forEach((order, index) => {
+                    console.log(`🔍 DEBUG: Order ${index}: ID ${order.id}, Type: ${order.type}, Status: ${order.status}`);
+                });
                 renderUnifiedOrdersTable(data.orders, data.summary);
+                
+                // Update the last updated time
+                const now = new Date();
+                document.getElementById('orders-update-time').textContent = now.toLocaleTimeString();
             } else {
                 console.error('Error loading unified orders:', data.error);
-                document.getElementById('unified-orders-container').innerHTML = '<p style="text-align: center; padding: 20px; color: red;">Error loading orders.</p>';
+                document.getElementById('unified-orders-container').innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <p style="color: red; margin-bottom: 10px;">⚠️ Error loading orders</p>
+                        <p style="color: #666; font-size: 0.9rem;">${data.error}</p>
+                        <button onclick="loadUnifiedOrdersTable()" style="margin-top: 10px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            🔄 Retry
+                        </button>
+                    </div>
+                `;
             }
         })
         .catch(error => {
             console.error('Error fetching unified orders:', error);
-            document.getElementById('unified-orders-container').innerHTML = '<p style="text-align: center; padding: 20px; color: red;">Error loading orders.</p>';
+            document.getElementById('unified-orders-container').innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <p style="color: red; margin-bottom: 10px;">⚠️ Failed to load orders</p>
+                    <p style="color: #666; font-size: 0.9rem;">${error.message}</p>
+                    <button onclick="loadUnifiedOrdersTable()" style="margin-top: 10px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        🔄 Retry
+                    </button>
+                </div>
+            `;
         });
 }
+
+
+
+
 
 function renderUnifiedOrdersTable(orders, summary) {
     const container = document.getElementById('unified-orders-container');
 
-    if (!orders || orders.length === 0) {
+    // Filter to show only regular orders
+    const filteredOrders = orders ? orders.filter(order => order.type === 'order') : [];
+
+    if (!filteredOrders || filteredOrders.length === 0) {
         container.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">No orders found.</p>';
         return;
     }
 
+    // Calculate summary for orders only
+    let ordersCount = 0;
+    let ordersValue = 0;
+
+    filteredOrders.forEach(order => {
+        ordersCount++;
+        ordersValue += order.amount || 0;
+    });
+
     let html = `
         <div style="padding: 15px; height: 100%; display: flex; flex-direction: column;">
+            <!-- Summary Section -->
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.2rem; font-weight: bold; color: #007bff;">${ordersCount}</div>
+                        <div style="font-size: 0.9rem; color: #666;">Orders</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.2rem; font-weight: bold; color: #28a745;">$${ordersValue.toFixed(2)}</div>
+                        <div style="font-size: 0.9rem; color: #666;">Total Value</div>
+                    </div>
+                </div>
+            </div>
             <div style="flex: 1; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; background: white; min-height: 0; max-height: 350px;">
                 <table style="width: 100%; border-collapse: collapse; border: 1px solid #aaa; font-weight: 400; font-size: 14px;">
                     <thead style="position: sticky; top: 0; background: white; z-index: 10;">
@@ -162,19 +266,22 @@ function renderUnifiedOrdersTable(orders, summary) {
                             <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Customer</th>
                             <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Details</th>
                             <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Amount</th>
-                            <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Status</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Payment Status</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Approval Status</th>
                             <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
     `;
 
-    orders.forEach(order => {
+    filteredOrders.forEach(order => {
         const typeBadge = getOrderTypeBadge(order.type);
-        const statusBadge = getUnifiedStatusBadge(order.status, order.type);
+        const mainStatusBadge = getMainStatusBadge(order.status, order.type);
         const actionButton = getUnifiedActionButton(order);
         const orderNumber = order.type === 'preorder' ? `#P${order.id}` : `#${order.id}`;
-        const amount = order.type === 'preorder' ? 'Pre-Order' : `$${order.amount.toFixed(2)}`;
+        const amount = order.type === 'preorder' ? 
+            `$${(order.amount || order.expected_value || 0).toFixed(2)}` : 
+            `$${order.amount.toFixed(2)}`;
 
         html += `
             <tr>
@@ -183,7 +290,8 @@ function renderUnifiedOrdersTable(orders, summary) {
                 <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">${order.customer_name}</td>
                 <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">${order.details}</td>
                 <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">${amount}</td>
-                <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">${statusBadge}</td>
+                <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">${mainStatusBadge}</td>
+                <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">${getApprovalStatusBadge(order)}</td>
                 <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">
                     ${actionButton}
                 </td>
@@ -209,16 +317,25 @@ function getOrderTypeBadge(type) {
     }
 }
 
-function getUnifiedStatusBadge(status, type) {
+function getUnifiedStatusBadge(status, type, order = null) {
     let statusColors = {};
 
     if (type === 'order') {
-        statusColors = {
-            'completed': '#28a745',
-            'pending': '#ffc107',
-            'processing': '#17a2b8',
-            'cancelled': '#dc3545'
-        };
+        // For orders, show approval status if available
+        if (order && order.approval_status) {
+            const approvalColors = {
+                'Pending Approval': '#ffc107',
+                'Approved': '#28a745',
+                'Rejected': '#dc3545'
+            };
+            const color = approvalColors[order.approval_status] || '#6c757d';
+            return `<span style="background-color: ${color}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">${order.approval_status}</span>`;
+        } else {
+            statusColors = {
+                'completed': '#28a745',
+                'cancelled': '#dc3545'
+            };
+        }
     } else {
         statusColors = {
             'pending': '#ffc107',
@@ -233,6 +350,46 @@ function getUnifiedStatusBadge(status, type) {
     return `<span style="background-color: ${color}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
 }
 
+function getMainStatusBadge(status, type) {
+    if (type === 'preorder') {
+        const statusColors = {
+            'confirmed': '#17a2b8',
+            'completed': '#28a745',
+            'cancelled': '#dc3545'
+        };
+        const color = statusColors[status] || '#6c757d';
+        return `<span style="background-color: ${color}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+    } else {
+        // For orders, show main status (Completed, Cancelled)
+        const statusColors = {
+            'completed': '#28a745',
+            'cancelled': '#dc3545'
+        };
+        const color = statusColors[status.toLowerCase()] || '#6c757d';
+        return `<span style="background-color: ${color}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+    }
+}
+
+function getApprovalStatusBadge(order) {
+    if (order.type === 'order' && order.approval_status) {
+        const approvalColors = {
+            'Pending Approval': '#ffc107',
+            'Approved': '#28a745',
+            'Rejected': '#dc3545'
+        };
+        const color = approvalColors[order.approval_status] || '#6c757d';
+        return `<span style="background-color: ${color}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">${order.approval_status}</span>`;
+    } else if (order.type === 'preorder') {
+        // For pre-orders, show a dash or "N/A"
+        return `<span style="color: #6c757d; font-style: italic;">N/A</span>`;
+    } else {
+        // For orders without approval status
+        return `<span style="color: #6c757d; font-style: italic;">N/A</span>`;
+    }
+}
+
+
+
 function getUnifiedActionButton(order) {
     if (order.type === 'order') {
         // Create a vertical button container like pre-orders
@@ -240,10 +397,17 @@ function getUnifiedActionButton(order) {
 
         buttons += `<button class="btn btn-sm btn-primary" onclick="showOrderDetails(${order.id})" style="background-color: #007bff; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
 
-        // Add cancel button ONLY for pending orders (not completed or cancelled)
-        if (order.status && order.status.toLowerCase() === 'pending') {
-            buttons += `<button class="btn btn-sm btn-danger" onclick="cancelOrder(${order.id})" style="background-color: #dc3545; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Cancel Order</button>`;
+        // Add approval controls for orders that need approval:
+        // - Not cancelled
+        // - Approval status is 'Pending Approval' (not already approved)
+        // - Status can be 'PENDING' OR 'COMPLETED' (since payment completion sets status to COMPLETED)
+        if (order.status && order.status !== 'CANCELLED' && 
+            order.approval_status === 'Pending Approval') {
+            buttons += `<button class="btn btn-sm btn-success" onclick="approveOrder(${order.id})" style="background-color: #28a745; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Confirm</button>`;
+            buttons += `<button class="btn btn-sm btn-danger" onclick="rejectOrder(${order.id})" style="background-color: #dc3545; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Reject</button>`;
         }
+
+
 
         buttons += `</div>`;
         return buttons;
@@ -253,24 +417,20 @@ function getUnifiedActionButton(order) {
         // Create a vertical button container
         buttons += `<div style="display: flex; flex-direction: column; gap: 3px; width: 100%;">`;
 
-        if (order.status === 'pending') {
-            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="background-color: #17a2b8; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
-            buttons += `<button class="btn btn-sm btn-success" onclick="confirmPreOrder(${order.id})" style="background-color: #28a745; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Confirm</button>`;
-            buttons += `<button class="btn btn-sm btn-danger" onclick="deletePreOrder(${order.id})" style="background-color: #dc3545; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Delete</button>`;
-        } else if (order.status === 'confirmed') {
+ if (order.status === 'confirmed') {
             // Always show Complete button for confirmed pre-orders (stock validation handled in backend)
-            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="background-color: #17a2b8; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
-            buttons += `<button class="btn btn-sm btn-primary" onclick="completePreOrder(${order.id})" style="background-color: #007bff; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Complete</button>`;
+            buttons += `<button class="btn btn-sm" onclick="showPreOrderDetails(${order.id})" style="background-color: #17a2b8; color: white; border: none; padding: 6px 12px; font-size: 0.9rem; border-radius: 4px;">View Details</button>`;
+            buttons += `<button class="btn btn-sm" onclick="completePreOrder(${order.id})" style="background-color: #28a745; color: white; border: none; padding: 6px 12px; font-size: 0.9rem; border-radius: 4px;">Complete</button>`;
         } else if (order.status === 'ready_for_pickup') {
             // Only show view details for ready_for_pickup (active status)
-            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="background-color: #17a2b8; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
+            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="padding: 6px 12px; font-size: 0.9rem;">View Details</button>`;
         } else if (order.status === 'completed') {
             // For completed pre-orders, only show view details (no delete)
-            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="background-color: #17a2b8; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
+            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="padding: 6px 12px; font-size: 0.9rem;">View Details</button>`;
         } else {
             // For all other statuses (cancelled, etc.), show view details + delete
-            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="background-color: #17a2b8; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">View Details</button>`;
-            buttons += `<button class="btn btn-sm btn-danger" onclick="deletePreOrder(${order.id})" style="background-color: #dc3545; color: white; border: none; width: 100%; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">Delete</button>`;
+            buttons += `<button class="btn btn-sm btn-info" onclick="showPreOrderDetails(${order.id})" style="padding: 6px 12px; font-size: 0.9rem;">View Details</button>`;
+            buttons += `<button class="btn btn-sm btn-danger" onclick="deletePreOrder(${order.id})" style="padding: 6px 12px; font-size: 0.9rem;">Delete</button>`;
         }
 
         buttons += `</div>`;
@@ -279,30 +439,7 @@ function getUnifiedActionButton(order) {
     }
 }
 
-async function confirmPreOrder(preorderId) {
-    const confirmed = await showConfirmation('Confirm Pre-Order', 'Are you sure you want to confirm this pre-order? The customer will be notified.');
-    if (confirmed) {
-        fetch(`/api/staff/preorders/${preorderId}/confirm`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showMessage('Pre-order confirmed successfully!', 'success');
-                loadUnifiedOrdersTable(); // Reload the unified table
-            } else {
-                showMessage('Error confirming pre-order: ' + data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showMessage('Error confirming pre-order', 'error');
-        });
-    }
-}
+
 
 async function deletePreOrder(preorderId) {
     const confirmed = await showDeleteConfirmation('Delete Pre-Order', 'Are you sure you want to permanently delete this pre-order? This action cannot be undone.');
@@ -423,7 +560,6 @@ function closePreOrderDetailsModal() {
 
 function getStatusColor(status) {
     const colors = {
-        'pending': '#ffc107',
         'confirmed': '#17a2b8',
         'ready': '#28a745',
         'completed': '#6c757d',
@@ -516,24 +652,14 @@ function showOrderDetailsModal(orderId) {
     document.getElementById('orderDetailsTitle').textContent = `Order #${orderId} Details`;
     document.getElementById('orderDetailsContent').innerHTML = 'Loading order details...';
 
-    // Fetch both order details and cancellation options
-    Promise.all([
-        fetch(`/api/orders/today_details_by_order/${orderId}`),
-        fetch(`/api/staff/orders/${orderId}/cancellation-options`).catch(err => {
-            console.log('Cancellation options API failed:', err);
-            return { json: () => ({ success: false, error: 'API not available' }) };
-        })
-    ])
-    .then(responses => {
-        console.log('API responses:', responses);
-        return Promise.all(responses.map(r => r.json()));
-    })
-    .then(([orderData, cancellationData]) => {
+    // Fetch order details
+    fetch(`/api/orders/today_details/${orderId}`)
+    .then(response => response.json())
+    .then(orderData => {
         console.log('Order data:', orderData);
-        console.log('Cancellation data:', cancellationData);
         if (orderData.success && orderData.products && orderData.products.length > 0) {
             let html = '<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">';
-            html += '<thead><tr style="background-color: #f8f9fa;"><th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Product Name</th><th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Quantity</th><th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Price</th><th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Original Price</th><th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Total</th><th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Actions</th></tr></thead>';
+            html += '<thead><tr style="background-color: #f8f9fa;"><th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Product Name</th><th style="border: 1px solid #ddd; padding: 12px; text-align: center;">Quantity</th><th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Price</th><th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Original Price</th><th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Total</th></tr></thead>';
             html += '<tbody>';
 
             let grandTotal = 0;
@@ -551,35 +677,7 @@ function showOrderDetailsModal(orderId) {
                     totalProfit += itemProfit;
                 }
 
-                // Debug: Log the cancellation data to see what we're getting
-                console.log('Cancellation data:', cancellationData);
-                console.log('Looking for product:', product.product_name);
 
-                // Find corresponding cancellation info by matching product name
-                let cancellationInfo = null;
-                if (cancellationData.success && cancellationData.items) {
-                    cancellationInfo = cancellationData.items.find(ci => ci.product_name === product.product_name);
-                    console.log('Found cancellation info:', cancellationInfo);
-                }
-
-                // Only show cancel buttons for pending orders, not completed orders
-                const canCancel = false; // Remove cancel buttons from completed order details
-
-                // Create a mock cancellation info if none found
-                if (!cancellationInfo) {
-                    cancellationInfo = {
-                        id: product.product_id || 1, // Use product_id or fallback
-                        available_to_cancel: product.quantity,
-                        can_cancel: true
-                    };
-                }
-
-                const cancelButton = canCancel ?
-                    `<button onclick="showPartialCancellationModal(${orderId}, ${cancellationInfo.id}, '${product.product_name.replace(/'/g, "\\'")}', ${cancellationInfo.available_to_cancel}, ${product.price})"
-                            style="background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">
-                        Cancel Item
-                    </button>` :
-                    '<span style="color: #6c757d; font-size: 11px;">N/A</span>';
 
                 html += `
                     <tr>
@@ -588,18 +686,17 @@ function showOrderDetailsModal(orderId) {
                         <td style="border: 1px solid #ddd; padding: 12px; text-align: right;">$${product.price.toFixed(2)}</td>
                         <td style="border: 1px solid #ddd; padding: 12px; text-align: right;">${originalPriceDisplay}</td>
                         <td style="border: 1px solid #ddd; padding: 12px; text-align: right;">$${totalPrice.toFixed(2)}</td>
-                        <td style="border: 1px solid #ddd; padding: 12px; text-align: center;">${cancelButton}</td>
                     </tr>
                 `;
             });
 
             html += `
                 <tr style="background-color: #f8f9fa; font-weight: bold;">
-                    <td colspan="5" style="border: 1px solid #ddd; padding: 12px; text-align: right;">Grand Total:</td>
+                    <td colspan="4" style="border: 1px solid #ddd; padding: 12px; text-align: right;">Grand Total:</td>
                     <td style="border: 1px solid #ddd; padding: 12px; text-align: right; color: #28a745;">$${grandTotal.toFixed(2)}</td>
                 </tr>
                 <tr style="background-color: #f8f9fa; font-weight: bold;">
-                    <td colspan="5" style="border: 1px solid #ddd; padding: 12px; text-align: right; color: ${totalProfit >= 0 ? '#28a745' : '#dc3545'};">Total Profit:</td>
+                    <td colspan="4" style="border: 1px solid #ddd; padding: 12px; text-align: right; color: ${totalProfit >= 0 ? '#28a745' : '#dc3545'};">Total Profit:</td>
                     <td style="border: 1px solid #ddd; padding: 12px; text-align: right; color: ${totalProfit >= 0 ? '#28a745' : '#dc3545'};">$${totalProfit.toFixed(2)}</td>
                 </tr>
             `;
@@ -679,16 +776,21 @@ function confirmCancellation(orderId) {
         })
     })
     .then(response => response.json())
-    .then(data => {
-        closeCancelModal();
-        if (data.success) {
-            // Show single success notification
-            showNotification('Order cancelled successfully! Customer has been notified.', 'success');
-            loadUnifiedOrdersTable(); // Refresh the orders list
-        } else {
-            showNotification('Error cancelling order: ' + data.error, 'error');
-        }
-    })
+            .then(data => {
+            closeCancelModal();
+            if (data.success) {
+                // Show single success notification
+                showNotification('Order cancelled successfully! Customer has been notified.', 'success');
+                loadUnifiedOrdersTable(); // Refresh the orders list
+                
+                // Refresh the Money Insight Widget dashboard to update totals
+                if (window.refreshMoneyInsightDashboard) {
+                    window.refreshMoneyInsightDashboard();
+                }
+            } else {
+                showNotification('Error cancelling order: ' + data.error, 'error');
+            }
+        })
     .catch(error => {
         closeCancelModal();
         console.error('Error:', error);
@@ -858,28 +960,38 @@ function submitPartialCancellation() {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            if (data.order_deleted) {
-                showNotification(`Successfully cancelled ${formData.cancel_quantity} item(s). Order completely removed. Refund: $${data.refund_amount.toFixed(2)}`, 'success');
-                closePartialCancellationModal();
-                // Close order details modal since order no longer exists
-                const orderModal = document.getElementById('orderDetailsModal');
-                if (orderModal) {
-                    orderModal.style.display = 'none';
+                    if (data.success) {
+                if (data.order_deleted) {
+                    showNotification(`Successfully cancelled ${formData.cancel_quantity} item(s). Order completely removed. Refund: $${data.refund_amount.toFixed(2)}`, 'success');
+                    closePartialCancellationModal();
+                    // Close order details modal since order no longer exists
+                    const orderModal = document.getElementById('orderDetailsModal');
+                    if (orderModal) {
+                        orderModal.style.display = 'none';
+                    }
+                    // Refresh the main dashboard orders table
+                    loadUnifiedOrdersTable();
+                    
+                    // Refresh the Money Insight Widget dashboard to update totals
+                    if (window.refreshMoneyInsightDashboard) {
+                        window.refreshMoneyInsightDashboard();
+                    }
+                } else {
+                    showNotification(`Successfully cancelled ${formData.cancel_quantity} item(s). Refund: $${data.refund_amount.toFixed(2)}`, 'success');
+                    closePartialCancellationModal();
+                    // Refresh the order details
+                    showOrderDetails(currentCancellationData.orderId);
+                    // Refresh the main dashboard orders table
+                    loadUnifiedOrdersTable();
+                    
+                    // Refresh the Money Insight Widget dashboard to update totals
+                    if (window.refreshMoneyInsightDashboard) {
+                        window.refreshMoneyInsightDashboard();
+                    }
                 }
-                // Refresh the main dashboard orders table
-                loadUnifiedOrdersTable();
             } else {
-                showNotification(`Successfully cancelled ${formData.cancel_quantity} item(s). Refund: $${data.refund_amount.toFixed(2)}`, 'success');
-                closePartialCancellationModal();
-                // Refresh the order details
-                showOrderDetails(currentCancellationData.orderId);
-                // Refresh the main dashboard orders table
-                loadUnifiedOrdersTable();
+                showNotification(`Error: ${data.error}`, 'error');
             }
-        } else {
-            showNotification(`Error: ${data.error}`, 'error');
-        }
     })
     .catch(error => {
         console.error('Error cancelling item:', error);
@@ -1166,6 +1278,285 @@ function showDeleteConfirmation(title, message) {
         };
         document.addEventListener('keydown', handleEscape);
     });
+}
+
+// Order Approval Functions
+async function approveOrder(orderId) {
+    const confirmed = await showConfirmation('Approve Order', `Are you sure you want to approve order #${orderId}? The customer will be notified.`);
+    if (confirmed) {
+        fetch(`/api/orders/${orderId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('Order approved successfully! Customer has been notified.', 'success');
+                loadUnifiedOrdersTable(); // Reload the unified table
+            } else {
+                showMessage('Error approving order: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error approving order', 'error');
+        });
+    }
+}
+
+async function rejectOrder(orderId) {
+    const reason = await showRejectModal(orderId);
+    if (!reason) {
+        return;
+    }
+
+    fetch(`/api/orders/${orderId}/reject`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            reason: reason,
+            notes: ''
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const refundAmount = data.refund_amount ? `$${data.refund_amount.toFixed(2)}` : '';
+            showMessage(`Order rejected and cancelled successfully! Customer notified about ${refundAmount} refund. Inventory restored.`, 'success');
+
+            // Remove the rejected order from the dashboard table immediately
+            const orderRow = document.querySelector(`tr[data-order-id="${orderId}"]`);
+            if (orderRow) {
+                orderRow.style.transition = 'opacity 0.3s ease';
+                orderRow.style.opacity = '0';
+                setTimeout(() => orderRow.remove(), 300);
+            }
+
+            // Reload the table after a short delay
+            setTimeout(() => {
+                loadUnifiedOrdersTable();
+            }, 500);
+        } else {
+            showMessage('Error rejecting order: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error rejecting order', 'error');
+    });
+}
+
+// Professional input modal for rejection reason (matching staff orders page)
+function showRejectModal(orderId) {
+    return new Promise((resolve) => {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'reject-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(2px);
+        `;
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 400px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: transform 0.2s ease-out;
+        `;
+
+        modal.innerHTML = `
+            <div style="padding: 24px 24px 16px 24px; text-align: center;">
+                <div style="color: #dc2626; font-size: 48px; margin-bottom: 16px;">▲</div>
+                <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #111827;">Reject Order #${orderId}</h3>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">Please provide a reason for rejecting this order. The customer will be notified.</p>
+            </div>
+            <div style="padding: 0 24px 16px 24px;">
+                <textarea id="rejectReason" placeholder="Enter rejection reason..." style="
+                    width: 100%;
+                    min-height: 80px;
+                    padding: 12px;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-family: inherit;
+                    resize: vertical;
+                    outline: none;
+                    transition: border-color 0.2s;
+                " onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+            </div>
+            <div style="padding: 16px 24px 24px 24px; display: flex; gap: 12px; justify-content: center;">
+                <button class="cancel-btn" style="
+                    background: #f3f4f6;
+                    color: #374151;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Cancel</button>
+                <button class="reject-btn" style="
+                    background: #dc2626;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Reject Order</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            modal.style.transform = 'scale(1)';
+        });
+
+        // Focus on textarea
+        const textarea = modal.querySelector('#rejectReason');
+        setTimeout(() => textarea.focus(), 100);
+
+        // Add hover effects
+        const cancelBtn = modal.querySelector('.cancel-btn');
+        const rejectBtn = modal.querySelector('.reject-btn');
+
+        cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.backgroundColor = '#e5e7eb';
+        });
+        cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.backgroundColor = '#f3f4f6';
+        });
+
+        rejectBtn.addEventListener('mouseenter', () => {
+            rejectBtn.style.backgroundColor = '#b91c1c';
+        });
+        rejectBtn.addEventListener('mouseleave', () => {
+            rejectBtn.style.backgroundColor = '#dc2626';
+        });
+
+        // Handle button clicks
+        const cleanup = () => {
+            modal.style.transform = 'scale(0.9)';
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+            }, 200);
+        };
+
+        cancelBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(null);
+        });
+
+        rejectBtn.addEventListener('click', () => {
+            const reason = textarea.value.trim();
+            if (!reason) {
+                textarea.style.borderColor = '#dc2626';
+                textarea.focus();
+                return;
+            }
+            cleanup();
+            resolve(reason);
+        });
+
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                cleanup();
+                resolve(null);
+            }
+        });
+
+        // Close on escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                resolve(null);
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    });
+}
+
+function showMessage(message, type = 'info') {
+    // Create message element
+    const messageDiv = document.createElement('div');
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        max-width: 300px;
+        word-wrap: break-word;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    `;
+
+    // Set background color based on type
+    switch (type) {
+        case 'success':
+            messageDiv.style.backgroundColor = '#28a745';
+            break;
+        case 'error':
+            messageDiv.style.backgroundColor = '#dc3545';
+            break;
+        case 'warning':
+            messageDiv.style.backgroundColor = '#ffc107';
+            messageDiv.style.color = '#212529';
+            break;
+        default:
+            messageDiv.style.backgroundColor = '#17a2b8';
+    }
+
+    messageDiv.textContent = message;
+    document.body.appendChild(messageDiv);
+
+    // Animate in
+    setTimeout(() => {
+        messageDiv.style.transform = 'translateX(0)';
+    }, 100);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        messageDiv.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.parentNode.removeChild(messageDiv);
+            }
+        }, 300);
+    }, 5000);
 }
 
 </script>

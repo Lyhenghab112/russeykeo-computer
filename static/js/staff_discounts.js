@@ -1,10 +1,28 @@
 // Staff Discount Management JavaScript
 
+// Get user role from session
+function getUserRole() {
+    return window.userRole || 'staff';
+}
+
 // Pagination variables
 let currentDiscountsPage = 1;
 const discountsPageSize = 10;
 
+// Initialize item counter
+let discountsItemCounter = null;
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize item counter
+    if (window.ItemCounter) {
+        discountsItemCounter = new ItemCounter('discounts-container', {
+            itemName: 'discounts',
+            itemNameSingular: 'discount',
+            position: 'bottom',
+            className: 'item-counter theme-warning'
+        });
+    }
+
     // Initialize the discount management interface
     initializeDiscountManagement();
 
@@ -34,6 +52,11 @@ function initializeDiscountManagement() {
             // Add active class to clicked tab and corresponding content
             this.classList.add('active');
             document.getElementById(`modal-${targetTab}-tab`).classList.add('active');
+
+            // Load volume discount rules when volume tab is activated
+            if (targetTab === 'volume') {
+                loadVolumeDiscountRules();
+            }
         });
     });
 }
@@ -66,6 +89,15 @@ function setupEventListeners() {
             applyModalBrandDiscount();
         });
     }
+
+    // Volume discount form
+    const volumeDiscountForm = document.getElementById('volume-discount-form');
+    if (volumeDiscountForm) {
+        volumeDiscountForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveVolumeDiscountRule();
+        });
+    }
 }
 
 async function loadCurrentDiscounts(page = currentDiscountsPage) {
@@ -74,44 +106,71 @@ async function loadCurrentDiscounts(page = currentDiscountsPage) {
         const response = await fetch(`/api/staff/discounts/products?page=${currentDiscountsPage}&page_size=${discountsPageSize}`);
         const data = await response.json();
 
-        console.log('API Response:', data); // Debug log
-
         if (data.success) {
-            console.log('Products:', data.products.length, 'Pagination:', data.pagination); // Debug log
-            console.log('Total count from API:', data.pagination?.total_count, 'Page size:', discountsPageSize); // Debug log
             displayCurrentDiscounts(data.products, data.pagination);
+            updateDiscountsItemCounter(data.pagination);
         } else {
             showMessage('Error loading current discounts: ' + data.error, 'error');
+            updateDiscountsItemCounter({ total_count: 0, page: 1, total_pages: 0 });
         }
     } catch (error) {
         console.error('Error loading current discounts:', error);
         showMessage('Failed to load current discounts', 'error');
+        updateDiscountsItemCounter({ total_count: 0, page: 1, total_pages: 0 });
     }
 }
 
-function displayCurrentDiscounts(products, pagination = null) {
-    console.log('displayCurrentDiscounts called with:', products.length, 'products, pagination:', pagination); // Debug log
 
+
+// Update discounts item counter
+function updateDiscountsItemCounter(pagination) {
+    if (!discountsItemCounter) return;
+
+    const totalItems = pagination.total_count || 0;
+    const currentPageNum = pagination.page || currentDiscountsPage;
+    const totalPages = pagination.total_pages || Math.ceil(totalItems / discountsPageSize);
+    const startItem = totalItems === 0 ? 0 : ((currentPageNum - 1) * discountsPageSize) + 1;
+    const endItem = Math.min(currentPageNum * discountsPageSize, totalItems);
+
+    discountsItemCounter.update({
+        totalItems: totalItems,
+        currentPage: currentPageNum,
+        pageSize: discountsPageSize,
+        totalPages: totalPages,
+        startItem: startItem,
+        endItem: endItem
+    });
+}
+
+function displayCurrentDiscounts(products, pagination = null) {
     const container = document.getElementById('current-discounts-table');
     const mobileContainer = document.getElementById('mobile-discounts-list');
     const removeAllBtn = document.getElementById('remove-all-discounts-btn');
     const paginationContainer = document.getElementById('discounts-pagination');
 
+    // Button visibility logic
+
     // Store current data for responsive re-rendering
     window.currentDiscountsData = { products, pagination };
 
-    console.log('Pagination container found:', !!paginationContainer); // Debug log
+
 
     if (products.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No products currently on discount</p>';
         if (mobileContainer) mobileContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No products currently on discount</p>';
-        removeAllBtn.style.display = 'none';
+        if (removeAllBtn) {
+            removeAllBtn.style.display = 'none';
+        }
         paginationContainer.innerHTML = '';
         return;
     }
 
-    // Show the remove all button when there are discounts
-    removeAllBtn.style.display = 'inline-flex';
+    // Show the remove all button when there are discounts (only if it exists and user has permission)
+            if (removeAllBtn && getUserRole() !== 'staff') {
+            removeAllBtn.style.display = 'inline-flex';
+        } else if (removeAllBtn) {
+            removeAllBtn.style.display = 'none';
+        }
 
     // Desktop table
     let html = `
@@ -120,8 +179,9 @@ function displayCurrentDiscounts(products, pagination = null) {
                 <tr>
                     <th>Product Name</th>
                     <th>Category</th>
-                    <th>Original Price</th>
-                    <th>Sale Price</th>
+                    <th>Supplier Cost</th>
+                    <th>Selling Price Before Discount</th>
+                    <th>Discounted Price</th>
                     <th>Discount</th>
                     <th>Savings</th>
                     <th>Stock</th>
@@ -136,15 +196,18 @@ function displayCurrentDiscounts(products, pagination = null) {
             <tr>
                 <td><strong>${product.name}</strong></td>
                 <td>${product.category_name || 'N/A'}</td>
-                <td>$${parseFloat(product.original_price).toFixed(2)}</td>
+                <td>$${parseFloat(product.supplier_cost || product.original_price).toFixed(2)}</td>
+                <td>$${parseFloat(product.selling_price_before_discount || product.original_price).toFixed(2)}</td>
                 <td><strong>$${parseFloat(product.price).toFixed(2)}</strong></td>
                 <td><span class="discount-badge">${product.discount_percentage}% OFF</span></td>
                 <td><span class="savings-amount">$${parseFloat(product.savings_amount).toFixed(2)}</span></td>
                 <td>${product.stock}</td>
                 <td>
+                    ${getUserRole() !== 'staff' ? `
                     <button class="remove-discount-btn" onclick="removeDiscount(${product.id})">
                         <i class="fas fa-times"></i> Remove
                     </button>
+                    ` : '<span class="text-muted">View Only</span>'}
                 </td>
             </tr>
         `;
@@ -166,17 +229,20 @@ function displayCurrentDiscounts(products, pagination = null) {
                     </div>
                     <div class="discount-info">
                         <div>
-                            <p><strong>Original:</strong> $${parseFloat(product.original_price).toFixed(2)}</p>
-                            <p><strong>Sale Price:</strong> $${parseFloat(product.price).toFixed(2)}</p>
+                            <p><strong>Supplier Cost:</strong> $${parseFloat(product.supplier_cost || product.original_price).toFixed(2)}</p>
+                            <p><strong>Selling Price:</strong> $${parseFloat(product.selling_price_before_discount || product.original_price).toFixed(2)}</p>
+                            <p><strong>Discounted Price:</strong> $${parseFloat(product.price).toFixed(2)}</p>
                             <p><strong>Savings:</strong> <span class="savings-amount">$${parseFloat(product.savings_amount).toFixed(2)}</span></p>
                         </div>
                         <span class="discount-badge">${product.discount_percentage}% OFF</span>
                     </div>
+                    ${getUserRole() !== 'staff' ? `
                     <div class="action-buttons">
                         <button class="btn btn-sm btn-danger remove-discount-btn" onclick="removeDiscount(${product.id})">
                             <i class="fas fa-times"></i> Remove
                         </button>
                     </div>
+                    ` : '<div class="text-muted text-center mt-2">View Only</div>'}
                 </div>
             `;
         });
@@ -184,30 +250,21 @@ function displayCurrentDiscounts(products, pagination = null) {
     }
 
     // Render pagination if pagination data is available
-    console.log('Checking pagination:', pagination); // Debug log
     if (pagination) {
-        console.log('Calling renderDiscountsPagination with total_count:', pagination.total_count, 'currentPage:', currentDiscountsPage); // Debug log
         renderDiscountsPagination(pagination.total_count, currentDiscountsPage);
     } else {
-        console.log('No pagination data provided'); // Debug log
         paginationContainer.innerHTML = '';
     }
 }
 
 // Render pagination for discounts table
 function renderDiscountsPagination(totalCount, currentPage) {
-    console.log('renderDiscountsPagination called with totalCount:', totalCount, 'currentPage:', currentPage, 'pageSize:', discountsPageSize); // Debug log
-
     const paginationContainer = document.getElementById('discounts-pagination');
     const totalPages = Math.ceil(totalCount / discountsPageSize);
-
-    console.log('Total pages calculated:', totalPages, 'Container found:', !!paginationContainer); // Debug log
-    console.log('Math.ceil calculation:', totalCount, '/', discountsPageSize, '=', totalPages); // Debug log
 
     paginationContainer.innerHTML = '';
 
     if (totalPages <= 1) {
-        console.log('Not enough pages for pagination, totalPages:', totalPages); // Debug log
         return;
     }
 
@@ -266,39 +323,7 @@ function renderDiscountsPagination(totalCount, currentPage) {
     }
 }
 
-async function loadProductsForSelection() {
-    try {
-        const response = await fetch('/api/staff/discounts/products-list');
-        const data = await response.json();
-        
-        if (data.success) {
-            populateProductDropdown(data.products);
-        } else {
-            showMessage('Error loading products: ' + data.error, 'error');
-        }
-    } catch (error) {
-        console.error('Error loading products:', error);
-        showMessage('Failed to load products', 'error');
-    }
-}
 
-function populateProductDropdown(products) {
-    const select = document.getElementById('product-select');
-    select.innerHTML = '<option value="">Choose a product...</option>';
-    
-    products.forEach(product => {
-        const hasDiscount = product.original_price && product.price < product.original_price;
-        const discountText = hasDiscount ? ' (Currently on discount)' : '';
-        const option = document.createElement('option');
-        option.value = product.id;
-        option.textContent = `${product.name} - $${parseFloat(product.price).toFixed(2)}${discountText}`;
-        if (hasDiscount) {
-            option.style.color = '#e67e22';
-            option.style.fontWeight = 'bold';
-        }
-        select.appendChild(option);
-    });
-}
 
 async function applySingleDiscount() {
     const form = document.getElementById('single-discount-form');
@@ -329,7 +354,6 @@ async function applySingleDiscount() {
             showMessage(result.message, 'success');
             form.reset();
             loadCurrentDiscounts();
-            loadProductsForSelection(); // Refresh to show updated status
         } else {
             showMessage('Error: ' + result.error, 'error');
         }
@@ -376,7 +400,6 @@ async function applyCategoryDiscount() {
             showMessage(result.message, 'success');
             form.reset();
             loadCurrentDiscounts();
-            loadProductsForSelection();
         } else {
             showMessage('Error: ' + result.error, 'error');
         }
@@ -397,6 +420,11 @@ async function applyBrandDiscount() {
     
     if (!data.brand_name || !data.discount_percentage) {
         showMessage('Please select a brand and enter a discount percentage', 'error');
+        return;
+    }
+    
+    if (data.discount_percentage < 1 || data.discount_percentage > 50) {
+        showMessage('Discount percentage must be between 1% and 50%', 'error');
         return;
     }
     
@@ -422,7 +450,6 @@ async function applyBrandDiscount() {
             showMessage(result.message, 'success');
             form.reset();
             loadCurrentDiscounts();
-            loadProductsForSelection();
         } else {
             showMessage('Error: ' + result.error, 'error');
         }
@@ -433,7 +460,7 @@ async function applyBrandDiscount() {
 }
 
 async function removeDiscount(productId) {
-    const confirmed = await showConfirmation('Remove discount from this product?');
+    const confirmed = await showConfirmation('Remove discount from this product? This will restore the original selling price.');
     if (!confirmed) return;
     
     try {
@@ -449,10 +476,23 @@ async function removeDiscount(productId) {
         
         if (result.success) {
             showMessage(result.message, 'success');
-            loadCurrentDiscounts();
-            loadProductsForSelection();
+            // Auto-refresh the list to show the updated state
+            try {
+                loadCurrentDiscounts();
+            } catch (refreshError) {
+                console.warn('Auto-refresh failed, but discount was removed successfully:', refreshError);
+                // Manual refresh button is available if needed
+            }
         } else {
             showMessage('Error: ' + result.error, 'error');
+            // Even if there's an error, try to refresh to show current state
+            setTimeout(() => {
+                try {
+                    loadCurrentDiscounts();
+                } catch (refreshError) {
+                    console.warn('Delayed refresh failed:', refreshError);
+                }
+            }, 1000);
         }
     } catch (error) {
         console.error('Error removing discount:', error);
@@ -518,12 +558,15 @@ async function applyQuickDiscount(percentage) {
     
     showMessage(`${percentage}% discount applied to all products!`, 'success');
     loadCurrentDiscounts();
-    loadProductsForSelection();
 }
 
 // Modal Control Functions
 function openDiscountModal() {
     const modal = document.getElementById('discount-modal');
+    if (!modal) {
+        console.warn('Discount modal not found - user may not have permission to access discount management');
+        return;
+    }
     modal.style.display = 'flex';
 
     // Load products for modal dropdown
@@ -535,6 +578,8 @@ function openDiscountModal() {
 
 function closeDiscountModal() {
     const modal = document.getElementById('discount-modal');
+    if (!modal) return;
+
     modal.style.display = 'none';
 
     // Restore body scroll
@@ -599,6 +644,7 @@ async function applySingleDiscountLogic(productId, discountPercentage) {
             const form = document.getElementById('modal-single-discount-form');
             if (form) form.reset();
 
+            // Refresh the discounts list to show the new discount
             loadCurrentDiscounts();
             closeDiscountModal();
         } else {
@@ -733,10 +779,10 @@ async function applyModalBrandDiscount() {
         return;
     }
 
-    if (data.discount_percentage < 1 || data.discount_percentage > 40) {
-        showMessage('Discount percentage must be between 1% and 40%', 'error');
-        return;
-    }
+            if (data.discount_percentage < 1 || data.discount_percentage > 50) {
+            showMessage('Discount percentage must be between 1% and 50%', 'error');
+            return;
+        }
 
     try {
         const response = await fetch('/api/staff/discounts/apply-brand', {
@@ -1468,45 +1514,249 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// Volume Discount Management Functions
+async function loadVolumeDiscountRules() {
+    try {
+        console.log('Loading volume discount rules...');
+        const response = await fetch('/api/staff/volume-discounts');
+        const data = await response.json();
+        console.log('Volume discount rules response:', data);
+
+        if (data.success) {
+            console.log(`Found ${data.rules.length} active volume discount rules:`, data.rules);
+            renderVolumeDiscountRules(data.rules);
+        } else {
+            console.error('Failed to load volume discount rules:', data.error);
+            document.getElementById('volume-rules-container').innerHTML =
+                '<p style="color: red;">Error loading volume discount rules.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading volume discount rules:', error);
+        document.getElementById('volume-rules-container').innerHTML =
+            '<p style="color: red;">Error loading volume discount rules.</p>';
+    }
+}
+
+function renderVolumeDiscountRules(rules) {
+    const container = document.getElementById('volume-rules-container');
+
+    if (!rules || rules.length === 0) {
+        container.innerHTML = '<p>No volume discount rules found. <a href="#" onclick="openAddVolumeRuleModal()">Add your first rule</a></p>';
+        return;
+    }
+
+    let html = '<div class="volume-rules-list">';
+
+    rules.forEach(rule => {
+        html += `
+            <div class="volume-rule-card" data-rule-id="${rule.id}">
+                <div class="rule-header">
+                    <div class="rule-info">
+                        <h5>${rule.name}</h5>
+                        <p class="rule-description">${rule.description || 'No description'}</p>
+                    </div>
+                    <div class="rule-actions">
+                        <button class="btn btn-sm btn-danger" onclick="deleteVolumeRule(${rule.id}, '${rule.name}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+                <div class="rule-details">
+                    <div class="rule-detail">
+                        <span class="detail-label">Minimum Amount:</span>
+                        <span class="detail-value">$${rule.minimum_amount.toFixed(2)}</span>
+                    </div>
+                    <div class="rule-detail">
+                        <span class="detail-label">Discount:</span>
+                        <span class="detail-value">${rule.discount_percentage}%</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// Add new volume rule modal (add-only, no editing)
+window.openAddVolumeRuleModal = function openAddVolumeRuleModal() {
+    document.getElementById('volume-discount-form').reset();
+    document.getElementById('volume-discount-modal').style.display = 'flex';
+    
+    // Clear validation states
+    const inputGroups = document.querySelectorAll('#volume-discount-modal .modern-input-group');
+    inputGroups.forEach(group => {
+        group.classList.remove('valid', 'error', 'has-value');
+        const input = group.querySelector('.modern-input, .modern-textarea');
+        if (input) {
+            input.classList.remove('has-value');
+        }
+    });
+}
+
+// Close volume discount modal
+window.closeVolumeDiscountModal = function closeVolumeDiscountModal() {
+    document.getElementById('volume-discount-modal').style.display = 'none';
+    document.getElementById('volume-discount-form').reset();
+    
+    // Clear validation states
+    const inputGroups = document.querySelectorAll('#volume-discount-modal .modern-input-group');
+    inputGroups.forEach(group => {
+        group.classList.remove('valid', 'error', 'has-value');
+        const input = group.querySelector('.modern-input, .modern-textarea');
+        if (input) {
+            input.classList.remove('has-value');
+        }
+    });
+}
+
+
+
+
+
+async function saveVolumeDiscountRule() {
+    const formData = new FormData(document.getElementById('volume-discount-form'));
+
+    const data = {
+        name: formData.get('name'),
+        minimum_amount: parseFloat(formData.get('minimum_amount')),
+        discount_percentage: parseFloat(formData.get('discount_percentage')),
+        description: formData.get('description')
+    };
+
+    try {
+        const response = await fetch('/api/staff/volume-discounts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showMessage(result.message, 'success');
+            closeVolumeDiscountModal();
+            loadVolumeDiscountRules();
+        } else {
+            showMessage('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error saving volume discount rule:', error);
+        showMessage('Error saving volume discount rule', 'error');
+    }
+}
+
+
+
+// Make sure function is globally accessible
+window.deleteVolumeRule = async function deleteVolumeRule(ruleId, ruleName) {
+    console.log(`Attempting to delete volume discount rule: ID=${ruleId}, Name="${ruleName}"`);
+    
+    const confirmed = await showConfirmation(`Are you sure you want to delete the volume discount rule "${ruleName}"?`);
+    if (!confirmed) {
+        console.log('Delete operation cancelled by user');
+        return;
+    }
+
+    try {
+        console.log(`Sending DELETE request to /api/staff/volume-discounts/${ruleId}`);
+        
+        const response = await fetch(`/api/staff/volume-discounts/${ruleId}`, {
+            method: 'DELETE'
+        });
+
+        console.log(`Response status: ${response.status}`);
+        const result = await response.json();
+        console.log('Response result:', result);
+
+        if (result.success) {
+            showMessage(result.message, 'success');
+            console.log('Rule deleted successfully, reloading volume discount rules...');
+            
+            // Add a small delay to ensure the database transaction is committed
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            try {
+                await loadVolumeDiscountRules();
+                console.log('Volume discount rules reloaded successfully');
+            } catch (reloadError) {
+                console.error('Error reloading volume discount rules:', reloadError);
+                showMessage('Rule deleted but failed to refresh the list', 'warning');
+            }
+        } else {
+            showMessage('Error: ' + result.error, 'error');
+            console.error('Delete failed:', result.error);
+        }
+    } catch (error) {
+        console.error('Error deleting volume discount rule:', error);
+        showMessage('Error deleting volume discount rule', 'error');
+    }
+}
+
+
+
 // Close modal with Escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeDiscountModal();
+        closeVolumeDiscountModal();
+    }
+});
+
+// Close volume discount modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    const volumeModal = document.getElementById('volume-discount-modal');
+    if (volumeModal) {
+        volumeModal.addEventListener('click', function(e) {
+            if (e.target === volumeModal) {
+                closeVolumeDiscountModal();
+            }
+        });
     }
 });
 
 async function clearAllDiscounts() {
     const confirmed = await showConfirmation(
-        'Remove ALL discounts and restore original prices? This action cannot be undone.'
+        'Remove ALL discounts? This will restore all products to their original selling prices. This action cannot be undone.'
     );
     
     if (!confirmed) return;
     
     try {
-        // Get all discounted products first
-        const response = await fetch('/api/staff/discounts/products');
-        const data = await response.json();
+        console.log('Starting clearAllDiscounts function...');
+        showMessage('Removing all discounts...', 'success');
         
-        if (data.success && data.products.length > 0) {
-            showMessage('Removing all discounts...', 'success');
-            
-            // Remove discount from each product
-            for (const product of data.products) {
-                await fetch('/api/staff/discounts/remove', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ product_id: product.id })
-                });
+        // Use the new efficient endpoint that removes all discounts at once
+        console.log('Calling /api/staff/discounts/remove-all endpoint...');
+        const response = await fetch('/api/staff/discounts/remove-all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
             }
-            
-            showMessage('All discounts have been removed!', 'success');
-            loadCurrentDiscounts();
-            loadProductsForSelection();
+        });
+        
+        console.log('Response status:', response.status);
+        const result = await response.json();
+        console.log('Response data:', result);
+        
+        if (result.success) {
+            if (result.count > 0) {
+                showMessage(`Successfully removed discounts from ${result.count} products!`, 'success');
+                console.log(`Successfully removed discounts from ${result.count} products`);
+            } else {
+                showMessage('No discounts were removed', 'info');
+                console.log('No discounts were removed');
+            }
         } else {
-            showMessage('No discounts to remove', 'error');
+            showMessage('Error: ' + result.error, 'error');
+            console.error('API returned error:', result.error);
         }
+        
+        console.log('Reloading current discounts...');
+        loadCurrentDiscounts();
     } catch (error) {
         console.error('Error clearing all discounts:', error);
         showMessage('Failed to clear all discounts', 'error');

@@ -13,6 +13,7 @@
             <button id="new-sale-btn" class="btn btn-success">
                 <i class="fas fa-plus"></i> New Sale
             </button>
+
         </div>
     </div>
 
@@ -25,9 +26,50 @@
                 </div>
                 <div class="quick-filters">
                     <button class="filter-btn active" data-category="all">All Products</button>
+                    <button class="filter-btn discount-filter" data-category="discounted">💰 On Sale</button>
                     <button class="filter-btn" data-category="laptops">Laptops</button>
+                    <button class="filter-btn" data-category="desktops">Desktops</button>
                     <button class="filter-btn" data-category="accessories">Accessories</button>
-                    <button class="filter-btn" data-category="components">Components</button>
+                </div>
+                
+                <!-- Brand Navigation Section -->
+                <div class="brand-navigation">
+                    <div class="brand-header">
+                        <h4>Popular Brands</h4>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearBrandFilter()">
+                            <i class="fas fa-times"></i> Clear Filter
+                        </button>
+                    </div>
+                    <div class="brand-buttons">
+                        <div class="brand-btn" data-brand="msi">
+                            <img src="/static/icons/msi.png" alt="MSI" class="brand-icon">
+                            <span>MSI</span>
+                        </div>
+                        <div class="brand-btn" data-brand="asus">
+                            <img src="/static/icons/ASUS.png" alt="ASUS" class="brand-icon">
+                            <span>ASUS</span>
+                        </div>
+                        <div class="brand-btn" data-brand="lenovo">
+                            <img src="/static/icons/Lanovo.png" alt="Lenovo" class="brand-icon">
+                            <span>Lenovo</span>
+                        </div>
+                        <div class="brand-btn" data-brand="acer">
+                            <img src="/static/icons/Acer.png" alt="Acer" class="brand-icon">
+                            <span>Acer</span>
+                        </div>
+                        <div class="brand-btn" data-brand="dell">
+                            <img src="/static/icons/Dell.png" alt="Dell" class="brand-icon">
+                            <span>Dell</span>
+                        </div>
+                        <div class="brand-btn" data-brand="razer">
+                            <img src="/static/icons/Razer.png" alt="Razer" class="brand-icon">
+                            <span>Razer</span>
+                        </div>
+                        <div class="brand-btn" data-brand="hp">
+                            <img src="/static/icons/HP.png" alt="HP" class="brand-icon">
+                            <span>HP</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -73,16 +115,18 @@
                 </div>
             </div>
 
-            <!-- Customer Information -->
+            <!-- Customer Information Summary -->
             <div class="customer-section" id="customer-section" style="display: none;">
-                <h4><i class="fas fa-user"></i> Customer Information (Optional)</h4>
-                <div class="customer-form">
-                    <div class="form-row">
-                        <input type="text" id="customer-name" placeholder="Customer Name" class="form-control">
+                <h4><i class="fas fa-user"></i> Customer Information</h4>
+                <div class="customer-summary" id="customer-summary">
+                    <div class="customer-info-display">
+                        <span class="customer-name-display">Walk-in Customer</span>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="edit-customer-btn">
+                            <i class="fas fa-edit"></i> Add/Edit Info
+                        </button>
                     </div>
-                    <div class="form-row">
-                        <input type="email" id="customer-email" placeholder="Email (optional)" class="form-control">
-                        <input type="tel" id="customer-phone" placeholder="Phone (optional)" class="form-control">
+                    <div class="customer-details" id="customer-details" style="display: none;">
+                        <!-- Customer details will be shown here -->
                     </div>
                 </div>
             </div>
@@ -158,8 +202,89 @@
                 <button type="button" id="print-invoice-btn" class="btn btn-primary">
                     <i class="fas fa-print"></i> Print Invoice
                 </button>
-                <button type="button" id="email-invoice-btn" class="btn btn-info">
-                    <i class="fas fa-envelope"></i> Email Invoice
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Information Modal -->
+<div class="modal fade" id="customer-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus"></i> Customer Information
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Optional:</strong> You can skip this step for anonymous walk-in customers, or add customer details for better tracking and future reference.
+                </div>
+
+                <form id="customer-form">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modal-first-name" class="form-label">
+                                    <i class="fas fa-user"></i> First Name
+                                </label>
+                                <input type="text" class="form-control" id="modal-first-name" placeholder="Enter first name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modal-last-name" class="form-label">
+                                    <i class="fas fa-user"></i> Last Name
+                                </label>
+                                <input type="text" class="form-control" id="modal-last-name" placeholder="Enter last name">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modal-phone" class="form-label">
+                                    <i class="fas fa-phone"></i> Phone Number
+                                </label>
+                                <input type="tel" class="form-control" id="modal-phone" placeholder="Enter phone number">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modal-email" class="form-label">
+                                    <i class="fas fa-envelope"></i> Email Address
+                                </label>
+                                <input type="email" class="form-control" id="modal-email" placeholder="Enter email address">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modal-address" class="form-label">
+                            <i class="fas fa-map-marker-alt"></i> Address
+                        </label>
+                        <textarea class="form-control" id="modal-address" rows="3" placeholder="Enter full address (optional)"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="save-customer">
+                            <label class="form-check-label" for="save-customer">
+                                <i class="fas fa-save"></i> Save customer information for future orders
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="skip-customer-btn">
+                    <i class="fas fa-forward"></i> Skip (Anonymous Customer)
+                </button>
+                <button type="button" class="btn btn-primary" id="save-customer-btn">
+                    <i class="fas fa-check"></i> Save & Continue
                 </button>
             </div>
         </div>
@@ -192,14 +317,76 @@
                 <button type="button" class="btn btn-primary" id="view-invoice-btn">
                     <i class="fas fa-receipt"></i> View Invoice
                 </button>
+                <button type="button" class="btn btn-secondary" id="continue-shopping-btn">
+                    <i class="fas fa-shopping-bag"></i> Continue Shopping
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Notification Container -->
-<div id="notification-container" class="notification-container"></div>
+
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/walk_in_sales.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sweet-alert.css') }}">
+<script src="{{ url_for('static', filename='js/sweet-alert.js') }}"></script>
 <script src="{{ url_for('static', filename='js/walk_in_sales.js') }}"></script>
+<script src="{{ url_for('static', filename='js/walk_in_sales_brand_navigation.js') }}"></script>
+
+<script>
+function showMessage(message, type = 'info') {
+    // Create message element
+    const messageDiv = document.createElement('div');
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        max-width: 300px;
+        word-wrap: break-word;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    `;
+
+    // Set background color based on type
+    switch (type) {
+        case 'success':
+            messageDiv.style.backgroundColor = '#28a745';
+            break;
+        case 'error':
+            messageDiv.style.backgroundColor = '#dc3545';
+            break;
+        case 'warning':
+            messageDiv.style.backgroundColor = '#ffc107';
+            messageDiv.style.color = '#212529';
+            break;
+        default:
+            messageDiv.style.backgroundColor = '#17a2b8';
+    }
+
+    messageDiv.textContent = message;
+    document.body.appendChild(messageDiv);
+
+    // Animate in
+    setTimeout(() => {
+        messageDiv.style.transform = 'translateX(0)';
+    }, 100);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        messageDiv.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.parentNode.removeChild(messageDiv);
+            }
+        }, 300);
+    }, 5000);
+}
+</script>
+
 {% endblock %}

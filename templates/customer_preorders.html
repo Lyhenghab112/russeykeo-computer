@@ -6,6 +6,7 @@
     <title>My Pre-Orders - Computer Shop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </script>
     <style>
         * {
@@ -95,6 +96,8 @@
             color: white;
             font-size: 16px;
             transition: background-color 0.3s;
+            text-align: left;
+            padding-left: 10px;
         }
 
         nav ul li .dropdown li a:hover, nav ul li .dropdown li a:focus {
@@ -374,91 +377,210 @@
             pointer-events: auto;
             border: 1px solid #e67e22;
         }
+
+        /* Logo spacing styles */
+        .top-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .logo-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            height: 40px;
+            width: auto;
+            margin-right: 15px;
+        }
+
+        .site-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: white;
+        }
+
+        /* Hide pre-orders specific elements */
+        .hide-preorders-section {
+            display: none !important;
+        }
+        
+        /* Hide elements containing "My Pre-Orders" text */
+        h2:contains("My Pre-Orders"),
+        .d-flex:has(h2:contains("My Pre-Orders")) {
+            display: none !important;
+        }
+        
+        /* Fallback - hide by targeting the specific structure */
+        .container .col-12 .d-flex.justify-content-between.align-items-center.mb-4:first-child {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-    <header>
-        <div class="top-bar">
-            <span>COMPUTER SHOP</span>
-            <nav>
-                <ul>
-                    <li><a href="{{ url_for('show_dashboard') }}">Home</a></li>
-                   
-                    <li><a href="#">Categories</a>
-                        <ul class="dropdown">
-                            <li><a href="/products/category/multi/1,5">Laptops</a></li>
-                            <li><a href="/products/category/2">Desktops</a></li>
-                            <li><a href="/products/category/3">Accessories</a></li>
-                        </ul>
-                    </li>
-                   <li><a href="#">Products</a>
-                        <ul class="dropdown">
-                            <li><a href="/products/brand/dell">Dell</a></li>
-                            <li><a href="/products/brand/hp">HP</a></li>
-                            <li><a href="/products/brand/lenovo">Lenovo</a></li>
-                            <li><a href="/products/brand/asus">Asus</a></li>
-                            <li><a href="/products/brand/acer">Acer</a></li>
-                            <li><a href="/products/brand/razer">Razer</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="#">About Company</a>
-                        <ul class="dropdown">
-                            <li><a href="{{ url_for('about') }}">About Us</a></li>
-                            <li><a href="{{ url_for('services') }}">Our Services</a></li>
-                            <li><a href="{{ url_for('privacy') }}">Privacy Policy</a></li>
-                            
-                        </ul>
-                    </li>
-                     <li><a href="{{ url_for('cart') }}">My Cart</a></li>
-                     {% if not session.username %}
-                     <li><a href="{{ url_for('auth.register') }}">Create Account</a></li>
-                     {% endif %}
-                    {% if session.username %}
-                    <li><a href="{{ url_for('customer_preorders') }}" class="active-nav">My Pre-Orders</a></li>
-                    <li><a href="#" onclick="showNotifications()" id="notifications-link">Notifications <span id="notification-badge" class="notification-badge" style="display: none;">0</span></a></li>
-                    {% endif %}
-                    <!-- <li><a href="#">Check Out</a></li> -->
-                    <!-- User Authentication Section -->
-                    {% if session.username %}
-                    <!-- Logged in user - show username and logout -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle me-2"></i>
-                            <span class="username-text">{{ session.username }}</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+  <header>
+  <div class="top-bar">
+    <div class="top-header">
+      <div class="logo-left">
+        <img src="/static/icons/logo.jpg" alt="Company Logo" class="logo" />
+      </div>
+      <div class="site-title">Russeykeo Computer</div>
+      <!-- Hamburger button visible only on mobile -->
+      <button
+        class="nav-toggle"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+      >
+        &#9776;
+      </button>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="{{ url_for('show_dashboard') }}">Home</a></li>
 
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
-                                    <i class="bi bi-box-arrow-right me-2"></i>Logout
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <!-- Not logged in - show login button -->
-                    <li class="nav-item">
-                        <a href="/auth/login" class="btn btn-outline-light btn-sm d-flex align-items-center">
-                            <i class="bi bi-person-plus me-2"></i>
-                            Login Account
-                        </a>
-                    </li>
-                    {% endif %}
-                    <li>
-                    <form class="search-container" action="/search" method="GET" onsubmit="return validateSearch()">
-                        <button type="button" class="search-icon" tabindex="0" aria-label="Search products" style="background:none; border:none; padding:0; cursor:pointer;">
-                            <img src="/static/icons/search.png" alt="Search Icon" style="height: 20px;">
-                        </button>
-                        <input type="text" name="q" class="search-input" placeholder="Search..." aria-label="Search products" required>
-                        <div class="search-suggestions"></div>
-                    </form>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+        <li>
+          <a href="#" aria-haspopup="true" aria-expanded="false">Categories</a>
+          <ul class="dropdown" id="categories-dropdown">
+            <!-- Categories will be loaded dynamically -->
+          </ul>
+        </li>
+        <li>
+          <a href="#" aria-haspopup="true" aria-expanded="false">Products</a>
+          <ul class="dropdown">
+            <li><a href="/products/brand/dell">Dell</a></li>
+            <li><a href="/products/brand/hp">HP</a></li>
+            <li><a href="/products/brand/lenovo">Lenovo</a></li>
+            <li><a href="/products/brand/asus">Asus</a></li>
+            <li><a href="/products/brand/acer">Acer</a></li>
+            <li><a href="/products/brand/razer">Razer</a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="#" aria-haspopup="true" aria-expanded="false">About Company</a>
+          <ul class="dropdown">
+            <li><a href="{{ url_for('about') }}">About Us</a></li>
+            <!-- <li><a href="{{ url_for('services') }}">Our Services</a></li>
+            <li><a href="{{ url_for('privacy') }}">Privacy Policy</a></li> -->
+          </ul>
+        </li>
+        <li><a href="{{ url_for('cart') }}">My Cart</a></li>
+        {% if not session.username %}
+        <li><a href="{{ url_for('auth.register') }}">Create Account</a></li>
+        {% endif %}
+        {% if session.username %}
+          {% if session.role == 'customer' %}
+          <li>
+            <a href="#" onclick="showNotifications()" id="notifications-link">
+              Notifications
+              <span
+                id="notification-badge"
+                class="notification-badge"
+                style="display: none;"
+                >0</span
+              >
+            </a>
+          </li>
+          {% elif session.role in ['staff', 'admin', 'super_admin'] %}
+          <li>
+            <a href="#" onclick="showNotifications()" id="notifications-link">
+              Notifications
+              <span
+                id="notification-badge"
+                class="notification-badge"
+                style="display: none;"
+                >0</span
+              >
+            </a>
+          </li>
+          {% endif %}
+        {% endif %}
+        {% if session.username %}
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle d-flex align-items-center text-white"
+            href="#"
+            id="userDropdown"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <i class="bi bi-person-circle me-2"></i>
+            <span class="username-text">{{ session.username }}</span>
+          </a>
+          <ul
+            class="dropdown-menu dropdown-menu-end custom-dropdown"
+            aria-labelledby="userDropdown"
+          >
+            {% if session.role == 'customer' %}
+            <li>
+              <a class="dropdown-item" href="{{ url_for('customer_preorders') }}">
+                <i class="bi bi-list-check me-2"></i>My Pre-Orders
+              </a>
+            </li>
+            {% elif session.role in ['staff', 'admin', 'super_admin'] %}
+            <li>
+              <a class="dropdown-item" href="{{ url_for('customer_preorders') }}">
+                <i class="bi bi-list-check me-2"></i>My Pre-Orders
+              </a>
+            </li>
+            {% endif %}
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"
+                ><i class="bi bi-box-arrow-right me-2"></i>Logout</a
+              >
+            </li>
+          </ul>
+        </li>
+        {% else %}
+        <li class="nav-item">
+          <a
+            href="/auth/login"
+            class="btn btn-outline-light btn-sm d-flex align-items-center"
+          >
+            <i class="bi bi-person-plus me-2"></i> Login Account
+          </a>
+        </li>
+        {% endif %}
+        <li>
+          <form
+            class="search-container"
+            action="/search"
+            method="GET"
+            onsubmit="return validateSearch()"
+          >
+            <button
+              type="button"
+              class="search-icon"
+              tabindex="0"
+              aria-label="Search products"
+              style="background:none; border:none; padding:0; cursor:pointer;"
+            >
+              <img
+                src="/static/icons/search.png"
+                alt="Search Icon"
+                style="height: 20px"
+              />
+            </button>
+            <input
+              type="text"
+              name="q"
+              class="search-input"
+              placeholder="Search..."
+              aria-label="Search products"
+              required
+            />
+            <div class="search-suggestions"></div>
+          </form>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
 
     <div class="content">
         <div class="container mt-4">
@@ -715,6 +837,10 @@
     <script>
         // Basic page functionality - payment functionality removed
         console.log('🔄 Customer pre-orders page loaded - showing confirmed pre-orders only');
+        
+        // Pass user role to JavaScript
+        window.userRole = '{{ session.get("role", "customer") }}';
+        console.log('👤 User role:', window.userRole);
     </script>
 
     <!-- Notification Modal -->
@@ -734,8 +860,7 @@
     </div>
 
     <script>
-        // Temporarily disable completed orders functions
-        /*
+        // Completed orders functions - now enabled
         // Reorder functionality
         async function reorderItems(orderId) {
             try {
@@ -749,11 +874,8 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    alert(`✅ Items added to cart successfully!\n\n📦 ${result.items_added} item(s) added to your cart.`);
-                    // Optionally redirect to cart
-                    if (confirm('Would you like to view your cart now?')) {
-                        window.location.href = '/cart';
-                    }
+                    // Use the same notification style as regular add to cart
+                    showNotification('Item added to cart successfully!', 'success', false);
                 } else {
                     alert(`❌ Error: ${result.error}`);
                 }
@@ -863,7 +985,6 @@
                 document.body.removeChild(modal);
             });
         }
-        */
 
         // AJAX function to load completed orders
         async function loadCompletedOrders() {
@@ -947,6 +1068,17 @@
                                             <div class="fw-bold">${order.payment_method}</div>
                                         </div>
                                     </div>
+                                    
+                                    ${order.transaction_id ? `
+                                    <div class="row mb-3">
+                                        <div class="col-12">
+                                            <small class="text-muted">Transaction ID:</small>
+                                            <div class="fw-bold">
+                                                <code class="bg-light p-1 rounded" style="font-size: 0.8em;">${order.transaction_id}</code>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    ` : ''}
 
                                     <!-- Action Buttons -->
                                     <div class="btn-group w-100" role="group">
@@ -961,6 +1093,20 @@
                                             <i class="bi bi-eye"></i> View Details
                                         </button>
                                     </div>
+                                    
+                                    <!-- Staff Approval Buttons -->
+                                    ${window.userRole && ['staff', 'admin', 'super_admin'].includes(window.userRole) && order.approval_status && order.approval_status === 'Pending Approval' && order.approval_status !== 'Unknown' ? `
+                                        <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 12px;">
+                                            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                                <button onclick="approveOrder(${order.id})" class="btn btn-success btn-sm" style="font-size: 12px;">
+                                                    <i class="fas fa-check"></i> Confirm
+                                                </button>
+                                                <button onclick="rejectOrder(${order.id})" class="btn btn-danger btn-sm" style="font-size: 12px;">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -1015,13 +1161,7 @@
         }
 
         // Placeholder functions for reorder and view details (can be implemented later)
-        function reorderItems(orderId) {
-            alert(`Reorder functionality for order #${orderId} - Coming soon!`);
-        }
 
-        function viewOrderDetails(orderId) {
-            alert(`View details for order #${orderId} - Coming soon!`);
-        }
 
         // Toggle Pre-Orders View More/Less
         function togglePreOrdersView() {
@@ -1074,6 +1214,80 @@
                 viewLessBtn.style.display = 'inline-block';
             }
         }
+        
+        // Staff approval functions
+        async function approveOrder(orderId) {
+            try {
+                const response = await fetch(`/api/orders/${orderId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('✅ Order approved successfully!', 'success');
+                    // Refresh the completed orders to update the UI
+                    loadCompletedOrders();
+                } else {
+                    showMessage('❌ Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error approving order:', error);
+                showMessage('❌ An error occurred while approving the order.', 'error');
+            }
+        }
+
+        async function rejectOrder(orderId) {
+            try {
+                const response = await fetch(`/api/orders/${orderId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('✅ Order rejected successfully!', 'success');
+                    // Refresh the completed orders to update the UI
+                    loadCompletedOrders();
+                } else {
+                    showMessage('❌ Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error rejecting order:', error);
+                showMessage('❌ An error occurred while rejecting the order.', 'error');
+            }
+        }
+
+        function showMessage(message, type) {
+            // Create a simple notification
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '9999';
+            notification.style.minWidth = '300px';
+            
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="close"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
 
         // Navigation fix - ensure dropdowns work consistently
         document.addEventListener('DOMContentLoaded', function() {
@@ -1118,6 +1332,13 @@
                                 window.location.href = this.href;
                             }
                         });
+                    }
+                    
+                    // Load completed orders when page loads
+                    try {
+                        loadCompletedOrders();
+                    } catch (error) {
+                        console.error('Error loading completed orders:', error);
                     }
                 } catch (error) {
                     console.error('Error initializing navigation:', error);
@@ -1186,7 +1407,7 @@
 
     <script>
         function loadNotifications() {
-            return fetch('/api/customer/notifications')
+            return fetch('/api/notifications')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -1257,7 +1478,7 @@
                 notifications.forEach(notification => {
                     const readClass = notification.is_read ? '' : 'unread';
                     const typeClass = notification.type || '';
-                    const notificationDate = new Date(notification.created_date);
+                    const notificationDate = new Date(notification.created_at || notification.created_date);
                     const isRecent = notificationDate > oneDayAgo;
                     const recentClass = isRecent ? 'recent' : '';
 
@@ -1285,7 +1506,7 @@
             button.disabled = true;
             button.textContent = 'Marking...';
 
-            fetch(`/api/customer/notifications/${notificationId}/read`, {
+            fetch(`/api/notifications/${notificationId}/read`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1337,9 +1558,10 @@
             });
         }
 
-        function clearAllNotifications() {
-            // Confirm before clearing all notifications
-            if (!confirm('Are you sure you want to clear all notifications? This action cannot be undone.')) {
+        async function clearAllNotifications() {
+            // Show custom confirmation modal
+            const confirmed = await showClearNotificationsConfirmation();
+            if (!confirmed) {
                 return;
             }
 
@@ -1373,6 +1595,136 @@
                 // Re-enable button
                 button.disabled = false;
                 button.textContent = 'Clear All';
+            });
+        }
+
+        function showClearNotificationsConfirmation() {
+            return new Promise((resolve) => {
+                // Create modal overlay
+                const overlay = document.createElement('div');
+                overlay.className = 'clear-notifications-overlay';
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.6);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                    backdrop-filter: blur(2px);
+                `;
+
+                // Create modal
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                    max-width: 400px;
+                    width: 90%;
+                    transform: scale(0.9);
+                    transition: transform 0.2s ease-out;
+                `;
+
+                modal.innerHTML = `
+                    <div style="padding: 24px 24px 16px 24px; text-align: center;">
+                        <div style="color: #f59e0b; font-size: 48px; margin-bottom: 16px;">🗑️</div>
+                        <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #111827;">Clear All Notifications</h3>
+                        <p style="margin: 0; color: #6b7280; font-size: 14px;">Are you sure you want to clear all notifications? This action cannot be undone.</p>
+                    </div>
+                    <div style="padding: 16px 24px 24px 24px; display: flex; gap: 12px; justify-content: center;">
+                        <button class="cancel-btn" style="
+                            background: #f3f4f6;
+                            color: #374151;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 8px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            font-size: 14px;
+                            transition: background-color 0.2s;
+                            min-width: 80px;
+                        ">Cancel</button>
+                        <button class="confirm-btn" style="
+                            background: #f59e0b;
+                            color: white;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 8px;
+                            font-weight: 500;
+                            cursor: pointer;
+                            font-size: 14px;
+                            transition: background-color 0.2s;
+                            min-width: 80px;
+                        ">Clear All</button>
+                    </div>
+                `;
+
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+
+                // Animate in
+                requestAnimationFrame(() => {
+                    modal.style.transform = 'scale(1)';
+                });
+
+                // Add hover effects
+                const cancelBtn = modal.querySelector('.cancel-btn');
+                const confirmBtn = modal.querySelector('.confirm-btn');
+
+                cancelBtn.addEventListener('mouseenter', () => {
+                    cancelBtn.style.backgroundColor = '#e5e7eb';
+                });
+                cancelBtn.addEventListener('mouseleave', () => {
+                    cancelBtn.style.backgroundColor = '#f3f4f6';
+                });
+
+                confirmBtn.addEventListener('mouseenter', () => {
+                    confirmBtn.style.backgroundColor = '#d97706';
+                });
+                confirmBtn.addEventListener('mouseleave', () => {
+                    confirmBtn.style.backgroundColor = '#f59e0b';
+                });
+
+                // Handle button clicks
+                const cleanup = () => {
+                    modal.style.transform = 'scale(0.9)';
+                    overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        document.body.removeChild(overlay);
+                    }, 200);
+                };
+
+                cancelBtn.addEventListener('click', () => {
+                    cleanup();
+                    resolve(false);
+                });
+
+                confirmBtn.addEventListener('click', () => {
+                    cleanup();
+                    resolve(true);
+                });
+
+                // Close on overlay click
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        cleanup();
+                        resolve(false);
+                    }
+                });
+
+                // Close on escape key
+                const handleEscape = (e) => {
+                    if (e.key === 'Escape') {
+                        cleanup();
+                        resolve(false);
+                        document.removeEventListener('keydown', handleEscape);
+                    }
+                };
+                document.addEventListener('keydown', handleEscape);
             });
         }
 
@@ -1605,6 +1957,326 @@
             }
             }, 100); // 100ms delay to ensure DOM is fully loaded
         });
+
+
+        
+
+document.addEventListener('DOMContentLoaded', () => {
+  const navToggle = document.querySelector('.nav-toggle');
+  const nav = document.querySelector('nav');
+  const searchContainer = document.querySelector('.search-container');
+  const searchIcon = document.querySelector('.search-icon');
+  const searchInput = document.querySelector('.search-input');
+
+  // Toggle nav menu on hamburger click
+  navToggle.addEventListener('click', () => {
+    const expanded = nav.classList.toggle('nav-open');
+    navToggle.setAttribute('aria-expanded', expanded);
+  });
+
+  // Toggle search input on search icon click
+  searchIcon.addEventListener('click', () => {
+    searchContainer.classList.toggle('active');
+    if (searchContainer.classList.contains('active')) {
+      searchInput.focus();
+    } else {
+      searchInput.value = '';
+    }
+  });
+
+  // Close nav or search if clicked outside
+  document.addEventListener('click', (e) => {
+    if (
+      !nav.contains(e.target) &&
+      !navToggle.contains(e.target)
+    ) {
+      nav.classList.remove('nav-open');
+      navToggle.setAttribute('aria-expanded', false);
+    }
+    if (
+      !searchContainer.contains(e.target)
+    ) {
+      searchContainer.classList.remove('active');
+      searchInput.value = '';
+    }
+  });
+});
+    </script>
+
+    <script>
+        // Hide only pre-orders section, keep completed orders visible
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit for content to load, then hide pre-orders section
+            setTimeout(function() {
+                // Hide ALL elements that contain "My Pre-Orders" text
+                const allElements = document.querySelectorAll('*');
+                allElements.forEach(function(element) {
+                    if (element.textContent && element.textContent.includes('My Pre-Orders')) {
+                        // Find the parent container and hide it
+                        let parentToHide = element;
+                        while (parentToHide && !parentToHide.classList.contains('d-flex')) {
+                            parentToHide = parentToHide.parentElement;
+                        }
+                        if (parentToHide && parentToHide.classList.contains('d-flex')) {
+                            parentToHide.style.display = 'none';
+                            console.log('Hidden element containing "My Pre-Orders"');
+                        }
+                    }
+                });
+                
+                // Hide preorders container
+                const preordersContainer = document.getElementById('preorders-container');
+                if (preordersContainer) {
+                    preordersContainer.style.display = 'none';
+                    console.log('Hidden preorders container');
+                }
+                
+                // Hide "No Pre-Orders Yet" message
+                const allTextElements = document.querySelectorAll('.text-center');
+                allTextElements.forEach(function(element) {
+                    if (element.textContent && element.textContent.includes('No Pre-Orders Yet')) {
+                        element.style.display = 'none';
+                        console.log('Hidden "No Pre-Orders Yet" message');
+                    }
+                });
+                
+                // Also hide the browse products button in the header
+                const browseButton = document.querySelector('a[href*="show_dashboard"]');
+                if (browseButton && browseButton.textContent.includes('Browse Products')) {
+                    browseButton.style.display = 'none';
+                    console.log('Hidden Browse Products button');
+                }
+                
+            }, 500); // Wait 500ms for content to load
+            
+            console.log('Pre-orders hiding script initialized');
+        });
+
+        // Add the same notification function used on homepage for consistency
+        function showNotification(message, type = 'info', showCartButton = false) {
+            // Remove any existing notifications of the same type to prevent stacking
+            const existingNotifications = document.querySelectorAll('.cart-notification');
+            existingNotifications.forEach(notif => {
+                if (notif.dataset.type === type) {
+                    notif.remove();
+                }
+            });
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'cart-notification';
+            notification.dataset.type = type;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                max-width: 350px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                transition: all 0.3s ease;
+                transform: translateX(100%);
+                opacity: 0;
+            `;
+
+            // Set background color based on type
+            if (type === 'success') {
+                notification.style.backgroundColor = '#28a745';
+            } else if (type === 'error') {
+                notification.style.backgroundColor = '#dc3545';
+            } else {
+                notification.style.backgroundColor = '#007bff';
+            }
+
+            // Create content container
+            const content = document.createElement('div');
+            content.style.display = 'flex';
+            content.style.flexDirection = 'column';
+            content.style.gap = '10px';
+
+            // Add message
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+            content.appendChild(messageDiv);
+
+            notification.appendChild(content);
+            document.body.appendChild(notification);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                notification.style.transform = 'translateX(0)';
+                notification.style.opacity = '1';
+            });
+
+            function removeNotification() {
+                notification.style.transform = 'translateX(100%)';
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }
+
+            // Auto remove after 3 seconds
+            setTimeout(removeNotification, 3000);
+        }
+    </script>
+
+    <style>
+        /* Custom dropdown styling to match navigation bar */
+        .custom-dropdown {
+            background-color: #333 !important;
+            border: 1px solid #555 !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .custom-dropdown .dropdown-item {
+            color: white !important;
+            transition: all 0.3s ease;
+            border-radius: 5px;
+            margin: 2px 5px;
+        }
+
+        .custom-dropdown .dropdown-item:hover {
+            background-color: #555 !important;
+            color: white !important;
+            transform: translateX(5px);
+        }
+
+        .custom-dropdown .dropdown-item.text-danger {
+            color: #ff6b6b !important;
+        }
+
+        .custom-dropdown .dropdown-item.text-danger:hover {
+            background-color: #721c24 !important;
+            color: white !important;
+        }
+
+        .custom-dropdown .dropdown-divider {
+            border-color: #555 !important;
+            margin: 0.5rem 0;
+        }
+
+        /* Dropdown container styling */
+        nav ul li .dropdown {
+            text-align: left;
+        }
+
+        /* Main dropdown styling */
+        nav ul li .dropdown li a {
+            display: block;
+            padding: 12px 20px 12px 25px;
+            color: white;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            text-align: left;
+        }
+
+        nav ul li .dropdown li a:hover, nav ul li .dropdown li a:focus {
+            background-color: #444;
+            color: #fff;
+        }
+
+        /* Multi-level dropdown styling */
+        .dropdown li {
+            position: relative;
+        }
+
+        .dropdown .sub-dropdown {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            background-color: #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            min-width: 200px;
+            padding: 15px 0;
+            animation: slideRight 0.3s ease-in-out;
+        }
+
+        .dropdown li:hover .sub-dropdown {
+            display: block;
+        }
+
+        .dropdown .sub-dropdown li a {
+            padding: 10px 20px 10px 25px;
+            font-size: 14px;
+            color: #ccc;
+            text-align: left;
+        }
+
+        .dropdown .sub-dropdown li a:hover {
+            background-color: #444;
+            color: #fff;
+        }
+
+        @keyframes slideRight {
+            0% { opacity: 0; transform: translateX(-10px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .dropdown li.has-submenu > a::after {
+            content: "▶";
+            float: right;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+
+    <script>
+        // Load categories dynamically for navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNavigationCategories();
+        });
+
+        async function loadNavigationCategories() {
+            try {
+                const response = await fetch('/api/navigation/categories');
+                const data = await response.json();
+                
+                if (data.success && data.categories) {
+                    populateCategoriesDropdown(data.categories);
+                }
+            } catch (error) {
+                console.error('Error loading navigation categories:', error);
+            }
+        }
+
+        function populateCategoriesDropdown(categories) {
+            const dropdown = document.getElementById('categories-dropdown');
+            if (!dropdown) return;
+
+            dropdown.innerHTML = '';
+
+            categories.forEach(category => {
+                const li = document.createElement('li');
+                
+                if (category.children && category.children.length > 0) {
+                    // Category with subcategories
+                    li.className = 'has-submenu';
+                    li.innerHTML = `
+                        <a href="/products/category/${category.id}">${category.name}</a>
+                        <ul class="sub-dropdown">
+                            ${category.children.map(child => 
+                                `<li><a href="/products/category/${child.id}">${child.name}</a></li>`
+                            ).join('')}
+                        </ul>
+                    `;
+                } else {
+                    // Category without subcategories
+                    li.innerHTML = `<a href="/products/category/${category.id}">${category.name}</a>`;
+                }
+                
+                dropdown.appendChild(li);
+            });
+        }
     </script>
     </div> <!-- Close content div -->
 </body>

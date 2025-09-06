@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple E-commerce Cart</title>
     <link rel="stylesheet" href="/static/css/cart.css">
+    <link rel="stylesheet" href="/static/css/payment_modal.css">
+    <link rel="stylesheet" href="/static/css/sweet-alert.css">
+    <script src="/static/js/sweet-alert.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -69,6 +72,11 @@
             flex-direction: column;
             gap: 8px;
             flex: 1;
+        }
+        
+        .cart-item-image {
+            margin-right: 15px;
+            flex-shrink: 0;
         }
 
         /* Product Type Badges */
@@ -248,49 +256,90 @@
             font-weight: bold;
             margin-top: 10px;
             text-align: right;
+            display: none; /* Hide by default, show only when cart has items */
         }
         .cart-buttons {
             display: flex;
             justify-content: space-between;
         }
 
-        /* Modal Styles */
+        /* Modal Styles - Modern Glassmorphism */
         .modal {
             display: none; 
             position: fixed; 
-            z-index: 1; 
+            z-index: 1000; 
             left: 0;
             top: 0;
             width: 100%; 
             height: 100%; 
             overflow: auto; 
-            background-color: rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(0,0,0,0.4));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            animation: modalFadeIn 0.3s ease-out;
         }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                backdrop-filter: blur(0px);
+            }
+            to {
+                opacity: 1;
+                backdrop-filter: blur(10px);
+            }
+        }
+        
         .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto; 
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            margin: 5% auto; 
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 90%;
+            max-width: 600px;
+            border-radius: 20px;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
             position: relative;
+            overflow: hidden;
+            transform: translateY(20px);
+            animation: modalSlideIn 0.4s ease-out forwards;
+        }
+        
+        @keyframes modalSlideIn {
+            to {
+                transform: translateY(0);
+            }
         }
         .close-button {
-            color: #aaa;
+            color: rgba(0, 0, 0, 0.6);
             float: right;
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 32px;
+            font-weight: 300;
             position: absolute;
-            top: 10px;
-            right: 20px;
+            top: 20px;
+            right: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
         .close-button:hover,
         .close-button:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
+            color: rgba(0, 0, 0, 0.8);
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
         }
         #customer-form label {
             display: block;
@@ -319,21 +368,1077 @@
             background: #218838;
         }
 
+        /* Address Section Styles */
+        .address-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .address-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group.half-width {
+            flex: 1;
+        }
+
+        .address-section h4 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .address-section label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .address-section input,
+        .address-section textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .address-section input:focus,
+        .address-section textarea:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .address-section textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* Collapsible Address Details */
+        .address-essential {
+            margin-bottom: 15px;
+        }
+
+        .address-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 500px;
+            }
+        }
+
+        .btn-outline-secondary {
+            background: transparent;
+            border: 1px solid #6c757d;
+            color: #6c757d;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-secondary:hover {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-outline-secondary i {
+            margin-right: 4px;
+        }
+
+        /* Custom Save Address Button Styling */
+        .btn-outline-success {
+            background: transparent;
+            border: 2px solid #007bff;
+            color: #007bff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-outline-success:hover {
+            background: #007bff;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-outline-success i {
+            margin-right: 4px;
+        }
+
+        /* Checkout Container Styles */
+        .checkout-modal-content {
+            max-width: 800px;
+            width: 95%;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+        }
+
+        .checkout-step {
+            display: none;
+            animation: stepFadeIn 0.5s ease-out;
+        }
+
+        .checkout-step.active {
+            display: block;
+        }
+
+        .checkout-step h2 {
+            color: #2c3e50;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 20px 0;
+            padding: 15px 0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid transparent;
+        }
+
+
+
+        @keyframes stepFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .checkout-progress {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0 40px;
+            padding: 0;
+            position: relative;
+        }
+
+        .checkout-progress::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #e9ecef 0%, #e9ecef 100%);
+            z-index: 1;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            padding: 15px 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 25px;
+            margin: 0 8px;
+            font-size: 14px;
+            color: #6c757d;
+            position: relative;
+            z-index: 2;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .progress-step.completed {
+            color: white !important;
+        }
+
+        .progress-step.active {
+            background: linear-gradient(135deg, #E3F2FD, #BBDEFB) !important;
+            color: #2196F3 !important;
+            border-color: #2196F3 !important;
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .checkout-progress .progress-step.active {
+            color: #2196F3 !important;
+        }
+
+        .progress-step.completed {
+            background: linear-gradient(135deg, #28a745, #20c997) !important;
+            color: white !important;
+            border-color: #28a745 !important;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            margin: 10px 0 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50 0%, #2196F3 100%);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+
+
+        .checkout-form {
+            margin: 30px 0;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 16px 18px;
+            border: 2px solid rgba(233, 236, 239, 0.8);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #2c3e50;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15);
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateY(-2px);
+        }
+
+        .form-group input::placeholder {
+            color: #95a5a6;
+            opacity: 0.8;
+        }
+
+        .payment-options {
+            margin: 30px 0;
+        }
+
+        .payment-option {
+            display: flex;
+            align-items: center;
+            padding: 25px;
+            border: 2px solid rgba(233, 236, 239, 0.6);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .payment-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .payment-option:hover:not(.selected) {
+            border-color: #007bff;
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 123, 255, 0.15);
+        }
+
+        .payment-option:hover:not(.selected)::before {
+            left: 100%;
+        }
+
+        .payment-option.selected {
+            border-color: #007bff;
+            background: linear-gradient(135deg, rgba(0, 123, 255, 0.1), rgba(0, 86, 179, 0.05));
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .payment-option.selected:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
+        }
+
+        .payment-option.selected {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .payment-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+        }
+
+        .payment-details {
+            flex: 1;
+        }
+
+        .payment-details h3 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+
+        .payment-details p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .payment-radio input[type="radio"] {
+            margin: 0;
+        }
+
+        .checkout-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 2px solid rgba(233, 236, 239, 0.3);
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+            min-width: 140px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #20c997, #17a2b8);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #c82333, #a71e2a);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #20c997, #17a2b8);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+        }
+
+        .order-summary {
+            background: linear-gradient(135deg, rgba(248, 249, 250, 0.9), rgba(255, 255, 255, 0.8));
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .order-summary h3 {
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+            font-size: 22px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .order-total {
+            text-align: right;
+            font-size: 20px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(222, 226, 230, 0.5);
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .checkout-progress {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .progress-step {
+                margin: 0 0 5px 0;
+            }
+        }
+
+        /* Pre-fill notification styles */
+        .prefill-notification {
+            background: linear-gradient(135deg, rgba(212, 237, 218, 0.9), rgba(195, 230, 203, 0.8));
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(195, 230, 203, 0.6);
+            border-radius: 16px;
+            padding: 18px 22px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15);
+            border-left: 4px solid #28a745;
+            animation: notificationSlideIn 0.5s ease-out;
+        }
+
+        @keyframes notificationSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .prefill-message {
+            display: flex;
+            align-items: center;
+            color: #155724;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .prefill-message i {
+            font-size: 18px;
+            margin-right: 12px;
+            background: rgba(40, 167, 69, 0.2);
+            padding: 8px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Custom Notification Styles */
+        .custom-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 400px;
+            animation: notificationSlideInRight 0.5s ease-out;
+        }
+
+        @keyframes notificationSlideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .custom-notification-content {
+            display: flex;
+            align-items: center;
+            padding: 18px 22px;
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+
+
+        .custom-notification-error .custom-notification-content {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.95), rgba(200, 35, 51, 0.9));
+            border-color: rgba(220, 53, 69, 0.3);
+        }
+
+        .custom-notification-success .custom-notification-content {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.95), rgba(32, 201, 151, 0.9));
+            border-color: rgba(40, 167, 69, 0.3);
+        }
+
+        .custom-notification-info .custom-notification-content {
+            background: linear-gradient(135deg, rgba(0, 123, 255, 0.95), rgba(0, 86, 179, 0.9));
+            border-color: rgba(0, 123, 255, 0.3);
+        }
+
+        .custom-notification-icon {
+            font-size: 20px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .custom-notification-message {
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            flex: 1;
+            letter-spacing: 0.3px;
+        }
+
+        .custom-notification-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 50%;
+            margin-left: 15px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .custom-notification-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .btn-outline-primary {
+            background: transparent;
+            color: #007bff;
+            border: 1px solid #007bff;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-primary:hover {
+            background: #007bff;
+            color: white;
+        }
+
+        /* Custom Select Styling */
+        .custom-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background-color: #ffffff;
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .custom-select:hover {
+            border-color: #007bff;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+        }
+
+        .custom-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .custom-select option {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <div class="cart">
-            <h2>Shopping Cart (<span id="cart-count">0</span> items)</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0;">Shopping Cart (<span id="cart-count">0</span> items)</h2>
+                <button type="button" id="verify-payment-btn" class="verify-payment-btn" style="background: #17a2b8; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                    <i class="fas fa-question-circle"></i> Need Help?
+                </button>
+            </div>
             <div id="cart-items"></div>
             <div id="cart-total">Total: $0.00</div>
             <div class="cart-buttons">
-                <a href="{{ url_for('show_dashboard') }}" id="back-button">Continue Shopping</a>
+                <a href="{{ url_for('show_dashboard') }}" id="back-button">Browse Products</a>
                 <button type="button" id="buy-button" disabled>Proceed to Checkout</button>
             </div>
         </div>
     </div>
 
+    <!-- Checkout Container Modal -->
+    <div id="checkout-container" class="modal">
+        <div class="modal-content checkout-modal-content">
+            <span class="close-button" onclick="closeCheckoutContainer()" style="z-index: 9999; position: relative;">&times;</span>
+            
+            <!-- Step 1: Customer Information -->
+            <div id="checkout-step-1" class="checkout-step active">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>🛒 Checkout</h2>
+                    <div id="prefill-button-container" style="display: none;">
+                        <select id="address-selector" class="form-control" style="font-size: 12px; padding: 6px 12px; width: 200px; display: inline-block; margin-right: 10px;" onchange="selectAddress()">
+                            <option value="">Select Address...</option>
+                        </select>
+                        <button type="button" class="btn btn-outline-success" onclick="saveCurrentAddress()" style="font-size: 12px; padding: 6px 12px;">
+                            <i class="fas fa-save" style="margin-right: 4px;"></i>
+                            Save Address
+                        </button>
+                    </div>
+                </div>
+                <div class="checkout-progress">
+                    <div class="progress-step active">1. Customer Info</div>
+                    <div class="progress-step">2. Confirmation</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%;"></div>
+                </div>
+                
+                <div id="prefill-notification" class="prefill-notification" style="display: none;">
+                    <div class="prefill-message">
+                        <i class="fas fa-user-check" style="color: #28a745; margin-right: 8px;"></i>
+                        Your information has been pre-filled from your account
+                    </div>
+                </div>
+                
+                <form id="customer-form" class="checkout-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">Full Name *</label>
+                            <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required placeholder="Enter your email">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone">Phone *</label>
+                            <input type="tel" id="phone" name="phone" required placeholder="Enter your phone number">
+                        </div>
+                        <!-- Atomic Address Fields -->
+                        <div class="address-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h4 style="margin: 0; color: #333;">Address Information</h4>
+                                <button type="button" id="toggle-address-details" class="btn btn-outline-secondary btn-sm" onclick="toggleAddressDetails()">
+                                    <i class="fas fa-plus"></i> Add more details
+                                </button>
+                            </div>
+                            
+                            <!-- Essential Address Fields (Always Visible) -->
+                            <div class="address-essential">
+                                <div class="address-row">
+                                    <div class="form-group half-width">
+                                        <label for="address_type">Address Type *</label>
+                                        <select id="address_type" name="address_type" required class="custom-select">
+                                            <option value="home">🏠 Home</option>
+                                            <option value="work">💼 Work</option>
+                                            <option value="shop">🏪 Shop</option>
+                                            <option value="other">📍 Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group half-width">
+                                        <label for="street_name">Street Address *</label>
+                                        <input type="text" id="street_name" name="street_name" required placeholder="Street 271, #123, Village name">
+                                    </div>
+                                </div>
+                                <div class="address-row">
+                                    <div class="form-group half-width">
+                                        <label for="province">Province *</label>
+                                        <input type="text" id="province" name="province" required placeholder="Phnom Penh">
+                                    </div>
+                                    <div class="form-group half-width">
+                                        <!-- Empty space for layout balance -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Additional Address Fields (Collapsible) -->
+                            <div id="address-details" class="address-details" style="display: none;">
+                                <div class="address-row">
+                                    <div class="form-group half-width">
+                                        <label for="house_number">House Number</label>
+                                        <input type="text" id="house_number" name="house_number" placeholder="#123, St. 123">
+                                    </div>
+                                    <div class="form-group half-width">
+                                        <label for="village">Village</label>
+                                        <input type="text" id="village" name="village" placeholder="Village name">
+                                    </div>
+                                </div>
+                                
+                                <div class="address-row">
+                                    <div class="form-group half-width">
+                                        <label for="sangkat">Sangkat</label>
+                                        <input type="text" id="sangkat" name="sangkat" placeholder="Sangkat name">
+                                    </div>
+                                    <div class="form-group half-width">
+                                        <label for="khan">Khan</label>
+                                        <input type="text" id="khan" name="khan" placeholder="Khan name">
+                                    </div>
+                                </div>
+                                
+                                <div class="address-row">
+                                    <div class="form-group half-width">
+                                        <label for="commune">Commune (Optional)</label>
+                                        <input type="text" id="commune" name="commune" placeholder="Commune name (for rural areas)">
+                                    </div>
+                                    <div class="form-group half-width">
+                                        <label for="postal_code">Postal Code</label>
+                                        <input type="text" id="postal_code" name="postal_code" placeholder="12345">
+                                    </div>
+                                </div>
+                                
+                                <div class="address-row">
+                                    <div class="form-group half-width">
+                                        <label for="building_name">Building Name (Optional)</label>
+                                        <input type="text" id="building_name" name="building_name" placeholder="Building name">
+                                    </div>
+                                    <div class="form-group half-width">
+                                        <label for="landmark">Landmark (Optional)</label>
+                                        <input type="text" id="landmark" name="landmark" placeholder="Near Central Market">
+                                    </div>
+                                </div>
+                                
+                                <div class="address-row">
+                                    <div class="form-group half-width">
+                                        <label for="floor_number">Floor (Optional)</label>
+                                        <input type="text" id="floor_number" name="floor_number" placeholder="Floor 3">
+                                    </div>
+                                    <div class="form-group half-width">
+                                        <label for="unit_number">Unit (Optional)</label>
+                                        <input type="text" id="unit_number" name="unit_number" placeholder="Unit 301">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="delivery_notes">Delivery Notes (Optional)</label>
+                                    <textarea id="delivery_notes" name="delivery_notes" rows="2" placeholder="Special delivery instructions"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="checkout-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeCheckoutContainer()">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="nextCheckoutStep()">Continue to Confirmation</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Step 2: Order Confirmation -->
+            <div id="checkout-step-2" class="checkout-step">
+                <h2>✅ Order Confirmation</h2>
+                <div class="checkout-progress">
+                    <div class="progress-step completed">1. Customer Info</div>
+                    <div class="progress-step active">2. Confirmation</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%;"></div>
+                </div>
+                
+                <div class="order-summary">
+                    <h3>Order Summary</h3>
+                    <div id="checkout-order-items"></div>
+                    <div class="order-total">
+                        <strong>Total: $<span id="checkout-total">0.00</span></strong>
+                    </div>
+                </div>
+                
+                <div class="checkout-actions">
+                    <button type="button" class="btn btn-secondary" onclick="previousCheckoutStep()">Back</button>
+                    <button type="button" class="btn btn-success" onclick="confirmOrder()">Confirm Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Verification Modal -->
+    <div id="payment-verification-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px; margin: 50px auto; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px 15px 0 0; text-align: center;">
+                <h2 style="margin: 0; font-size: 1.8rem;">
+                    <i class="fas fa-credit-card" style="margin-right: 10px;"></i>
+                    Payment Verification
+                </h2>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">Upload your payment screenshot to verify your order instantly!</p>
+            </div>
+            
+            <div class="modal-body" style="padding: 30px;">
+                <form id="payment-verification-form" enctype="multipart/form-data">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            <i class="fas fa-magic"></i> Auto-Detection
+                        </label>
+                        <div style="background: #e8f5e8; border: 1px solid #28a745; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <i class="fas fa-info-circle" style="color: #28a745; margin-right: 8px;"></i>
+                                <strong style="color: #28a745;">Smart Detection Enabled</strong>
+                            </div>
+                            <p style="margin: 0; color: #666; font-size: 14px;">
+                                We'll automatically extract Order ID from QR codes and both Order ID + Transaction ID from invoices!
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="order-id" name="order_id" class="form-control" 
+                                   placeholder="Auto-detected or enter manually" 
+                                   style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px;">
+                            <button type="button" id="find-order-btn" style="background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; white-space: nowrap;">
+                                <i class="fas fa-search"></i> Find My Order
+                            </button>
+                        </div>
+                        <small style="color: #666; font-size: 14px; margin-top: 5px; display: block;">
+                            Order ID will be auto-detected from QR codes or invoices. You can also search by email/phone.
+                        </small>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="transaction-id" style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            <i class="fas fa-hashtag"></i> Transaction ID (Optional)
+                        </label>
+                        <input type="text" id="transaction-id" name="transaction_id" class="form-control" 
+                               placeholder="Auto-detected from payment invoice only"
+                               style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px;">
+                        <small style="color: #666; font-size: 14px;">
+                            <strong>QR codes don't contain Transaction ID.</strong> Only available from payment invoices/receipts from your bank.
+                        </small>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 25px;">
+                        <label for="payment-screenshot" style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            <i class="fas fa-camera"></i> Payment Proof (Any Type)
+                        </label>
+                        <div class="file-upload-area" id="file-upload-area" 
+                             style="border: 2px dashed #17a2b8; border-radius: 10px; padding: 40px; text-align: center; background: #f8f9fa; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #17a2b8; margin-bottom: 15px;"></i>
+                            <p style="margin: 0; font-size: 18px; color: #333;">
+                                <strong>Upload any payment proof</strong> - QR code, bank receipt, invoice, screenshot, etc.
+                            </p>
+                            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">
+                                Supports: JPG, PNG, PDF, DOC, DOCX (Max 10MB)
+                            </p>
+                        </div>
+                        <input type="file" id="payment-screenshot" name="payment_screenshot" accept="image/*,.pdf,.doc,.docx" 
+                               style="display: none;" required>
+                        <div id="file-preview" style="margin-top: 15px; display: none;">
+                            <div style="background: #e8f5e8; border: 1px solid #17a2b8; border-radius: 5px; padding: 15px;">
+                                <i class="fas fa-check-circle" style="color: #17a2b8; margin-right: 8px;"></i>
+                                <span id="file-name" style="font-weight: bold;"></span>
+                                <button type="button" id="remove-file" style="float: right; background: none; border: none; color: #dc3545; cursor: pointer;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Upload Help Section -->
+                        <div style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #17a2b8;">
+                            <h4 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">
+                                <i class="fas fa-info-circle" style="color: #17a2b8; margin-right: 8px;"></i>
+                                What can you upload?
+                            </h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                                <div style="display: flex; align-items: center; padding: 8px; background: white; border-radius: 5px;">
+                                    <i class="fas fa-qrcode" style="color: #28a745; margin-right: 10px; font-size: 18px;"></i>
+                                    <span>QR code screenshots</span>
+                                </div>
+                                <div style="display: flex; align-items: center; padding: 8px; background: white; border-radius: 5px;">
+                                    <i class="fas fa-university" style="color: #007bff; margin-right: 10px; font-size: 18px;"></i>
+                                    <span>Bank transfer receipts</span>
+                                </div>
+                                <div style="display: flex; align-items: center; padding: 8px; background: white; border-radius: 5px;">
+                                    <i class="fas fa-file-invoice" style="color: #ffc107; margin-right: 10px; font-size: 18px;"></i>
+                                    <span>Payment invoices</span>
+                                </div>
+                                <div style="display: flex; align-items: center; padding: 8px; background: white; border-radius: 5px;">
+                                    <i class="fas fa-camera" style="color: #6f42c1; margin-right: 10px; font-size: 18px;"></i>
+                                    <span>Any payment confirmation</span>
+                                </div>
+                            </div>
+                            <div style="background: #d1ecf1; padding: 12px; border-radius: 5px; border-left: 3px solid #17a2b8;">
+                                <p style="margin: 0; color: #0c5460; font-size: 14px;">
+                                    <i class="fas fa-lightbulb" style="margin-right: 8px;"></i>
+                                    <strong>Don't worry if auto-detection fails!</strong> Our staff will review everything you upload and help resolve any issues.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 25px;">
+                        <label for="payment-notes" style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            <i class="fas fa-comment"></i> Additional Notes (Optional)
+                        </label>
+                        <textarea id="payment-notes" name="payment_notes" class="form-control" rows="3" 
+                                  placeholder="Any additional information about your payment..."
+                                  style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; resize: vertical;"></textarea>
+                    </div>
+
+                    <div class="form-actions" style="text-align: center;">
+                        <button type="submit" id="submit-btn" class="btn btn-success" 
+                                style="background: #17a2b8; color: white; border: none; padding: 15px 40px; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-upload"></i> Verify Payment
+                        </button>
+                        <button type="button" id="close-verification-modal" class="btn btn-secondary" 
+                                style="background: #6c757d; color: white; border: none; padding: 15px 40px; border-radius: 5px; font-size: 18px; margin-left: 15px; cursor: pointer;">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+
+                <div id="verification-result" style="margin-top: 25px; display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Find Order Modal -->
+    <div id="find-order-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px; margin: 100px auto; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 15px 15px 0 0; text-align: center;">
+                <h2 style="margin: 0; font-size: 1.5rem;">
+                    <i class="fas fa-search" style="margin-right: 10px;"></i>
+                    Find My Order
+                </h2>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">Search for your order using your email or phone number</p>
+            </div>
+            
+            <div class="modal-body" style="padding: 30px;">
+                <form id="find-order-form">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="search-email" style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            <i class="fas fa-envelope"></i> Email Address
+                        </label>
+                        <input type="email" id="search-email" name="email" class="form-control" 
+                               placeholder="Enter your email address"
+                               style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px;">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 25px;">
+                        <label for="search-phone" style="display: block; margin-bottom: 8px; font-weight: bold; color: #333;">
+                            <i class="fas fa-phone"></i> Phone Number (Optional)
+                        </label>
+                        <input type="tel" id="search-phone" name="phone" class="form-control" 
+                               placeholder="Enter your phone number"
+                               style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px;">
+                        <small style="color: #666; font-size: 14px;">
+                            Provide either email or phone number to search for your orders.
+                        </small>
+                    </div>
+
+                    <div class="form-actions" style="text-align: center;">
+                        <button type="submit" id="search-orders-btn" class="btn btn-success" 
+                                style="background: #28a745; color: white; border: none; padding: 15px 40px; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.3s ease;">
+                            <i class="fas fa-search"></i> Search Orders
+                        </button>
+                        <button type="button" id="close-find-order-modal" class="btn btn-secondary" 
+                                style="background: #6c757d; color: white; border: none; padding: 15px 40px; border-radius: 5px; font-size: 18px; margin-left: 15px; cursor: pointer;">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+
+                <div id="search-results" style="margin-top: 25px; display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Original Customer Modal (kept for backward compatibility) -->
     <div id="customer-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -364,6 +1469,35 @@
     <script>
         // Initialize cart items array
         let cartItems = [];
+
+        // Global variable to store logged-in user info
+        let loggedInUserInfo = null;
+
+        // Fetch logged-in user info on page load
+        async function fetchUserInfo() {
+            try {
+                const response = await fetch('/api/user/info');
+                const data = await response.json();
+                if (data.success && data.user) {
+                    loggedInUserInfo = data.user;
+                    console.log('Logged-in user info:', loggedInUserInfo);
+                } else {
+                    console.warn('User info not available or not logged in');
+                    loggedInUserInfo = null; // Ensure it's null for non-logged-in users
+                }
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+                loggedInUserInfo = null; // Ensure it's null on error
+            }
+        }
+
+        // Call fetchUserInfo on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUserInfo();
+            loadCartItems();
+            
+
+        });
 
         // Get modal elements
         const modal = document.getElementById('customer-modal');
@@ -500,7 +1634,16 @@
                     </div>
                 `;
 
+                // Get product image URL with fallback
+                const productImageUrl = item.photo ? `/static/uploads/products/${item.photo}` : '/static/icons/product/laptop.jpg';
+                const fallbackImage = '/static/icons/product/laptop.jpg';
+                
                 cartItemDiv.innerHTML = `
+                    <div class="cart-item-image">
+                        <img src="${productImageUrl}" alt="${item.name}" 
+                             onerror="this.src='${fallbackImage}'"
+                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
+                    </div>
                     <div class="cart-item-info">
                         <div style="margin-bottom: 8px;">
                             ${itemDisplay}
@@ -515,8 +1658,88 @@
             });
 
             cartCount.textContent = totalItems;
-            cartTotal.textContent = `Total: $${totalPrice.toFixed(2)}`;
+
+            // Update localStorage to notify navigation bar cart badge (use unique products count)
+            const uniqueProducts = cartItems.length;
+            localStorage.setItem('cart_count', uniqueProducts.toString());
+            localStorage.setItem('cart_updated', Date.now().toString());
+
+            // Show/hide cart total based on whether there are items
+            if (totalItems > 0) {
+                cartTotal.style.display = 'block';
+                // Calculate and display volume discount
+                calculateAndDisplayVolumeDiscount(totalPrice);
+            } else {
+                cartTotal.style.display = 'none';
+            }
+
             buyButton.disabled = totalItems === 0;
+        }
+
+        // Global variable to store the final total after discounts
+        let currentFinalTotal = 0;
+
+        // Function to calculate and display volume discount
+        async function calculateAndDisplayVolumeDiscount(totalPrice) {
+            const cartTotalElement = document.getElementById('cart-total');
+
+            try {
+                const response = await fetch('/api/calculate-volume-discount', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ cart_total: totalPrice })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.volume_discount) {
+                    const discount = data.volume_discount;
+
+                    if (discount.applicable) {
+                        // Store the discounted total globally
+                        currentFinalTotal = discount.final_total;
+                        
+                        // Show volume discount applied
+                        cartTotalElement.innerHTML = `
+                            <div style="text-align: right;">
+                                <div style="color: #666; font-size: 14px;">Subtotal: $${totalPrice.toFixed(2)}</div>
+                                <div style="color: #28a745; font-size: 14px; margin: 5px 0;">
+                                    <i class="fas fa-gift"></i> ${discount.rule_name}: ${discount.discount_percentage}% off (-$${discount.savings.toFixed(2)})
+                                </div>
+                                <div style="font-weight: bold; font-size: 18px; color: #333;">
+                                    Total: $${discount.final_total.toFixed(2)}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // No volume discount applicable - use original total
+                        currentFinalTotal = totalPrice;
+                        
+                        // No volume discount applicable
+                        cartTotalElement.innerHTML = `
+                            <div style="text-align: right;">
+                                <div style="font-weight: bold; font-size: 18px; color: #333;">
+                                    Total: $${totalPrice.toFixed(2)}
+                                </div>
+                                <div style="color: #666; font-size: 12px; margin-top: 5px;">
+                                    💡 Spend $500+ to get volume discounts!
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // Fallback to simple total
+                    currentFinalTotal = totalPrice;
+                    cartTotalElement.textContent = `Total: $${totalPrice.toFixed(2)}`;
+                }
+            } catch (error) {
+                console.error('Error calculating volume discount:', error);
+                // Fallback to simple total
+                currentFinalTotal = totalPrice;
+                cartTotalElement.textContent = `Total: $${totalPrice.toFixed(2)}`;
+            }
         }
 
         function changeQuantity(id, newQuantity, isPreOrder = false) {
@@ -610,42 +1833,167 @@
             }
         });
 
+
+
         // --- Modal and Form Submission Logic ---
 
-        // Open the modal when "Buy Now" is clicked - but skip if user is logged in
+        // Handle checkout when "Proceed to Checkout" is clicked
+        let storedCustomerInfo = null; // Global variable to store customer info
+
         document.getElementById('buy-button').onclick = async () => {
             if (cartItems.length > 0) {
-                // Check if user is logged in and get their info
-                try {
-                    const userResponse = await fetch('/api/user/info');
-                    const userData = await userResponse.json();
-
-                    if (userData.success && userData.user) {
-                        // User is logged in, proceed directly to payment
-                        const customerInfo = {
-                            first_name: userData.user.first_name,
-                            last_name: userData.user.last_name,
-                            email: userData.user.email,
-                            phone: userData.user.phone || '',
-                            address: userData.user.address || ''
-                        };
-
-                        // Calculate total price
-                        let totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-                        // Show payment method selection
-                        showPaymentMethodSelection(cartItems, customerInfo, totalPrice);
-                    } else {
-                        // User not logged in, show customer details modal
-                        modal.style.display = 'block';
-                    }
-                } catch (error) {
-                    console.error('Error checking user login status:', error);
-                    // Fallback to showing modal
-                    modal.style.display = 'block';
+                // Use the final total after discounts, or calculate if not available
+                let finalTotal = currentFinalTotal;
+                if (finalTotal === 0) {
+                    finalTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
                 }
+
+                // Use stored customer info if available, else fallback to logged-in user info
+                const customerInfo = storedCustomerInfo || loggedInUserInfo || {};
+
+                showPaymentMethodSelection(cartItems, customerInfo, finalTotal);
             }
         };
+
+        // Handle form submission - now using Bakong payment
+
+
+
+        // Function to process checkout with selected payment method
+        async function processCheckout(paymentMethod) {
+            try {
+                // Disable button during processing
+                const buyButton = document.getElementById('buy-button');
+                buyButton.disabled = true;
+                buyButton.textContent = 'Processing...';
+
+                console.log('Starting checkout process with payment method:', paymentMethod);
+
+                // Call the checkout API with payment method
+                const response = await fetch('/api/cart/checkout', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        payment_method: paymentMethod
+                    })
+                });
+
+                console.log('Checkout response status:', response.status);
+                console.log('Checkout response ok:', response.ok);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Checkout result:', result);
+
+                    if (result.success) {
+                        console.log('Checkout successful, order ID:', result.order_id);
+
+                        // Clear local cart display
+                        cartItems = [];
+                        updateCart();
+
+                        // Show success message with safe number formatting
+                        const subtotal = parseFloat(result.subtotal || 0).toFixed(2);
+                        const discount = parseFloat(result.volume_discount_amount || 0).toFixed(2);
+                        const total = parseFloat(result.final_total || 0).toFixed(2);
+
+                        // Use SweetAlert for beautiful notification
+                        Swal.fire({
+                            title: '🎉 Order Placed Successfully!',
+                            html: `
+                                <div style="text-align: left; margin: 20px 0;">
+                                    <p><strong>Order ID:</strong> #${result.order_id}</p>
+                                    <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+                                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+                                    <p><strong>Subtotal:</strong> $${subtotal}</p>
+                                    <p><strong>Volume Discount:</strong> -$${discount}</p>
+                                    <hr style="margin: 15px 0; border: none; border-top: 2px solid #28a745;">
+                                    <p style="font-size: 18px; color: #28a745;"><strong>Total:</strong> $${total}</p>
+                                </div>
+                            `,
+                            icon: 'success',
+                            confirmButtonText: 'View Invoice',
+                            confirmButtonColor: '#28a745',
+                            showCancelButton: true,
+                            cancelButtonText: 'Continue Shopping',
+                            cancelButtonColor: '#6c757d'
+                        }).then((result_modal) => {
+                            if (result_modal.isConfirmed) {
+                                // Redirect to invoice page
+                                console.log('Redirecting to invoice:', `/invoice/${result.order_id}`);
+                                window.location.href = `/invoice/${result.order_id}`;
+                            } else {
+                                // Continue shopping - redirect to dashboard
+                                window.location.href = '/dashboard';
+                            }
+                        });
+                    } else {
+                        // Check if verification is required
+                        if (result.requires_verification || result.requires_otp) {
+                            // Show verification prompt
+                            Swal.fire({
+                                title: 'Account Verification Required',
+                                html: `
+                                    <div style="text-align: center; margin: 20px 0;">
+                                        <div style="font-size: 48px; margin-bottom: 20px;">📧</div>
+                                        <p style="font-size: 16px; margin-bottom: 20px;">
+                                            Please verify your email address to continue purchasing.
+                                        </p>
+                                        <p style="font-size: 14px; color: #666;">
+                                            You can verify your account from the notifications panel.
+                                        </p>
+                                    </div>
+                                `,
+                                icon: 'info',
+                                confirmButtonText: 'Verify Now',
+                                confirmButtonColor: '#007bff',
+                                showCancelButton: true,
+                                cancelButtonText: 'Cancel',
+                                cancelButtonColor: '#6c757d'
+                            }).then((result_modal) => {
+                                if (result_modal.isConfirmed) {
+                                    // Redirect to dashboard where notifications modal is available
+                                    window.location.href = '/dashboard';
+                                }
+                            });
+                        } else {
+                            // Use SweetAlert for other error notifications
+                            Swal.fire({
+                                title: 'Checkout Failed',
+                                text: result.error,
+                                icon: 'error',
+                                confirmButtonText: 'Try Again',
+                                confirmButtonColor: '#dc3545'
+                            });
+                        }
+
+                        // Re-enable button
+                        buyButton.disabled = false;
+                        buyButton.textContent = 'Proceed to Checkout';
+                    }
+                } catch (error) {
+                    console.error('Error during checkout:', error);
+                    console.error('Error details:', error.message, error.stack);
+                    // Use SweetAlert for error notification
+                    Swal.fire({
+                        title: 'Checkout Error',
+                        text: `An error occurred during checkout: ${error.message}. Please try again.`,
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#dc3545'
+                    });
+                    // Re-enable button
+                    const buyButton = document.getElementById('buy-button');
+                    buyButton.disabled = false;
+                    buyButton.textContent = 'Proceed to Checkout';
+                }
+        }
 
         // Close the modal when the 'x' is clicked
         closeButton.onclick = () => {
@@ -678,42 +2026,37 @@
                 return;
             }
 
-            // Calculate total price
-            let totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            // Use the final total after discounts, or calculate if not available
+            let finalTotal = currentFinalTotal;
+            if (finalTotal === 0) {
+                finalTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            }
 
             // Close customer form modal
             modal.style.display = 'none';
 
             // Show payment method selection
-            showPaymentMethodSelection(cartItems, customerInfo, totalPrice);
+            showPaymentMethodSelection(cartItems, customerInfo, finalTotal);
         });
 
         // Handle successful payment completion
         window.handlePaymentSuccess = async function(paymentData) {
             try {
-                // Confirm payment and create order
-                const response = await fetch(`/api/payment/confirm/${paymentData.session.id}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
+                // The backend does not have /api/payment/confirm-khqr endpoint
+                // Instead, the order is created immediately on checkout
+                // So just reset the form and redirect to invoice if order_id is available
 
-                const data = await response.json();
-
-                if (data.success) {
-                    // Cart is already cleared on server side after payment confirmation
-
+                if (paymentData && paymentData.order_id) {
                     // Reset customer form
                     customerForm.reset();
 
                     // Redirect to invoice page
-                    window.location.href = `/invoice/${data.order_id}`;
+                    window.location.href = `/invoice/${paymentData.order_id}`;
                 } else {
-                    alert('Error creating order: ' + data.error);
+                    alert('Payment succeeded but order ID not found.');
                 }
             } catch (error) {
-                console.error('Error confirming payment:', error);
+                console.error('Error handling payment success:', error);
                 alert('An error occurred while processing your order.');
             }
         };
@@ -733,144 +2076,382 @@
                 customerInfo: customerInfo,
                 totalPrice: totalPrice
             };
+            
             // Create payment method selection modal
             const paymentModal = document.createElement('div');
             paymentModal.id = 'payment-method-modal';
-            paymentModal.className = 'modal';
-            paymentModal.style.cssText = `
-                display: block;
-                position: fixed;
-                z-index: 1001;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0,0,0,0.5);
-            `;
+            paymentModal.className = 'payment-modal';
 
             paymentModal.innerHTML = `
-                <div class="modal-content" style="max-width: 600px; margin: 5% auto;">
-                    <span class="close-button" onclick="closePaymentMethodModal()">&times;</span>
-                    <h2 style="margin-bottom: 20px; color: #333;">Choose Payment Method</h2>
-                    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-                        <h3 style="margin: 0 0 10px 0;">Order Summary</h3>
-                        <p style="margin: 5px 0;"><strong>Customer:</strong> ${customerInfo.first_name} ${customerInfo.last_name}</p>
-                        <p style="margin: 5px 0;"><strong>Total Amount:</strong> $${totalPrice.toFixed(2)}</p>
-                        <p style="margin: 5px 0;"><strong>Items:</strong> ${cartItems.length} item(s)</p>
+                <div class="payment-modal-content">
+                    <button class="payment-modal-close" onclick="closePaymentMethodModal()" aria-label="Close modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    
+                    <div class="payment-modal-header">
+                        <h2>Choose Payment Method</h2>
+                        <div class="subtitle">Select your preferred way to complete your purchase</div>
                     </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                        <!-- KHQR Payment Option -->
-                        <div class="payment-option" style="border: 2px solid #ddd; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s;"
-                             onclick="selectKHQRPayment()"
-                             onmouseover="this.style.borderColor='#007bff'; this.style.backgroundColor='#f8f9ff'"
-                             onmouseout="this.style.borderColor='#ddd'; this.style.backgroundColor='white'">
-                            <div style="font-size: 48px; margin-bottom: 10px;">📱</div>
-                            <h3 style="margin: 10px 0; color: #333;">KHQR Payment</h3>
-                            <p style="margin: 0; color: #666; font-size: 14px;">ACLEDA Mobile, ABA, Wing, Pi Pay</p>
-                            <p style="margin: 5px 0 0 0; color: #666; font-size: 12px;">Scan QR code with your banking app</p>
+                    
+                    <div class="payment-modal-body">
+                        <div class="order-summary">
+                            <h3>Order Summary</h3>
+                            <div class="summary-grid">
+                                <div class="summary-item">
+                                    <span class="summary-label">Customer</span>
+                                    <span class="summary-value">${(customerInfo.first_name || 'Customer')} ${(customerInfo.last_name || '')}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Total Amount</span>
+                                    <span class="summary-value amount">$${totalPrice.toFixed(2)}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Items</span>
+                                    <span class="summary-value">${cartItems.length} item(s)</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Cash Payment Option -->
-                        <div class="payment-option" style="border: 2px solid #ddd; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s;"
-                             onclick="selectCashPayment()"
-                             onmouseover="this.style.borderColor='#28a745'; this.style.backgroundColor='#f8fff8'"
-                             onmouseout="this.style.borderColor='#ddd'; this.style.backgroundColor='white'">
-                            <div style="font-size: 48px; margin-bottom: 10px;">💵</div>
-                            <h3 style="margin: 10px 0; color: #333;">Cash Payment</h3>
-                            <p style="margin: 0; color: #666; font-size: 14px;">Walk-in customers</p>
-                            <p style="margin: 5px 0 0 0; color: #666; font-size: 12px;">Pay with cash at the store</p>
+                        <div class="payment-options">
+                            <!-- KHQR Payment Option -->
+                            <div class="payment-option featured" onclick="selectKHQRPayment()" tabindex="0" role="button" aria-label="Select KHQR Payment">
+                                <div class="payment-option-icon">📱</div>
+                                <h3>KHQR Payment</h3>
+                                <div class="payment-option-description">ACLEDA Mobile, ABA, Wing, Pi Pay</div>
+                                <div class="payment-option-subtitle">Scan QR code with your banking app</div>
+                            </div>
+
+
+                            <!-- Cash Payment Option -->
+                            <div class="payment-option cash" onclick="selectCashPayment()" tabindex="0" role="button" aria-label="Select Cash Payment">
+                                <div class="payment-option-icon">💵</div>
+                                <h3>Cash Payment</h3>
+                                <div class="payment-option-description">Walk-in customers</div>
+                                <div class="payment-option-subtitle">Pay with cash at the store</div>
+                            </div>
                         </div>
                     </div>
-
-                    <div style="text-align: center; margin-top: 20px;">
-                        <button onclick="closePaymentMethodModal()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
-                            Cancel
+                    
+                    <div class="payment-modal-footer">
+                        <button class="cancel-button" onclick="closePaymentMethodModal()">
+                            <i class="fas fa-times"></i> Cancel
                         </button>
                     </div>
                 </div>
             `;
 
             document.body.appendChild(paymentModal);
+            
+            // Add keyboard navigation support
+            const paymentOptions = paymentModal.querySelectorAll('.payment-option');
+            paymentOptions.forEach(option => {
+                option.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        option.click();
+                    }
+                });
+            });
+            
+            // Add click outside to close functionality
+            paymentModal.addEventListener('click', (e) => {
+                if (e.target === paymentModal) {
+                    closePaymentMethodModal();
+                }
+            });
         }
 
         function closePaymentMethodModal() {
             const modal = document.getElementById('payment-method-modal');
             if (modal) {
-                modal.remove();
+                // Add fade out animation before removing
+                modal.style.animation = 'modalFadeOut 0.3s ease-out forwards';
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
             }
         }
 
         function selectKHQRPayment() {
-            // Use global payment data instead of parsing from parameters
-            const { cartItems, customerInfo, totalPrice } = currentPaymentData;
-
             closePaymentMethodModal();
 
-            // Start KHQR payment process
-            console.log('🔥 Starting KHQR payment:', { cartItems, customerInfo, totalPrice });
+            // Start KHQR Bakong payment with auto-generation
+            startKHQRBakongPayment();
+        }
 
-            // Set success callback for when payment is completed
-            window.khqrPayment.setSuccessCallback(async (result) => {
-                console.log('🎉 Cart success callback called with result:', result);
-                console.log('🔍 Result details:', {
-                    invoice_url: result.invoice_url,
-                    order_id: result.order_id,
-                    amount: result.amount,
-                    currency: result.currency,
-                    reference_id: result.reference_id
+        // Function to start KHQR Bakong payment with auto-generation
+        async function startKHQRBakongPayment() {
+            try {
+                const totalPrice = currentPaymentData.totalPrice;
+                const customerInfo = currentPaymentData.customerInfo;
+
+                console.log('🔄 Starting KHQR Bakong auto-payment generation...');
+                
+                // Create order first using the existing checkout API
+                const checkoutResponse = await fetch('/api/cart/checkout', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        payment_method: 'KHQR_BAKONG',
+                        customer_info: customerInfo
+                    })
                 });
 
-                // Clear cart on both client and server
-                console.log('🧹 Clearing cart...');
-                localStorage.removeItem('cart');
+                // Check if response is JSON
+                const contentType = checkoutResponse.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await checkoutResponse.text();
+                    console.error('❌ Invalid response format:', text);
+                    throw new Error('Server returned HTML instead of JSON. Please check the API endpoint.');
+                }
 
-                // Clear server-side cart
-                try {
-                    await fetch('/api/khqr/clear-cart', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
+                const checkoutResult = await checkoutResponse.json();
+                
+                if (!checkoutResult.success) {
+                    throw new Error(checkoutResult.error || 'Failed to create order');
+                }
+
+                // Start KHQR payment with auto-generation
+                // Suppress internal modal since we want to show our own
+                window.khqrPayment.setSuppressOwnModal(true);
+                
+                window.khqrPayment.setSuccessCallback((paymentResult) => {
+                    console.log('✅ KHQR payment completed:', paymentResult);
+                    
+                    // Show success modal first, then redirect
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Payment Successful!',
+                            text: 'Your KHQR payment has been processed successfully.',
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'View Invoice',
+                            cancelButtonText: 'Continue Shopping',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // User chose to view invoice
+                                if (checkoutResult.order_id) {
+                                    window.location.href = `/invoice/${checkoutResult.order_id}`;
+                                } else {
+                                    alert('Invoice not available');
+                                }
+                            } else {
+                                // User chose to continue shopping - reload page to show empty cart
+                                window.location.reload();
+                            }
+                        });
+                    } else {
+                        // Fallback if SweetAlert is not available
+                        const choice = confirm('Payment successful! Click OK to view invoice or Cancel to continue shopping.');
+                        if (choice && checkoutResult.order_id) {
+                            window.location.href = `/invoice/${checkoutResult.order_id}`;
+                        } else {
+                            window.location.reload();
                         }
+                    }
+                });
+
+                window.khqrPayment.setErrorCallback((errorMessage) => {
+                    console.error('❌ KHQR payment failed:', errorMessage);
+                    Swal.fire({
+                        title: 'Payment Failed',
+                        text: errorMessage,
+                        icon: 'error',
+                        confirmButtonText: 'Try Again'
                     });
-                    console.log('✅ Server cart cleared');
-                } catch (error) {
-                    console.error('❌ Error clearing server cart:', error);
-                }
+                });
 
-                // Check if we have invoice URL and order ID
-                if (result.invoice_url && result.order_id) {
-                    console.log(`🧾 Redirecting to invoice: ${result.invoice_url}`);
-                    window.location.href = result.invoice_url;
-                } else if (result.order_id) {
-                    // Fallback: construct invoice URL manually
-                    const invoiceUrl = `/invoice/${result.order_id}`;
-                    console.log(`🧾 Constructing invoice URL: ${invoiceUrl}`);
-                    window.location.href = invoiceUrl;
-                } else {
-                    // Fallback: show success message and redirect to homepage
-                    console.log('⚠️ No order_id or invoice_url found, showing alert');
-                    alert(`🎉 Payment Successful!\n\nAmount: ${result.currency || 'USD'} ${result.amount || 'N/A'}\nReference: ${result.reference_id || 'N/A'}\n\n💰 Money has been transferred!\n📦 Order processing...`);
-                    window.location.href = '/';
-                }
-            });
+                // Start the payment
+                await window.khqrPayment.startPayment(
+                    totalPrice,
+                    'USD',
+                    `ORDER_${checkoutResult.order_id}`
+                );
 
-            // Start KHQR payment with total amount
-            window.khqrPayment.startPayment(totalPrice, 'USD', `CART_${Date.now()}`);
+            } catch (error) {
+                console.error('❌ Error starting KHQR Bakong payment:', error);
+                Swal.fire({
+                    title: 'Payment Error',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
         }
 
         function selectCashPayment() {
-            // Use global payment data instead of parsing from parameters
-            const { cartItems, customerInfo, totalPrice } = currentPaymentData;
-
             closePaymentMethodModal();
 
-            // Process cash payment
+            // For cash payments, we need to get cart items and customer info first
+            // but not create the order until cash payment is confirmed
+            const cartItems = getCartItemsForCheckout();
+            
+            // Use already-fetched logged-in user info, or fallback to form data
+            let customerInfo = loggedInUserInfo;
+            
+            // If no logged-in user info, check form data
+            if (!customerInfo && typeof customerForm !== 'undefined' && customerForm) {
+                const formData = new FormData(customerForm);
+                customerInfo = {};
+                for (let [key, value] of formData.entries()) {
+                    customerInfo[key] = value;
+                }
+                // Check if we have the required fields
+                if (!customerInfo.first_name || !customerInfo.last_name || !customerInfo.phone) {
+                    customerInfo = null;
+                }
+            }
+            
+            if (!cartItems || cartItems.length === 0) {
+                Swal.fire({
+                    title: 'Empty Cart',
+                    text: 'Your cart is empty. Please add items before proceeding.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            if (!customerInfo) {
+                Swal.fire({
+                    title: 'Customer Information Required',
+                    text: 'Please fill in your customer information before proceeding.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            // Calculate total price
+            const totalPrice = cartItems.reduce((total, item) => {
+                return total + (parseFloat(item.price) * parseInt(item.quantity));
+            }, 0);
+            
+            // Show cash payment confirmation modal first
             processCashPayment(cartItems, customerInfo, totalPrice);
         }
 
+
+
+        // Function to process checkout with selected payment method
+        async function processCheckout(paymentMethod) {
+            try {
+                // Disable button during processing
+                const buyButton = document.getElementById('buy-button');
+                buyButton.disabled = true;
+                buyButton.textContent = 'Processing...';
+
+                console.log('Starting checkout process with payment method:', paymentMethod);
+
+                // Call the checkout API with payment method
+                const response = await fetch('/api/cart/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        payment_method: paymentMethod
+                    })
+                });
+
+                console.log('Checkout response status:', response.status);
+                console.log('Checkout response ok:', response.ok);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Checkout result:', result);
+
+                if (result.success) {
+                    console.log('Checkout successful, order ID:', result.order_id);
+
+                    // Clear local cart display
+                    cartItems = [];
+                    updateCart();
+
+                    // Show success message with safe number formatting
+                    const subtotal = parseFloat(result.subtotal || 0).toFixed(2);
+                    const discount = parseFloat(result.volume_discount_amount || 0).toFixed(2);
+                    const total = parseFloat(result.final_total || 0).toFixed(2);
+
+                    // Use improved styled notification
+                    Swal.fire({
+                        title: '🎉 Order Placed Successfully!',
+                        html: `
+                            <div style="text-align: left; margin: 20px 0;">
+                                <p><strong>Order ID:</strong> #${result.order_id}</p>
+                                <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+                                <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+                                <p><strong>Subtotal:</strong> $${subtotal}</p>
+                                <p><strong>Volume Discount:</strong> -$${discount}</p>
+                                <hr style="margin: 15px 0; border: none; border-top: 2px solid #28a745;">
+                                <p style="font-size: 18px; color: #28a745;"><strong>Total:</strong> $${total}</p>
+                            </div>
+                        `,
+                        icon: 'success',
+                        confirmButtonText: 'View Invoice',
+                        confirmButtonColor: '#28a745',
+                        showCancelButton: true,
+                        cancelButtonText: 'Continue Shopping',
+                        cancelButtonColor: '#6c757d'
+                    }).then((result_modal) => {
+                        if (result_modal.isConfirmed) {
+                            // Redirect to invoice page
+                            console.log('Redirecting to invoice:', `/invoice/${result.order_id}`);
+                            window.location.href = `/invoice/${result.order_id}`;
+                        } else {
+                            // Continue shopping - redirect to homepage
+                            window.location.href = '/';
+                        }
+                    });
+                } else {
+                    // Use styled error notification
+                    Swal.fire({
+                        title: 'Checkout Failed',
+                        text: result.error,
+                        icon: 'error',
+                        confirmButtonText: 'Try Again',
+                        confirmButtonColor: '#dc3545'
+                    });
+
+                    // Re-enable button
+                    buyButton.disabled = false;
+                    buyButton.textContent = 'Proceed to Checkout';
+                }
+            } catch (error) {
+                console.error('Error during checkout:', error);
+                console.error('Error details:', error.message, error.stack);
+
+                // Use styled error notification
+                Swal.fire({
+                    title: 'Checkout Error',
+                    text: `An error occurred during checkout: ${error.message}. Please try again.`,
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#dc3545'
+                });
+
+                // Re-enable button
+                const buyButton = document.getElementById('buy-button');
+                buyButton.disabled = false;
+                buyButton.textContent = 'Proceed to Checkout';
+            }
+        }
+
+        // Store cash payment data globally to avoid JSON parsing issues
+        let cashPaymentData = null;
+
         async function processCashPayment(cartItems, customerInfo, totalPrice) {
             try {
+                // Store data globally for confirmCashPayment function
+                cashPaymentData = { cartItems, customerInfo, totalPrice };
+
                 // Show cash payment confirmation modal
                 const confirmModal = document.createElement('div');
                 confirmModal.id = 'cash-payment-modal';
@@ -913,7 +2494,7 @@
                             <button onclick="cancelCashPayment()" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer;">
                                 Cancel
                             </button>
-                            <button onclick="confirmCashPayment('${JSON.stringify(cartItems).replace(/"/g, '&quot;')}', '${JSON.stringify(customerInfo).replace(/"/g, '&quot;')}', ${totalPrice})"
+                            <button onclick="confirmCashPayment()"
                                     style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-weight: bold;">
                                 ✅ Confirm Cash Received
                             </button>
@@ -929,36 +2510,128 @@
             }
         }
 
-        function cancelCashPayment() {
+        async function cancelCashPayment() {
             const modal = document.getElementById('cash-payment-modal');
             if (modal) {
                 modal.remove();
             }
+            
+            // If we have pending order data, we need to restore cart items and cancel the pending order
+            if (cashPaymentData && cashPaymentData.cartItems) {
+                console.log('🔄 Restoring cart items after cash payment cancellation...');
+                
+                // Restore cart items to session
+                const restoredCart = cashPaymentData.cartItems.map(item => ({
+                    product_id: item.product_id,
+                    quantity: item.quantity,
+                    price: item.price,
+                    product_name: item.product_name
+                }));
+                
+                // Update the cart display
+                if (typeof updateCartDisplay === 'function') {
+                    updateCartDisplay(restoredCart);
+                }
+                
+                // If we have a pending order ID, cancel it to prevent it from being counted as completed
+                if (cashPaymentData.pendingOrderId) {
+                    try {
+                        console.log('🔄 Cancelling pending order after cash payment cancellation...');
+                        const response = await fetch(`/api/orders/${cashPaymentData.pendingOrderId}/cancel`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                reason: 'Payment cancelled by customer',
+                                notes: 'Cash payment was cancelled during scanning'
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        if (data.success) {
+                            console.log('✅ Pending order cancelled successfully');
+                        } else {
+                            console.warn('⚠️ Failed to cancel pending order:', data.error);
+                        }
+                    } catch (error) {
+                        console.error('❌ Error cancelling pending order:', error);
+                    }
+                }
+                
+                // Show success message
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Payment Cancelled',
+                        text: 'Your cash payment has been cancelled and items have been restored to your cart.',
+                        icon: 'info',
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+                    alert('Payment cancelled. Items have been restored to your cart.');
+                }
+            }
+            
+            // Clear global payment data
+            cashPaymentData = null;
         }
 
-        async function confirmCashPayment(cartItemsStr, customerInfoStr, totalPrice) {
-            const cartItems = JSON.parse(cartItemsStr.replace(/&quot;/g, '"'));
-            const customerInfo = JSON.parse(customerInfoStr.replace(/&quot;/g, '"'));
+        async function confirmCashPayment() {
+            if (!cashPaymentData) {
+                alert('Payment data not found. Please try again.');
+                return;
+            }
+
+            const { cartItems, customerInfo, totalPrice } = cashPaymentData;
 
             try {
-                // Create cash payment order
-                const response = await fetch('/api/payment/cash', {
+                // First, create the order via checkout API
+                console.log('🔄 Creating order for cash payment...');
+                const checkoutResponse = await fetch('/api/cart/checkout', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        cart_items: cartItems,
-                        customer_info: customerInfo,
-                        total_amount: totalPrice
+                        payment_method: 'Cash'
                     })
                 });
+
+                const checkoutResult = await checkoutResponse.json();
+                
+                if (!checkoutResult.success) {
+                    throw new Error(checkoutResult.error || 'Failed to create order');
+                }
+
+                // Store the order ID so it can be cancelled if needed
+                cashPaymentData.pendingOrderId = checkoutResult.order_id;
+                console.log('✅ Order created with ID:', checkoutResult.order_id);
+
+                                                // Now process the cash payment
+                                const response = await fetch('/api/payment/cash', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        order_id: checkoutResult.order_id,  // Send the order ID we just created
+                                        cart_items: cartItems,
+                                        customer_info: customerInfo,
+                                        total_amount: totalPrice
+                                    })
+                                });
 
                 const data = await response.json();
 
                 if (data.success) {
                     // Close cash payment modal
-                    cancelCashPayment();
+                    const modal = document.getElementById('cash-payment-modal');
+                    if (modal) {
+                        modal.remove();
+                    }
+
+                    // Clear global payment data
+                    cashPaymentData = null;
 
                     // Clear cart
                     await clearCartAPI();
@@ -968,32 +2641,137 @@
                         customerForm.reset();
                     }
 
-                    // Handle different types of payments
-                    if (data.payment_type === 'mixed_cart' && data.order_id && data.preorder_id) {
-                        // Mixed cart payment - redirect to mixed cart summary
-                        window.location.href = `/mixed-cart/summary/${data.order_id}/${data.preorder_id}`;
-                    } else if (data.order_id) {
-                        // Regular order - redirect to invoice
-                        window.location.href = `/invoice/${data.order_id}`;
-                    } else if (data.preorder_only && data.preorder_id) {
-                        // Single pre-order payment - redirect to pre-order invoice
-                        window.location.href = `/preorder/invoice/${data.preorder_id}`;
-                    } else if (data.preorder_only) {
-                        // Multiple pre-order payments - redirect to pre-orders page with success message
-                        alert(data.message);
-                        window.location.href = '/customer/preorders';
+                    // Show success modal with options
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Payment Successful!',
+                            text: 'Your cash payment has been processed successfully.',
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'View Invoice',
+                            cancelButtonText: 'Continue Shopping',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // User chose to view invoice
+                                if (data.payment_type === 'mixed_cart' && data.order_id && data.preorder_id) {
+                                    // Mixed cart payment - redirect to mixed cart summary
+                                    window.location.href = `/mixed-cart/summary/${data.order_id}/${data.preorder_id}`;
+                                } else if (data.order_id) {
+                                    // Regular order - redirect to invoice
+                                    window.location.href = `/invoice/${data.order_id}`;
+                                } else if (data.preorder_only && data.preorder_id) {
+                                    // Single pre-order payment - redirect to pre-order invoice
+                                    window.location.href = `/preorder/invoice/${data.preorder_id}`;
+                                } else if (data.preorder_only) {
+                                    // Multiple pre-order payments - redirect to pre-orders page
+                                    window.location.href = '/customer/preorders';
+                                } else {
+                                    // Fallback - show success message and stay on page
+                                    alert(data.message || 'Payment completed successfully!');
+                                }
+                            } else {
+                                // User chose to continue shopping - just reload the page to show empty cart
+                                window.location.reload();
+                            }
+                        });
                     } else {
-                        // Fallback - show success message and stay on page
-                        alert(data.message);
-                        window.location.reload();
+                        // Fallback if SweetAlert is not available
+                        const choice = confirm('Payment successful! Click OK to view invoice or Cancel to continue shopping.');
+                        if (choice) {
+                            // User chose to view invoice
+                            if (data.order_id) {
+                                window.location.href = `/invoice/${data.order_id}`;
+                            } else {
+                                alert('Invoice not available');
+                            }
+                        } else {
+                            // User chose to continue shopping
+                            window.location.reload();
+                        }
                     }
                 } else {
+                    // If cash payment fails, we need to cancel the order we just created
+                    if (cashPaymentData.pendingOrderId) {
+                        try {
+                            console.log('🔄 Cancelling order due to cash payment failure...');
+                            await fetch(`/api/orders/${cashPaymentData.pendingOrderId}/cancel`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    reason: 'Cash payment failed',
+                                    notes: 'Order cancelled due to payment processing error'
+                                })
+                            });
+                        } catch (cancelError) {
+                            console.error('❌ Error cancelling order after payment failure:', cancelError);
+                        }
+                    }
+                    
                     alert('Error processing cash payment: ' + data.error);
                 }
             } catch (error) {
                 console.error('Error confirming cash payment:', error);
+                
+                // If order creation fails, we need to cancel any order that might have been created
+                if (cashPaymentData.pendingOrderId) {
+                    try {
+                        console.log('🔄 Cancelling order due to checkout error...');
+                        await fetch(`/api/orders/${cashPaymentData.pendingOrderId}/cancel`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                reason: 'Checkout error',
+                                notes: 'Order cancelled due to system error during checkout'
+                            })
+                        });
+                    } catch (cancelError) {
+                        console.error('❌ Error cancelling order after checkout error:', cancelError);
+                    }
+                }
+                
                 alert('An error occurred while processing the cash payment.');
             }
+        }
+
+        // Helper function to get cart items for checkout
+        function getCartItemsForCheckout() {
+            // Get cart items from session or localStorage
+            if (typeof getCartItems === 'function') {
+                return getCartItems();
+            }
+            
+            // Fallback to global cartItems variable
+            if (typeof cartItems !== 'undefined' && cartItems.length > 0) {
+                return cartItems;
+            }
+            
+            return null;
+        }
+
+        // Helper function to get customer info
+        function getCustomerInfo() {
+            // Check if customer form exists and has data
+            if (typeof customerForm !== 'undefined' && customerForm) {
+                const formData = new FormData(customerForm);
+                const customerInfo = {};
+                
+                for (let [key, value] of formData.entries()) {
+                    customerInfo[key] = value;
+                }
+                
+                // Check if we have the required fields
+                if (customerInfo.first_name && customerInfo.last_name && customerInfo.phone) {
+                    return customerInfo;
+                }
+            }
+            
+            // No customer info available
+            return null;
         }
 
         // Test KHQR Payment Function
@@ -1047,6 +2825,618 @@
             }
         }
 
+        // Checkout Container Functions
+        let currentCheckoutStep = 1;
+        let selectedPaymentMethod = 'KHQR_BAKONG';
+        let checkoutCustomerInfo = {};
+
+        function openCheckoutContainer() {
+            // Security check: Only allow checkout for logged-in users
+            if (!loggedInUserInfo || !loggedInUserInfo.id) {
+                showCustomNotification('Please log in to access checkout.', 'error');
+                return; // Prevent checkout from opening
+            }
+            
+            const modal = document.getElementById('checkout-container');
+            modal.style.display = 'block';
+            currentCheckoutStep = 1;
+            showCheckoutStep(1);
+            
+            console.log('Opening checkout container...');
+            console.log('loggedInUserInfo:', loggedInUserInfo);
+            
+            // Show pre-fill button if user is logged in
+            const prefillButtonContainer = document.getElementById('prefill-button-container');
+            if (prefillButtonContainer) {
+                if (loggedInUserInfo) {
+                    prefillButtonContainer.style.display = 'block';
+                    // Load customer addresses for selection
+                    loadCustomerAddresses();
+                    console.log('Pre-fill button shown');
+                } else {
+                    prefillButtonContainer.style.display = 'none';
+                    console.log('Pre-fill button hidden - no user info');
+                }
+            }
+            
+            // Pre-fill customer information if user is logged in
+            if (loggedInUserInfo) {
+                console.log('Calling prefillCustomerForm...');
+                prefillCustomerForm();
+            } else {
+                console.log('No user info available for pre-fill');
+            }
+        }
+
+        function closeCheckoutContainer() {
+            console.log('Close button clicked!');
+            const modal = document.getElementById('checkout-container');
+            modal.style.display = 'none';
+            resetCheckoutForm();
+            console.log('Checkout modal closed and form reset');
+        }
+        
+        // Add event listener for close button
+        document.addEventListener('DOMContentLoaded', function() {
+            const closeButton = document.querySelector('#checkout-container .close-button');
+            if (closeButton) {
+                closeButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Close button event listener triggered');
+                    closeCheckoutContainer();
+                });
+            }
+        });
+
+        // Load customer addresses for selection
+        async function loadCustomerAddresses() {
+            try {
+                const response = await fetch('/api/customer/addresses');
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Addresses response:', data);
+                    
+                    // Check if data has addresses array
+                    const addresses = data.addresses || data;
+                    console.log('Addresses array:', addresses);
+                    
+                    const selector = document.getElementById('address-selector');
+                    
+                    // Clear existing options except the first one
+                    selector.innerHTML = '<option value="">Select Address...</option>';
+                    
+                    // Add address options
+                    if (addresses && Array.isArray(addresses)) {
+                        addresses.forEach((address, index) => {
+                            const option = document.createElement('option');
+                            option.value = address.id;
+                            const addressType = address.address_type ? address.address_type.charAt(0).toUpperCase() + address.address_type.slice(1) : 'Home';
+                            option.textContent = `${addressType} - ${address.street_name}, ${address.province}`;
+                            if (address.is_default) {
+                                option.textContent += ' (Default)';
+                            }
+                            selector.appendChild(option);
+                        });
+                        console.log(`Loaded ${addresses.length} addresses into dropdown`);
+                    } else {
+                        console.log('No addresses found or addresses is not an array');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading addresses:', error);
+            }
+        }
+
+        // Handle address selection
+        async function selectAddress() {
+            const selector = document.getElementById('address-selector');
+            const addressId = selector.value;
+            
+            if (addressId) {
+                try {
+                    console.log('Loading address ID:', addressId);
+                    const response = await fetch(`/api/customer/addresses/${addressId}`);
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('Address response:', result);
+                        
+                        if (result.success && result.address) {
+                            prefillAddressFields(result.address);
+                            console.log('Address loaded and prefilled:', result.address);
+                            
+                            // Show notification
+                            const notification = document.getElementById('prefill-notification');
+                            if (notification) {
+                                notification.style.display = 'block';
+                            }
+                        } else {
+                            console.error('Error loading address:', result.error);
+                        }
+                    } else {
+                        console.error('Failed to load address:', response.status);
+                    }
+                } catch (error) {
+                    console.error('Error loading address:', error);
+                }
+            }
+        }
+
+        // Save current address from checkout form
+        async function saveCurrentAddress() {
+            try {
+                // Helper function to safely get field value
+                const getFieldValue = (fieldId) => {
+                    const element = document.getElementById(fieldId);
+                    return element ? element.value : '';
+                };
+
+                // Collect address data from form with null checks
+                const addressData = {
+                    address_type: getFieldValue('address_type') || 'home',
+                    house_number: getFieldValue('house_number'),
+                    street_name: getFieldValue('street_name'),
+                    street_number: getFieldValue('street_number'),
+                    village: getFieldValue('village'),
+                    sangkat: getFieldValue('sangkat'),
+                    commune: getFieldValue('commune'),
+                    khan: getFieldValue('khan'),
+                    province: getFieldValue('province'),
+                    postal_code: getFieldValue('postal_code'),
+                    country: getFieldValue('country') || 'Cambodia',
+                    building_name: getFieldValue('building_name'),
+                    floor_number: getFieldValue('floor_number'),
+                    unit_number: getFieldValue('unit_number'),
+                    landmark: getFieldValue('landmark'),
+                    delivery_notes: getFieldValue('delivery_notes'),
+                    is_default: false // Don't set as default automatically
+                };
+
+                const response = await fetch('/api/customer/addresses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(addressData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Address saved successfully:', result);
+                    
+                    // Show success notification
+                    showCustomNotification('Address saved successfully!', 'success');
+                    
+                    // Reload address list
+                    loadCustomerAddresses();
+                } else {
+                    const error = await response.json();
+                    console.error('Error saving address:', error);
+                    showCustomNotification('Error saving address: ' + (error.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error saving address:', error);
+                showCustomNotification('Error saving address: ' + error.message, 'error');
+            }
+        }
+
+        function showCheckoutStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.checkout-step').forEach(s => s.classList.remove('active'));
+            
+            // Show current step
+            document.getElementById(`checkout-step-${step}`).classList.add('active');
+            
+            // Update progress indicators
+            updateProgressIndicators(step);
+            
+            // Update progress step classes
+            updateProgressStepClasses(step);
+            
+            // Update progress bar
+            const progressFill = document.querySelector('.progress-fill');
+            if (progressFill) {
+                if (step === 1) {
+                    progressFill.style.width = '0%';
+                } else if (step === 2) {
+                    progressFill.style.width = '100%';
+                }
+            }
+        }
+
+        function updateProgressIndicators(step) {
+            const progressSteps = document.querySelectorAll('.progress-step');
+            progressSteps.forEach((stepEl, index) => {
+                stepEl.classList.remove('active', 'completed');
+                if (index + 1 < step) {
+                    stepEl.classList.add('completed');
+                } else if (index + 1 === step) {
+                    stepEl.classList.add('active');
+                }
+            });
+        }
+
+        function updateProgressStepClasses(step) {
+            try {
+                // Get all progress steps from the current active step
+                const currentStepElement = document.querySelector(`#checkout-step-${step}`);
+                if (!currentStepElement) {
+                    console.warn(`Step ${step} element not found`);
+                    return;
+                }
+                
+                const progressSteps = currentStepElement.querySelectorAll('.progress-step');
+                if (progressSteps.length === 0) {
+                    console.warn(`No progress steps found in step ${step}`);
+                    return;
+                }
+                
+                // Remove all classes from all progress steps
+                progressSteps.forEach(stepEl => {
+                    stepEl.classList.remove('active', 'completed');
+                });
+                
+                // Add appropriate classes based on current step
+                if (step === 1) {
+                    // Step 1: Customer Info
+                    if (progressSteps[0]) progressSteps[0].classList.add('active');
+                } else if (step === 3) {
+                    // Step 2: Confirmation (skipping payment method)
+                    if (progressSteps[0]) progressSteps[0].classList.add('completed');
+                    if (progressSteps[1]) progressSteps[1].classList.add('active');
+                }
+                
+                console.log(`Progress step classes updated for step ${step}`);
+            } catch (error) {
+                console.error('Error updating progress step classes:', error);
+            }
+        }
+
+        function nextCheckoutStep() {
+            if (currentCheckoutStep === 1) {
+                // Validate customer form
+                if (!validateCustomerForm()) {
+                    return;
+                }
+                
+                // Store customer info
+                checkoutCustomerInfo = {
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    street_name: document.getElementById('street_name').value,
+                    province: document.getElementById('province').value,
+                    house_number: document.getElementById('house_number').value,
+                    village: document.getElementById('village').value,
+                    sangkat: document.getElementById('sangkat').value,
+                    khan: document.getElementById('khan').value,
+                    commune: document.getElementById('commune').value,
+                    postal_code: document.getElementById('postal_code').value,
+                    building_name: document.getElementById('building_name').value,
+                    landmark: document.getElementById('landmark').value,
+                    floor_number: document.getElementById('floor_number').value,
+                    unit_number: document.getElementById('unit_number').value,
+                    delivery_notes: document.getElementById('delivery_notes').value
+                };
+                
+                // Go directly to confirmation (step 2)
+                currentCheckoutStep = 2;
+                showCheckoutStep(2);
+                populateOrderSummary();
+            }
+        }
+
+        function previousCheckoutStep() {
+            if (currentCheckoutStep === 2) {
+                // From Confirmation, go back to Customer Info (step 1)
+                currentCheckoutStep = 1;
+                showCheckoutStep(1);
+            }
+            // If already on step 1, do nothing (can't go back further)
+        }
+
+        function showCustomNotification(message, type = 'error') {
+            // Remove any existing notifications
+            const existingNotification = document.querySelector('.custom-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `custom-notification custom-notification-${type}`;
+            notification.innerHTML = `
+                <div class="custom-notification-content">
+                    <i class="custom-notification-icon">${type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️'}</i>
+                    <span class="custom-notification-message">${message}</span>
+                    <button class="custom-notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+            
+            // Add to body
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function validateCustomerForm() {
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const street_name = document.getElementById('street_name').value.trim();
+            const province = document.getElementById('province').value.trim();
+            
+            console.log('Validation check:', { name, email, phone, street_name, province });
+            
+            if (!name || !email || !phone || !street_name || !province) {
+                showCustomNotification('Please fill in all required fields.', 'error');
+                return false;
+            }
+            
+            if (!isValidEmail(email)) {
+                showCustomNotification('Please enter a valid email address.', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            
+            // Update radio buttons
+            document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+                radio.checked = radio.value === method;
+            });
+            
+            // Update visual selection - remove selected class from all options
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.classList.remove('selected');
+                // Also remove any hover effects
+                option.style.transform = '';
+                option.style.boxShadow = '';
+            });
+            
+            // Find and select the clicked option
+            const clickedOption = event.currentTarget;
+            clickedOption.classList.add('selected');
+            
+            // Show success notification
+            showCustomNotification(`Payment method selected: ${method}`, 'success');
+        }
+
+        function proceedToConfirmation() {
+            if (!selectedPaymentMethod) {
+                showCustomNotification('Please select a payment method.', 'error');
+                return;
+            }
+            
+            currentCheckoutStep = 3;
+            showCheckoutStep(3);
+            populateOrderSummary();
+        }
+
+        function populateOrderSummary() {
+            const orderItemsDiv = document.getElementById('checkout-order-items');
+            const totalSpan = document.getElementById('checkout-total');
+            
+            let orderItemsHTML = '';
+            let total = 0;
+            
+            cartItems.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                
+                orderItemsHTML += `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding: 10px; background: white; border-radius: 8px;">
+                        <div>
+                            <strong>${item.name}</strong><br>
+                            <small>Qty: ${item.quantity} × $${item.price.toFixed(2)}</small>
+                        </div>
+                        <div style="font-weight: 600;">$${itemTotal.toFixed(2)}</div>
+                    </div>
+                `;
+            });
+            
+            orderItemsDiv.innerHTML = orderItemsHTML;
+            totalSpan.textContent = total.toFixed(2);
+        }
+
+        function confirmOrder() {
+            // Since we skipped payment method selection, open the payment modal directly
+            closeCheckoutContainer();
+            showPaymentMethodSelection(cartItems, checkoutCustomerInfo, currentFinalTotal);
+        }
+
+        function prefillCustomerForm() {
+            console.log('prefillCustomerForm called with loggedInUserInfo:', loggedInUserInfo);
+            
+            if (loggedInUserInfo) {
+                // Pre-fill the customer form with logged-in user information
+                const nameField = document.getElementById('name');
+                const emailField = document.getElementById('email');
+                const phoneField = document.getElementById('phone');
+                
+                console.log('Form fields found:', { nameField, emailField, phoneField });
+                
+                if (nameField) nameField.value = loggedInUserInfo.name || '';
+                if (emailField) emailField.value = loggedInUserInfo.email || '';
+                if (phoneField) phoneField.value = loggedInUserInfo.phone || '';
+                
+                // Always try to get default address from API for atomic fields
+                fetchDefaultAddress();
+                
+                console.log('Form fields updated with values:', {
+                    name: nameField?.value,
+                    email: emailField?.value,
+                    phone: phoneField?.value
+                });
+                
+                // Show the pre-fill notification
+                const notification = document.getElementById('prefill-notification');
+                if (notification) {
+                    notification.style.display = 'block';
+                    console.log('Pre-fill notification shown');
+                } else {
+                    console.log('Pre-fill notification not found');
+                }
+                
+                console.log('Customer form pre-filled with user info:', loggedInUserInfo);
+            } else {
+                console.log('No loggedInUserInfo available for pre-fill');
+            }
+        }
+
+        function prefillAddressFields(addressData) {
+            console.log('prefillAddressFields called with:', addressData);
+            
+            // Pre-fill atomic address fields
+            const fields = [
+                'address_type', 'house_number', 'street_name', 'village', 'sangkat', 
+                'commune', 'khan', 'province', 'postal_code',
+                'building_name', 'landmark', 'floor_number', 'unit_number', 'delivery_notes'
+            ];
+            
+            fields.forEach(field => {
+                const element = document.getElementById(field);
+                console.log(`Field ${field}:`, element, 'Value:', addressData[field]);
+                if (element && addressData[field]) {
+                    element.value = addressData[field];
+                    console.log(`Set ${field} to:`, addressData[field]);
+                }
+            });
+        }
+
+        async function fetchDefaultAddress() {
+            try {
+                console.log('Fetching default address...');
+                const response = await fetch('/api/customer/addresses/default');
+                const result = await response.json();
+                
+                console.log('Default address response:', result);
+                
+                if (result.success && result.address) {
+                    prefillAddressFields(result.address);
+                    console.log('Default address loaded and prefilled:', result.address);
+                    // Show success notification
+                    const notification = document.getElementById('prefill-notification');
+                    if (notification) {
+                        notification.querySelector('.prefill-message').innerHTML = 
+                            '<i class="fas fa-user-check" style="color: #28a745; margin-right: 8px;"></i>' +
+                            'Your information has been pre-filled from your account';
+                        notification.style.display = 'block';
+                    }
+                } else {
+                    console.log('No default address found or error:', result);
+                    // Show a subtle notification that address fields are empty
+                    const notification = document.getElementById('prefill-notification');
+                    if (notification) {
+                        notification.querySelector('.prefill-message').innerHTML = 
+                            '<i class="fas fa-info-circle" style="color: #17a2b8; margin-right: 8px;"></i>' +
+                            'Basic info pre-filled. Please complete address details.';
+                        notification.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.log('Error fetching default address:', error);
+            }
+        }
+
+        function toggleAddressDetails() {
+            const detailsSection = document.getElementById('address-details');
+            const toggleButton = document.getElementById('toggle-address-details');
+            const icon = toggleButton.querySelector('i');
+            
+            if (detailsSection.style.display === 'none') {
+                detailsSection.style.display = 'block';
+                toggleButton.innerHTML = '<i class="fas fa-minus"></i> Hide details';
+                toggleButton.classList.remove('btn-outline-secondary');
+                toggleButton.classList.add('btn-outline-primary');
+            } else {
+                detailsSection.style.display = 'none';
+                toggleButton.innerHTML = '<i class="fas fa-plus"></i> Add more details';
+                toggleButton.classList.remove('btn-outline-primary');
+                toggleButton.classList.add('btn-outline-secondary');
+            }
+        }
+
+        function resetCheckoutForm() {
+            // Reset the form
+            const form = document.getElementById('customer-form');
+            if (form) {
+                form.reset();
+            }
+            
+            // Reset all form fields manually to ensure they're cleared
+            const formFields = [
+                'customer_name', 'customer_email', 'customer_phone',
+                'street_name', 'province', 'house_number', 'village', 
+                'sangkat', 'commune', 'khan', 'postal_code',
+                'building_name', 'landmark', 'floor_number', 
+                'unit_number', 'delivery_notes'
+            ];
+            
+            formFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = '';
+                }
+            });
+            
+            // Reset step and variables
+            currentCheckoutStep = 1;
+            selectedPaymentMethod = 'KHQR_BAKONG';
+            checkoutCustomerInfo = {};
+            showCheckoutStep(1);
+            
+            // Hide the pre-fill notification
+            const notification = document.getElementById('prefill-notification');
+            if (notification) {
+                notification.style.display = 'none';
+            }
+            
+            // Hide the pre-fill button
+            const prefillButtonContainer = document.getElementById('prefill-button-container');
+            if (prefillButtonContainer) {
+                prefillButtonContainer.style.display = 'none';
+            }
+            
+            // Hide address details section
+            const addressDetails = document.getElementById('address-details');
+            if (addressDetails) {
+                addressDetails.style.display = 'none';
+            }
+            
+            console.log('Checkout form reset completed');
+        }
+
+
+
+
+
+        // Update the buy button to use the new checkout container
+        document.getElementById('buy-button').onclick = function() {
+            if (cartItems.length > 0) {
+                // Check if user is logged in before opening checkout
+                if (loggedInUserInfo && loggedInUserInfo.id) {
+                    openCheckoutContainer();
+                } else {
+                    // Show login required message only
+                    showCustomNotification('Please log in to proceed with checkout.', 'error');
+                }
+            }
+        };
+
         // Make functions globally available
         window.showPaymentMethodSelection = showPaymentMethodSelection;
         window.closePaymentMethodModal = closePaymentMethodModal;
@@ -1055,7 +3445,363 @@
         window.cancelCashPayment = cancelCashPayment;
         window.confirmCashPayment = confirmCashPayment;
         window.testKHQRPayment = testKHQRPayment;
+        window.openCheckoutContainer = openCheckoutContainer;
+        window.closeCheckoutContainer = closeCheckoutContainer;
+        window.nextCheckoutStep = nextCheckoutStep;
+        window.previousCheckoutStep = previousCheckoutStep;
+        window.selectPaymentMethod = selectPaymentMethod;
+        window.proceedToConfirmation = proceedToConfirmation;
+        window.confirmOrder = confirmOrder;
+        window.prefillCustomerForm = prefillCustomerForm;
+        window.showCustomNotification = showCustomNotification;
 
+        // Payment Verification Modal
+        const verifyPaymentBtn = document.getElementById('verify-payment-btn');
+        const paymentVerificationModal = document.getElementById('payment-verification-modal');
+        const closeVerificationModal = document.getElementById('close-verification-modal');
+        
+        // Find Order Modal
+        const findOrderBtn = document.getElementById('find-order-btn');
+        const findOrderModal = document.getElementById('find-order-modal');
+        const closeFindOrderModal = document.getElementById('close-find-order-modal');
+        const findOrderForm = document.getElementById('find-order-form');
+        const searchResults = document.getElementById('search-results');
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const fileInput = document.getElementById('payment-screenshot');
+        const filePreview = document.getElementById('file-preview');
+        const fileName = document.getElementById('file-name');
+        const removeFileBtn = document.getElementById('remove-file');
+        const form = document.getElementById('payment-verification-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultDiv = document.getElementById('verification-result');
+
+        // Show payment verification modal
+        verifyPaymentBtn.addEventListener('click', () => {
+            paymentVerificationModal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Show find order modal
+        findOrderBtn.addEventListener('click', () => {
+            findOrderModal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Close find order modal
+        closeFindOrderModal.addEventListener('click', () => {
+            findOrderModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            findOrderForm.reset();
+            searchResults.style.display = 'none';
+        });
+
+        // Close find order modal when clicking outside
+        findOrderModal.addEventListener('click', (e) => {
+            if (e.target === findOrderModal) {
+                findOrderModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                findOrderForm.reset();
+                searchResults.style.display = 'none';
+            }
+        });
+
+        // Close payment verification modal
+        closeVerificationModal.addEventListener('click', () => {
+            paymentVerificationModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            form.reset();
+            filePreview.style.display = 'none';
+            resultDiv.style.display = 'none';
+        });
+
+        // Close modal when clicking outside
+        paymentVerificationModal.addEventListener('click', (e) => {
+            if (e.target === paymentVerificationModal) {
+                paymentVerificationModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                form.reset();
+                filePreview.style.display = 'none';
+                resultDiv.style.display = 'none';
+            }
+        });
+
+        // File upload handling
+        fileUploadArea.addEventListener('click', () => fileInput.click());
+        
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.background = '#e8f5e8';
+            fileUploadArea.style.borderColor = '#17a2b8';
+        });
+        
+        fileUploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.background = '#f8f9fa';
+            fileUploadArea.style.borderColor = '#17a2b8';
+        });
+        
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.background = '#f8f9fa';
+            fileUploadArea.style.borderColor = '#17a2b8';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                showFilePreview(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                showFilePreview(e.target.files[0]);
+            }
+        });
+
+        removeFileBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            filePreview.style.display = 'none';
+        });
+
+        function showFilePreview(file) {
+            fileName.textContent = file.name;
+            filePreview.style.display = 'block';
+            
+            // Auto-extract order ID and transaction ID from the uploaded file
+            extractOrderInfoFromFile(file);
+        }
+
+        function extractOrderInfoFromFile(file) {
+            // Show loading state
+            const orderIdInput = document.getElementById('order-id');
+            const transactionIdInput = document.getElementById('transaction-id');
+            
+            // Add loading indicators
+            orderIdInput.placeholder = 'Extracting Order ID...';
+            transactionIdInput.placeholder = 'Extracting Transaction ID...';
+            
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Send file to server for extraction
+            fetch('/api/payment/extract-order-info', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Auto-fill the extracted information
+                    if (data.order_id) {
+                        orderIdInput.value = data.order_id;
+                        orderIdInput.style.borderColor = '#28a745';
+                        orderIdInput.placeholder = 'Order ID detected!';
+                    }
+                    
+                    if (data.transaction_id) {
+                        transactionIdInput.value = data.transaction_id;
+                        transactionIdInput.style.borderColor = '#28a745';
+                        transactionIdInput.placeholder = 'Transaction ID detected!';
+                    }
+                    
+                    // Show success message
+                    let message = `✅ Smart Detection Complete!\n\nOrder ID: ${data.order_id || 'Not found'}`;
+                    if (data.transaction_id) {
+                        message += `\nTransaction ID: ${data.transaction_id}`;
+                    } else {
+                        message += `\nTransaction ID: Not found (QR codes don't contain this)`;
+                    }
+                    showCustomNotification(message, 'success');
+                } else {
+                    // Reset placeholders if extraction failed
+                    orderIdInput.placeholder = 'Auto-detection failed - enter manually';
+                    transactionIdInput.placeholder = 'Auto-detection failed - enter manually';
+                    orderIdInput.style.borderColor = '#ffc107';
+                    transactionIdInput.style.borderColor = '#ffc107';
+                    
+                    showCustomNotification(
+                        '⚠️ Could not auto-detect order information. No worries! Our staff will review your upload and help you complete the payment verification.',
+                        'warning'
+                    );
+                }
+            })
+            .catch(error => {
+                console.error('Extraction error:', error);
+                orderIdInput.placeholder = 'Auto-detection failed - enter manually';
+                transactionIdInput.placeholder = 'Auto-detection failed - enter manually';
+                orderIdInput.style.borderColor = '#dc3545';
+                transactionIdInput.style.borderColor = '#dc3545';
+            });
+        }
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const orderId = formData.get('order_id');
+            
+            // Show loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/payment/verify-upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    let message = `<h4><i class="fas fa-check-circle" style="color: #17a2b8;"></i> Payment Verified Successfully!</h4><p><strong>Order #${orderId}</strong> has been verified!</p>`;
+                    
+                    if (result.order_status === 'COMPLETED') {
+                        message += `<p>🎉 <strong>Order Completed!</strong> Your payment was automatically verified and the order is now complete. Your items are being prepared!</p>`;
+                    } else if (result.order_status === 'PENDING (QR Payment Verified)') {
+                        message += `<p>📱 <strong>Payment Proof Uploaded!</strong> Your payment proof has been uploaded. Our staff will review it and complete the verification soon.</p>`;
+                    } else {
+                        message += `<p>⏳ <strong>Payment Proof Uploaded!</strong> Your payment proof has been uploaded. Our staff will review it and help resolve any issues.</p>`;
+                    }
+                    
+                    message += `<p>You will receive a confirmation email once your order is processed.</p>`;
+                    
+                    showResult('success', message);
+                    form.reset();
+                    filePreview.style.display = 'none';
+                } else {
+                    showResult('error', `
+                        <h4><i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> Verification Failed</h4>
+                        <p>${result.error}</p>
+                        <p>Please check your Order ID and try again, or contact support if the problem persists.</p>
+                    `);
+                }
+            } catch (error) {
+                showResult('error', `
+                    <h4><i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> Upload Error</h4>
+                    <p>There was an error uploading your payment verification. Please try again.</p>
+                `);
+            } finally {
+                submitBtn.innerHTML = '<i class="fas fa-upload"></i> Verify Payment';
+                submitBtn.disabled = false;
+            }
+        });
+
+        function showResult(type, message) {
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+            resultDiv.className = `alert alert-${type}`;
+            resultDiv.style.background = type === 'success' ? '#d4edda' : '#f8d7da';
+            resultDiv.style.border = type === 'success' ? '1px solid #c3e6cb' : '1px solid #f5c6cb';
+            resultDiv.style.color = type === 'success' ? '#155724' : '#721c24';
+            resultDiv.style.padding = '20px';
+            resultDiv.style.borderRadius = '5px';
+            resultDiv.style.marginTop = '20px';
+            
+            // Scroll to result
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Find order form submission
+        findOrderForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('search-email').value.trim();
+            const phone = document.getElementById('search-phone').value.trim();
+            
+            if (!email && !phone) {
+                showSearchResult('error', 'Please provide either email or phone number to search.');
+                return;
+            }
+            
+            // Show loading state
+            const searchBtn = document.getElementById('search-orders-btn');
+            searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+            searchBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/orders/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, phone })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.orders.length > 0) {
+                    showOrderResults(result.orders);
+                } else {
+                    showSearchResult('error', 'No orders found. Please check your email or phone number and try again.');
+                }
+            } catch (error) {
+                showSearchResult('error', 'Error searching for orders. Please try again.');
+            } finally {
+                searchBtn.innerHTML = '<i class="fas fa-search"></i> Search Orders';
+                searchBtn.disabled = false;
+            }
+        });
+
+        function showOrderResults(orders) {
+            let html = '<h4 style="color: #28a745; margin-bottom: 15px;"><i class="fas fa-check-circle"></i> Found Orders</h4>';
+            
+            orders.forEach(order => {
+                const statusColor = order.status === 'PENDING' ? '#ffc107' : 
+                                  order.status === 'COMPLETED' ? '#28a745' : '#dc3545';
+                
+                html += `
+                    <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 10px; cursor: pointer;" 
+                         onclick="selectOrder(${order.id})">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>Order #${order.id}</strong>
+                                <span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 4px; margin-left: 10px; font-size: 12px;">
+                                    ${order.status}
+                                </span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: bold; color: #333;">$${order.total_amount}</div>
+                                <div style="font-size: 12px; color: #666;">${order.order_date}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 14px; color: #666;">
+                            Payment Method: ${order.payment_method}
+                            ${order.transaction_id ? `<br>Transaction ID: ${order.transaction_id}` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            searchResults.innerHTML = html;
+            searchResults.style.display = 'block';
+        }
+
+        function showSearchResult(type, message) {
+            searchResults.innerHTML = `
+                <div style="background: ${type === 'error' ? '#f8d7da' : '#d4edda'}; 
+                            border: 1px solid ${type === 'error' ? '#f5c6cb' : '#c3e6cb'}; 
+                            color: ${type === 'error' ? '#721c24' : '#155724'}; 
+                            padding: 15px; border-radius: 5px;">
+                    <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'}"></i>
+                    ${message}
+                </div>
+            `;
+            searchResults.style.display = 'block';
+        }
+
+        // Select order function
+        window.selectOrder = function(orderId) {
+            document.getElementById('order-id').value = orderId;
+            findOrderModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            findOrderForm.reset();
+            searchResults.style.display = 'none';
+            
+            // Show success message
+            showCustomNotification(`Order #${orderId} selected! You can now upload your payment screenshot.`, 'success');
+        };
 
     </script>
 </body>

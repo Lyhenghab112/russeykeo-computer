@@ -161,15 +161,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         data: data,
                         backgroundColor: [
                             'rgba(75, 192, 192, 0.2)', // completed
-                            'rgba(255, 206, 86, 0.2)',  // pending
-                            'rgba(255, 99, 132, 0.2)',  // cancelled
-                            'rgba(153, 102, 255, 0.2)' // processing
+                            'rgba(255, 99, 132, 0.2)'   // cancelled
                         ],
                         borderColor: [
                             'rgba(75, 192, 192, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(153, 102, 255, 1)'
+                            'rgba(255, 99, 132, 1)'
                         ],
                         borderWidth: 1
                     }]
@@ -200,21 +196,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success && data.orders && data.orders.length > 0) {
                 renderOrdersChart(data.orders);
-                // Update pending orders count
-                // The selector needs to be more robust. Let's assume the paragraph is directly within the widget.
-                const ordersWidget = document.querySelector('.widget:has(h2:contains("Orders"))');
-                if (ordersWidget) {
-                    const pendingOrdersParagraph = ordersWidget.querySelector('p');
-                    if (pendingOrdersParagraph && pendingOrdersParagraph.textContent.includes('Pending Orders:')) {
-                        pendingOrdersParagraph.textContent = `Pending Orders: ${data.pending_orders_count}`;
-                    } else {
-                        // If the paragraph doesn't exist or has different text, we might need to create it or find it differently.
-                        // For now, let's log a warning.
-                        console.warn("Could not find or update the 'Pending Orders:' paragraph.");
-                    }
-                } else {
-                    console.warn("Could not find the 'Orders' widget to update pending orders count.");
-                }
             } else {
                 console.error('Failed to fetch orders data:', data.error || 'No data received');
                 // Optionally display a message if no orders data is available
@@ -282,7 +263,8 @@ function renderMonthlySalesChart(sales) {
                             .then(response => response.json())
                             .then(data => {
                                 if (data.success) {
-                                    showMonthlySalesDetailModal(month, data.sales_detail);
+                                    // showMonthlySalesDetailModal(month, data.sales_detail); // Function removed
+                                    console.log('Sales data available for month:', month);
                                 } else {
                                     alert('Failed to fetch sales details: ' + data.error);
                                 }
@@ -573,7 +555,8 @@ function downloadCSV(rows, filename) {
     console.log('Download completed for:', filename);
 }
 
-function showMonthlySalesDetailModal(month, salesDetail) {
+// Money Insight modal function removed - now handled by money_insight_widget.js
+// function showMonthlySalesDetailModal(month, salesDetail) {
     console.log("Sales detail data received:", salesDetail);
 
     // Create backdrop
@@ -783,7 +766,7 @@ function showMonthlySalesDetailModal(month, salesDetail) {
 
     backdrop.style.display = 'block';
     modal.style.display = 'block';
-}
+// }
 
 // New function to fetch and show order details
 function fetchOrderDetails(orderId) {
@@ -1264,7 +1247,8 @@ function showMonthlyRevenueDetail(month, monthLabel, revenue) {
                 if (data.success) {
                     modal.style.display = 'none';
                     backdrop.style.display = 'none';
-                    showMonthlySalesDetailModal(month, data.sales_detail);
+                    // showMonthlySalesDetailModal(month, data.sales_detail); // Function removed
+                    console.log('Sales data available for month:', month);
                 } else {
                     alert('Failed to fetch sales details: ' + data.error);
                 }

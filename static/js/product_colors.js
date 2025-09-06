@@ -9,8 +9,8 @@ async function fetchAndPopulateColors() {
             const editProductColorSelect = document.getElementById('edit-product-color');
 
             // Clear existing options except the default "Select Color"
-            productColorSelect.innerHTML = '<option value="">Select Color</option>';
-            editProductColorSelect.innerHTML = '<option value="">Select Color</option>';
+            productColorSelect.innerHTML = '<option value=""></option>';
+            editProductColorSelect.innerHTML = '<option value=""></option>';
 
             data.colors.forEach(color => {
                 const option = document.createElement('option');

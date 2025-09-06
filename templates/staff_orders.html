@@ -1,67 +1,36 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Order Management{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/order_modal.css') }}">
-    <link rel="stylesheet" href="/static/css/staff_orders.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/staff_notifications.css') }}">
-</head>
-<body>
 {% extends "base.html" %}
+
+{% block title %}Order Management{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/order_modal.css') }}">
+<link rel="stylesheet" href="/static/css/staff_orders.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff_notifications.css') }}">
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+    
+    .page-header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+        color: #2d3748;
+        text-align: center;
+    }
+</style>
+{% endblock %}
 {% block content %}
 <div class="staff-container">
-    <h1>Order Management</h1>
-
-    <!-- New Order Form -->
-    <button type="button" class="btn btn-success mb-3" id="openAddOrderModalBtn">Add New Order</button>
-
-    <!-- Add Order Modal -->
-    <div class="modal fade" id="addOrderModal" tabindex="-1" aria-labelledby="addOrderModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="addOrderModalLabel">Add New Order</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="addOrderForm">
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <div style="flex: 1 1 200px;">
-                        <label for="firstNameInput">First Name</label>
-                        <input type="text" id="firstNameInput" name="first_name" required class="form-control" />
-                    </div>
-                    <div style="flex: 1 1 200px;">
-                        <label for="lastNameInput">Last Name</label>
-                        <input type="text" id="lastNameInput" name="last_name" required class="form-control" />
-                    </div>
-                    <div style="flex: 1 1 300px;">
-                        <label for="emailInput">Email</label>
-                        <input type="email" id="emailInput" name="email" required class="form-control" />
-                    </div>
-                    <div style="flex: 1 1 200px;">
-                        <label for="orderDateInput">Order Date</label>
-                        <input type="date" id="orderDateInput" name="order_date" required class="form-control" />
-                    </div>
-                </div>
-                <div style="margin-top: 10px;">
-                <label>Order Items</label>
-                <div id="orderItemsContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 4px;">
-                    <!-- Dynamic product items will be added here -->
-                </div>
-                <button type="button" class="btn btn-secondary mt-2" id="addOrderItemBtn">Add Product</button>
-                <small>Select products and specify quantity and price for each.</small>
-                </div>
-                <button type="submit" class="btn btn-success mt-3">Add Order</button>
-            </form>
-          </div>
-        </div>
-      </div>
+    <div class="page-header">
+        <h1>Order Management</h1>
     </div>
+
+    <!-- Orders are automatically created through walk-in sales and frontend purchases -->
 
     <div class="order-summary">
         <div class="summary-item total-orders-amount">
@@ -70,16 +39,35 @@
                     <i class="fas fa-chart-bar"></i>
                 </div>
                 <div>
-                    <h3>Total Orders Amount</h3>
+                    <h3>Completed Orders Count</h3>
                 </div>
             </div>
-            <p class="total-amount">${{ '%.2f'|format(total_orders_amount) }}</p>
+            <p class="total-amount">{{ completed_count }}</p>
             <div class="status-badges">
                 {% for item in summary %}
                     <span class="status-badge {{ item.status|lower }}">
                         {{ item.status }} ({{ item.count }})
                     </span>
                 {% endfor %}
+                {% if pending_count > 0 %}
+                    {% set pending_in_summary = false %}
+                    {% for item in summary %}
+                        {% if item.status|lower == 'pending' %}
+                            {% set pending_in_summary = true %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if not pending_in_summary %}
+                        <span class="status-badge pending">
+                            PENDING ({{ pending_count }})
+                        </span>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <div class="card-subtitle">
+                    <i class="fas fa-info-circle"></i>
+                    All orders (pending, completed, cancelled)
+                </div>
             </div>
         </div>
         <div class="summary-item total-completed-amount">
@@ -88,13 +76,13 @@
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div>
-                    <h3>Completed Orders Amount</h3>
+                    <h3>Revenue from Completed Orders</h3>
                 </div>
             </div>
             <p class="total-amount">${{ '%.2f'|format(total_completed_amount) }}</p>
             <div class="card-footer">
                 <span class="card-subtitle">
-                    <i class="fas fa-trending-up" style="color: #10b981; margin-right: 4px;"></i>
+                    <i class="fas fa-trending-up" style="color: #10b981;"></i>
                     Revenue from completed orders
                 </span>
             </div>
@@ -118,19 +106,26 @@
         </div>
         <div class="filter-group">
             <label for="status-filter">Filter by Status:</label>
-            <select id="status-filter" aria-label="Order status filter">
-                <option value="all">All Orders</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+            <select id="status-filter" aria-label="Order status filter" onchange="applyFilters()">
+                <option value="all" selected>All Orders</option>
+                <option value="pending">Pending Orders</option>
+                <option value="completed">Completed Orders</option>
+                <option value="cancelled">Cancelled Orders</option>
             </select>
         </div>
         <div class="filter-group">
             <label for="date-filter">Filter by Date:</label>
-            <input type="date" id="date-filter" aria-label="Order date filter">
+            <input type="date" id="date-filter" aria-label="Order date filter" onchange="applyFilters()">
         </div>
-        <button class="btn btn-success" id="apply-filters" aria-label="Apply filters">Apply</button>
+        <div class="filter-group">
+            <label for="approval-filter">Filter by Approval:</label>
+            <select id="approval-filter" aria-label="Approval status filter" onchange="applyFilters()">
+                <option value="all">All Approval Status</option>
+                <option value="Pending Approval">Needs Approval</option>
+                <option value="Approved">Already Approved</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+        </div>
     </div>
 
     <div class="orders-list">
@@ -143,7 +138,8 @@
                     <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Date</th>
                     <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Total</th>
                     <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Payment Method</th>
-                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Status</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Payment Status</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 1px solid #888; background-color: #f5f5f5;">Approval Status</th>
                     <th style="padding: 12px; text-align: left; border-bottom: 1px solid #888; background-color: #f5f5f5;">Actions</th>
                 </tr>
             </thead>
@@ -156,16 +152,28 @@
                     <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ order.order_date }}</td>
                     <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">${{ "%.2f"|format(order.total) }}</td>
                     <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">{{ order.payment_method|default('QR Payment') }}</td>
-                    <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
+                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">
                         <span class="status-badge status-{{ order.status|lower }}">
                             {{ order.status|title }}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #888;">
+                        <span class="status-badge approval-{{ order.approval_status|lower|replace(' ', '-') }}">
+                            {{ order.approval_status|default('Pending Approval') }}
                         </span>
                     </td>
                     <td style="padding: 12px; text-align: left; border-bottom: 1px solid #888;">
                         <div style="display: flex; flex-direction: column; gap: 5px; min-width: 120px;">
                             <a href="{{ url_for('auth.order_details', order_id=order.id) }}" class="btn btn-primary btn-sm" style="width: 100%; text-align: center;">Details</a>
-                            {% if order.status|lower == 'pending' %}
+                            {% if order.status|lower != 'cancelled' and order.approval_status == 'Pending Approval' %}
+                            <button type="button" class="btn btn-success btn-sm" onclick="approveOrder({{ order.id }})" style="width: 100%;">Confirm</button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="rejectOrder({{ order.id }})" style="width: 100%;">Reject</button>
+                            {% endif %}
+                            {% if order.status|lower == 'pending' and session.get('role') != 'staff' %}
                             <button type="button" class="btn btn-danger btn-sm" onclick="cancelOrder({{ order.id }})" style="width: 100%;">Cancel Order</button>
+                            {% endif %}
+                            {% if session.get('role') in ['admin', 'super_admin'] %}
+                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteOrder({{ order.id }})" style="width: 100%; background-color: #dc3545;">Delete Order</button>
                             {% endif %}
                         </div>
                     </td>
@@ -190,6 +198,522 @@
 <script src="{{ url_for('static', filename='js/staff_messages.js') }}"></script>
 <script src="{{ url_for('static', filename='js/staff_orders.js') }}"></script>
 <script src="{{ url_for('static', filename='js/staff_orders_pagination.js') }}"></script>
+
+<script>
+// Set user role for JavaScript access
+window.userRole = '{{ session.get("role", "") }}';
+
+// Professional confirmation modal for actions
+function showConfirmation(title, message) {
+    return new Promise((resolve) => {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'confirmation-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(2px);
+        `;
+
+        // Create modal content
+        const modal = document.createElement('div');
+        modal.className = 'confirmation-modal';
+        modal.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.2s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+
+        modal.innerHTML = `
+            <div style="padding: 24px 24px 16px 24px; text-align: center;">
+                <div style="width: 64px; height: 64px; background: #dbeafe; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="32" height="32" fill="#2563eb" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #111827;">${title}</h3>
+                <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">${message}</p>
+            </div>
+            <div style="padding: 16px 24px 24px 24px; display: flex; gap: 12px; justify-content: center;">
+                <button class="cancel-btn" style="
+                    background: #f3f4f6;
+                    color: #374151;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Cancel</button>
+                <button class="confirm-btn" style="
+                    background: #2563eb;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Confirm</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            modal.style.transform = 'scale(1)';
+        });
+
+        // Add hover effects
+        const cancelBtn = modal.querySelector('.cancel-btn');
+        const confirmBtn = modal.querySelector('.confirm-btn');
+
+        cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.backgroundColor = '#e5e7eb';
+        });
+        cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.backgroundColor = '#f3f4f6';
+        });
+
+        confirmBtn.addEventListener('mouseenter', () => {
+            confirmBtn.style.backgroundColor = '#1d4ed8';
+        });
+        confirmBtn.addEventListener('mouseleave', () => {
+            confirmBtn.style.backgroundColor = '#2563eb';
+        });
+
+        // Handle button clicks
+        const cleanup = () => {
+            modal.style.transform = 'scale(0.9)';
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+            }, 200);
+        };
+
+        cancelBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(false);
+        });
+
+        confirmBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(true);
+        });
+
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                cleanup();
+                resolve(false);
+            }
+        });
+
+        // Close on escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                resolve(false);
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    });
+}
+
+// Order Approval Functions
+async function approveOrder(orderId) {
+    const confirmed = await showConfirmation('Confirm Order', `Are you sure you want to confirm order #${orderId}? The customer will be notified.`);
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/orders/${orderId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showMessage('Order confirmed successfully! Customer has been notified.', 'success');
+            // Remove the Confirm/Reject buttons for this order since it's now finalized
+            const orderRow = document.querySelector(`tr:has(button[onclick="approveOrder(${orderId})"])`);
+            if (orderRow) {
+                const actionCell = orderRow.querySelector('td:last-child');
+                if (actionCell) {
+                    // Keep only the Details button, remove Confirm/Reject buttons
+                    const detailsButton = actionCell.querySelector('a[href*="/details"]');
+                    if (detailsButton) {
+                        actionCell.innerHTML = `<div style="display: flex; flex-direction: column; gap: 5px; min-width: 120px;">${detailsButton.outerHTML}</div>`;
+                    }
+                }
+            }
+
+            // Also reload to ensure consistency
+            if (typeof window.fetchOrdersFromPagination === 'function') {
+                window.fetchOrdersFromPagination(1);
+            } else {
+                location.reload();
+            }
+        } else {
+            showMessage('Error approving order: ' + data.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error approving order', 'error');
+    }
+}
+
+// Professional input modal for rejection reason
+function showRejectModal(orderId) {
+    return new Promise((resolve) => {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'reject-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(2px);
+        `;
+
+        // Create modal content
+        const modal = document.createElement('div');
+        modal.className = 'reject-modal';
+        modal.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.2s ease;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        `;
+
+        modal.innerHTML = `
+            <div style="padding: 24px 24px 16px 24px; text-align: center;">
+                <div style="width: 64px; height: 64px; background: #fef2f2; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="32" height="32" fill="#dc2626" viewBox="0 0 24 24">
+                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                </div>
+                <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #111827;">Reject Order #${orderId}</h3>
+                <p style="margin: 0 0 16px 0; color: #6b7280; font-size: 14px; line-height: 1.5;">Please provide a reason for rejecting this order. The customer will be notified.</p>
+                <textarea id="rejectReason" placeholder="Enter rejection reason..." style="
+                    width: 100%;
+                    min-height: 80px;
+                    padding: 12px;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-family: inherit;
+                    resize: vertical;
+                    outline: none;
+                    transition: border-color 0.2s;
+                " onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+            </div>
+            <div style="padding: 16px 24px 24px 24px; display: flex; gap: 12px; justify-content: center;">
+                <button class="cancel-btn" style="
+                    background: #f3f4f6;
+                    color: #374151;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Cancel</button>
+                <button class="reject-btn" style="
+                    background: #dc2626;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    font-size: 14px;
+                    transition: background-color 0.2s;
+                    min-width: 80px;
+                ">Reject Order</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            modal.style.transform = 'scale(1)';
+        });
+
+        // Focus on textarea
+        const textarea = modal.querySelector('#rejectReason');
+        setTimeout(() => textarea.focus(), 100);
+
+        // Add hover effects
+        const cancelBtn = modal.querySelector('.cancel-btn');
+        const rejectBtn = modal.querySelector('.reject-btn');
+
+        cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.backgroundColor = '#e5e7eb';
+        });
+        cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.backgroundColor = '#f3f4f6';
+        });
+
+        rejectBtn.addEventListener('mouseenter', () => {
+            rejectBtn.style.backgroundColor = '#b91c1c';
+        });
+        rejectBtn.addEventListener('mouseleave', () => {
+            rejectBtn.style.backgroundColor = '#dc2626';
+        });
+
+        // Handle button clicks
+        const cleanup = () => {
+            modal.style.transform = 'scale(0.9)';
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+            }, 200);
+        };
+
+        cancelBtn.addEventListener('click', () => {
+            cleanup();
+            resolve(null);
+        });
+
+        rejectBtn.addEventListener('click', () => {
+            const reason = textarea.value.trim();
+            if (!reason) {
+                textarea.style.borderColor = '#dc2626';
+                textarea.focus();
+                return;
+            }
+            cleanup();
+            resolve(reason);
+        });
+
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                cleanup();
+                resolve(null);
+            }
+        });
+
+        // Close on escape key
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                cleanup();
+                resolve(null);
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+    });
+}
+
+async function rejectOrder(orderId) {
+    const reason = await showRejectModal(orderId);
+    if (!reason) {
+        return;
+    }
+
+    const confirmed = await showConfirmation('Confirm Rejection', `Are you sure you want to reject order #${orderId}? The customer will be notified.`);
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/orders/${orderId}/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                reason: reason,
+                notes: ''
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const refundAmount = data.refund_amount ? `$${data.refund_amount.toFixed(2)}` : '';
+            showMessage(`Order rejected and cancelled successfully! Customer notified about ${refundAmount} refund. Inventory restored.`, 'success');
+
+            // Remove the rejected order from the table immediately
+            const orderRow = document.querySelector(`tr:has(button[onclick="rejectOrder(${orderId})"])`);
+            if (orderRow) {
+                orderRow.style.transition = 'opacity 0.3s ease';
+                orderRow.style.opacity = '0';
+                setTimeout(() => {
+                    orderRow.remove();
+                    // Update row numbers after removal
+                    updateRowNumbers();
+                }, 300);
+            }
+
+            // Also remove from mobile view if exists
+            const mobileCard = document.querySelector(`.mobile-card:has(button[onclick="rejectOrder(${orderId})"])`);
+            if (mobileCard) {
+                mobileCard.style.transition = 'opacity 0.3s ease';
+                mobileCard.style.opacity = '0';
+                setTimeout(() => mobileCard.remove(), 300);
+            }
+
+            // Reload to ensure consistency
+            setTimeout(() => {
+                if (typeof window.fetchOrdersFromPagination === 'function') {
+                    window.fetchOrdersFromPagination(1);
+                } else {
+                    location.reload();
+                }
+            }, 500);
+        } else {
+            showMessage('Error rejecting order: ' + data.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error rejecting order', 'error');
+    }
+}
+
+// Cancel Order Function (existing functionality)
+async function cancelOrder(orderId) {
+    if (!confirm(`Are you sure you want to cancel order #${orderId}? This action cannot be undone.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/orders/${orderId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showMessage('Order cancelled successfully!', 'success');
+            // Reload the orders table
+            if (typeof window.fetchOrdersFromPagination === 'function') {
+                window.fetchOrdersFromPagination(1);
+            } else {
+                location.reload();
+            }
+        } else {
+            showMessage('Error cancelling order: ' + data.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error cancelling order', 'error');
+    }
+}
+
+// Helper function to update row numbers after order removal
+function updateRowNumbers() {
+    const tableRows = document.querySelectorAll('.orders-list tbody tr');
+    tableRows.forEach((row, index) => {
+        const firstCell = row.querySelector('td:first-child');
+        if (firstCell) {
+            firstCell.textContent = index + 1;
+        }
+    });
+}
+
+// Delete order function (admin only)
+async function deleteOrder(orderId) {
+    const confirmed = await showConfirmation('Delete Order', `Are you sure you want to permanently delete order #${orderId}? This action cannot be undone and will remove all order data.`);
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/orders/${orderId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showMessage(`Order #${orderId} deleted successfully!`, 'success');
+
+            // Remove the order from the table immediately
+            const orderRow = document.querySelector(`tr:has(button[onclick="deleteOrder(${orderId})"])`);
+            if (orderRow) {
+                orderRow.style.transition = 'opacity 0.3s ease';
+                orderRow.style.opacity = '0';
+                setTimeout(() => {
+                    orderRow.remove();
+                    updateRowNumbers();
+                }, 300);
+            }
+
+            // Also remove from mobile view if exists
+            const mobileCard = document.querySelector(`.mobile-card:has(button[onclick="deleteOrder(${orderId})"])`);
+            if (mobileCard) {
+                mobileCard.style.transition = 'opacity 0.3s ease';
+                mobileCard.style.opacity = '0';
+                setTimeout(() => mobileCard.remove(), 300);
+            }
+
+            // Reload to ensure consistency
+            setTimeout(() => {
+                if (typeof window.fetchOrdersFromPagination === 'function') {
+                    window.fetchOrdersFromPagination(1);
+                } else {
+                    location.reload();
+                }
+            }, 500);
+        } else {
+            showMessage('Error deleting order: ' + data.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error deleting order', 'error');
+    }
+}
+</script>
 
 <style>
 /* Responsive Styles for Orders Page */
@@ -262,7 +786,7 @@
         display: block;
     }
 }
+
+
 </style>
 {% endblock %}
-</body>
-</html>
