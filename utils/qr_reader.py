@@ -3,8 +3,14 @@ Automatic QR Code Reader
 Reads QR codes from uploaded images automatically
 """
 
-import cv2
-import numpy as np
+try:
+    import cv2
+    import numpy as np
+    OPENCV_AVAILABLE = True
+except ImportError:
+    OPENCV_AVAILABLE = False
+    print("⚠️ OpenCV not available. QR code reading will be limited.")
+
 from PIL import Image
 import io
 import base64
@@ -22,7 +28,7 @@ class QRCodeReader:
     """
     
     def __init__(self):
-        self.available = PYZBAR_AVAILABLE
+        self.available = PYZBAR_AVAILABLE and OPENCV_AVAILABLE
     
     def read_qr_from_file(self, file) -> dict:
         """
@@ -31,7 +37,7 @@ class QRCodeReader:
         if not self.available:
             return {
                 'success': False,
-                'error': 'QR code reading not available. Please install pyzbar library.'
+                'error': 'QR code reading not available. OpenCV or pyzbar not properly installed.'
             }
         
         try:
@@ -42,11 +48,14 @@ class QRCodeReader:
             # Convert to PIL Image
             image = Image.open(io.BytesIO(file_content))
             
-            # Convert to OpenCV format
-            opencv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            
-            # Read QR codes
-            qr_codes = pyzbar.decode(opencv_image)
+            if OPENCV_AVAILABLE:
+                # Convert to OpenCV format
+                opencv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                # Read QR codes
+                qr_codes = pyzbar.decode(opencv_image)
+            else:
+                # Fallback to direct PIL image processing
+                qr_codes = pyzbar.decode(image)
             
             if not qr_codes:
                 return {
@@ -76,7 +85,7 @@ class QRCodeReader:
         if not self.available:
             return {
                 'success': False,
-                'error': 'QR code reading not available. Please install pyzbar library.'
+                'error': 'QR code reading not available. OpenCV or pyzbar not properly installed.'
             }
         
         try:
@@ -86,11 +95,14 @@ class QRCodeReader:
             # Convert to PIL Image
             image = Image.open(io.BytesIO(image_data))
             
-            # Convert to OpenCV format
-            opencv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            
-            # Read QR codes
-            qr_codes = pyzbar.decode(opencv_image)
+            if OPENCV_AVAILABLE:
+                # Convert to OpenCV format
+                opencv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                # Read QR codes
+                qr_codes = pyzbar.decode(opencv_image)
+            else:
+                # Fallback to direct PIL image processing
+                qr_codes = pyzbar.decode(image)
             
             if not qr_codes:
                 return {
