@@ -441,15 +441,12 @@ def create_app():
         
     @app.route('/')
     def show_dashboard():
-        # Simple test without database for now
-        return """
-        <h1>Computer Shop - App is Running!</h1>
-        <p>✅ Flask app is working correctly</p>
-        <p>✅ All routes are functional</p>
-        <p>✅ Database configuration is loaded</p>
-        <p>⏳ Database connection needs to be tested separately</p>
-        <p><a href="/test">Test Route</a> | <a href="/login">Login</a></p>
-        """
+        try:
+            products = Product.get_featured()
+            return render_template('homepage.html', products=products)
+        except Exception as e:
+            # If database error, show a simple page
+            return f"<h1>Computer Shop</h1><p>App is running but database connection failed: {str(e)}</p>"
     
     @app.route('/test')
     def test_route():
