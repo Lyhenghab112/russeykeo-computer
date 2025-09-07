@@ -1,19 +1,33 @@
 services:
   - type: web
-    name: computer-shop
+    name: keo-computer-shop
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
-      - key: FLASK_ENV
-        value: production
       - key: SECRET_KEY
         generateValue: true
       - key: MYSQL_HOST
-        sync: false
+        value: mysql
       - key: MYSQL_USER
-        sync: false
+        value: keo_user
       - key: MYSQL_PASSWORD
         sync: false
       - key: MYSQL_DB
+        value: keo_computer_shop
+      - key: MYSQL_PORT
+        value: 3306
+
+  - type: pserv
+    name: mysql
+    env: docker
+    dockerfilePath: ./Dockerfile.mysql
+    envVars:
+      - key: MYSQL_DATABASE
+        value: keo_computer_shop
+      - key: MYSQL_USER
+        value: keo_user
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_ROOT_PASSWORD
         sync: false

@@ -1,0 +1,16 @@
+FROM mysql:8.0
+
+# Set environment variables
+ENV MYSQL_DATABASE=keo_computer_shop
+ENV MYSQL_USER=keo_user
+ENV MYSQL_PASSWORD=your_password_here
+ENV MYSQL_ROOT_PASSWORD=your_root_password_here
+
+# Create a directory for custom initialization scripts
+RUN mkdir -p /docker-entrypoint-initdb.d
+
+# Copy your SQL file to initialize the database
+# COPY keocomputer.sql /docker-entrypoint-initdb.d/
+
+# Expose MySQL port
+EXPOSE 3306
