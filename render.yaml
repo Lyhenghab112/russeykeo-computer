@@ -3,10 +3,12 @@ services:
     name: keo-computer-shop
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
     envVars:
       - key: SECRET_KEY
         generateValue: true
+      - key: FLASK_ENV
+        value: production
       - key: MYSQL_HOST
         value: mysql
       - key: MYSQL_USER
@@ -17,6 +19,10 @@ services:
         value: keo_computer_shop
       - key: MYSQL_PORT
         value: 3306
+      - key: SMTP_USERNAME
+        value: lyhenghab3@gmail.com
+      - key: SMTP_PASSWORD
+        sync: false
 
   - type: pserv
     name: mysql

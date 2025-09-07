@@ -57,3 +57,18 @@ backups/
 # Temporary files
 temp/
 tmp/
+
+# Test files
+test_*.py
+debug_*.py
+*_test.py
+
+# Environment files
+env_template.txt
+
+# Database dumps
+Dump*/
+*.sql
+
+# Migration files (keep structure, exclude data)
+migrations/*.py
