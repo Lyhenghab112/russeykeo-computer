@@ -441,7 +441,12 @@ def create_app():
         
     @app.route('/')
     def show_dashboard():
-        return "<h1>Computer Shop - App is Working!</h1><p>This is a test page to verify the app is running.</p>"
+        try:
+            products = Product.get_featured()
+            return render_template('homepage.html', products=products)
+        except Exception as e:
+            # If database error, show a simple page
+            return f"<h1>Computer Shop</h1><p>App is running but database connection failed: {str(e)}</p>"
     
     @app.route('/test')
     def test_route():
