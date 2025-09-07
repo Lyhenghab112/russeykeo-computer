@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-WSGI entry point for Render deployment
+WSGI entry point for Render deployment - Updated
 """
 
 from app import create_app
