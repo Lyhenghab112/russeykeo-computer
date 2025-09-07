@@ -49,7 +49,7 @@ ENV/
 Thumbs.db
 
 # Project specific
-static/uploads/
+# static/uploads/  # Commented out to include product images in deployment
 backups/
 *.rar
 *.zip
