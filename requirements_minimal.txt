@@ -1,0 +1,14 @@
+flask
+gunicorn
+flask-mysqldb
+mysql-connector-python
+python-dotenv
+flask_sqlalchemy
+qrcode[pil]
+bakong-khqr
+pyotp
+flask-mail
+pytesseract
+Pillow
+pdf2image
+pyzbar
