@@ -25,11 +25,14 @@ def get_db():
             host=Config.MYSQL_HOST,
             port=Config.MYSQL_PORT,
             database=Config.MYSQL_DB,
-            # Remove unsupported argument datetime_converter
-            use_pure=True
+            use_pure=True,
+            autocommit=True,
+            connect_timeout=60,
+            auth_plugin='mysql_native_password'
         )
         current_app.logger.info("Database connection established successfully.")
         return conn
+            
     except Exception as e:
         current_app.logger.error(f"Failed to connect to database: {e}")
         raise

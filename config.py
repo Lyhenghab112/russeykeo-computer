@@ -9,7 +9,7 @@ class Config:
     # Try Railway's MYSQL_URL first, then fallback to individual variables
     MYSQL_URL = os.getenv('MYSQL_URL')
     if MYSQL_URL:
-        # Use Railway's provided MYSQL_URL
+        # Use Railway's provided MYSQL_URL with PyMySQL
         SQLALCHEMY_DATABASE_URI = MYSQL_URL.replace('mysql://', 'mysql+mysqlconnector://')
         # Parse MYSQL_URL for individual components
         import re
