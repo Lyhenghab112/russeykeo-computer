@@ -442,20 +442,23 @@ def create_app():
     @app.route('/')
     def show_dashboard():
         try:
-            # Debug: Show current config values
+            # Test database connection
+            products = Product.get_featured()
+            return render_template('homepage.html', products=products)
+        except Exception as e:
+            # If database error, show debug info
             from config import Config
             debug_info = f"""
-            <h1>Computer Shop - Debug Info</h1>
+            <h1>Computer Shop - Database Connection Test</h1>
+            <p><strong>Configuration:</strong></p>
             <p>MYSQL_HOST: {Config.MYSQL_HOST}</p>
             <p>MYSQL_USER: {Config.MYSQL_USER}</p>
             <p>MYSQL_DB: {Config.MYSQL_DB}</p>
             <p>MYSQL_PORT: {Config.MYSQL_PORT}</p>
             <p>MYSQL_PASSWORD: {'*' * len(Config.MYSQL_PASSWORD) if Config.MYSQL_PASSWORD else 'None'}</p>
+            <p><strong>Error:</strong> {str(e)}</p>
             """
             return debug_info
-        except Exception as e:
-            # If database error, show a simple page
-            return f"<h1>Computer Shop</h1><p>App is running but database connection failed: {str(e)}</p>"
     
     @app.route('/test')
     def test_route():
