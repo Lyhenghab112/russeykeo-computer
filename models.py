@@ -23,6 +23,7 @@ def get_db():
             user=Config.MYSQL_USER,
             password=Config.MYSQL_PASSWORD,
             host=Config.MYSQL_HOST,
+            port=Config.MYSQL_PORT,
             database=Config.MYSQL_DB,
             # Remove unsupported argument datetime_converter
             use_pure=True
