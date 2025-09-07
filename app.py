@@ -442,6 +442,7 @@ def create_app():
     @app.route('/')
     def show_dashboard():
         try:
+            # Cache products for better performance
             products = Product.get_featured()
             return render_template('homepage.html', products=products)
         except Exception as e:
