@@ -1,1 +1,1 @@
-web: python -c "import test_app; print('test_app imported successfully'); print('app object:', test_app.app)"
+web: python run_diagnostic.py
